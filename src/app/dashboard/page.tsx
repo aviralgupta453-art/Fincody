@@ -278,8 +278,15 @@ export default function Dashboard() {
   const [calculationStartDate, setCalculationStartDate] = useState("2026-06-01");
   const [startYear, setStartYear] = useState(2026);
   const [endYear, setEndYear] = useState(2040);
-  // Persistence States & Effects
-  const [dataLoaded, setDataLoaded] = useState(false);
+  // Persistence States & Helper
+  const persistData = (key: string, data: any) => {
+    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
+    try {
+      localStorage.setItem(`${prefix}${key}`, typeof data === "string" ? data : JSON.stringify(data));
+    } catch (e) {
+      console.error("Error saving persisted state:", e);
+    }
+  };
 
   useEffect(() => {
     const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
@@ -326,48 +333,7 @@ export default function Dashboard() {
     } catch (e) {
       console.error("Error loading persisted state:", e);
     }
-    setDataLoaded(true);
   }, [user]);
-
-  useEffect(() => {
-    if (!dataLoaded) return;
-
-    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
-
-    try {
-      localStorage.setItem(`${prefix}goals`, JSON.stringify(goals));
-      localStorage.setItem(`${prefix}subscriptions`, JSON.stringify(subscriptions));
-      localStorage.setItem(`${prefix}insurancePolicies`, JSON.stringify(insurancePolicies));
-      localStorage.setItem(`${prefix}documents`, JSON.stringify(documents));
-      localStorage.setItem(`${prefix}netWorth`, netWorth.toString());
-      localStorage.setItem(`${prefix}monthlySavings`, monthlySavings.toString());
-      localStorage.setItem(`${prefix}healthScore`, healthScore.toString());
-      localStorage.setItem(`${prefix}startYear`, startYear.toString());
-      localStorage.setItem(`${prefix}endYear`, endYear.toString());
-      localStorage.setItem(`${prefix}calculationStartDate`, calculationStartDate);
-      localStorage.setItem(`${prefix}manualSalary`, manualSalary);
-      localStorage.setItem(`${prefix}manualEMI`, manualEMI);
-      localStorage.setItem(`${prefix}manualOtherExpenses`, manualOtherExpenses);
-    } catch (e) {
-      console.error("Error saving persisted state:", e);
-    }
-  }, [
-    goals,
-    subscriptions,
-    insurancePolicies,
-    documents,
-    netWorth,
-    monthlySavings,
-    healthScore,
-    startYear,
-    endYear,
-    calculationStartDate,
-    manualSalary,
-    manualEMI,
-    manualOtherExpenses,
-    dataLoaded,
-    user
-  ]);
 
   // Future Simulator interactive state
   const [simSalaryRate, setSimSalaryRate] = useState(12);
@@ -453,31 +419,38 @@ export default function Dashboard() {
       deadline: formattedDeadline
     };
 
-    setGoals([...goals, newGoal]);
+    const updatedGoals = [...goals, newGoal];
+    setGoals(updatedGoals);
+    persistData("goals", updatedGoals);
+
     setNewGoalName("");
     setNewGoalTarget("");
     setNewGoalDeadline("");
   };
 
   const handleContributeToGoal = (id: string, amount: number) => {
-    setGoals(goals.map(g => {
+    const updatedGoals = goals.map(g => {
       if (g.id === id) {
         const nextVal = g.current + amount;
         return { ...g, current: nextVal > g.target ? g.target : nextVal };
       }
       return g;
-    }));
+    });
+    setGoals(updatedGoals);
+    persistData("goals", updatedGoals);
   };
 
   // Subscription Cancellation Simulator
   const handleToggleSub = (id: string) => {
-    setSubscriptions(subscriptions.map(sub => {
+    const updatedSubs = subscriptions.map(sub => {
       if (sub.id === id) {
-        const nextStatus = sub.status === "active" ? "canceled" : "active";
+        const nextStatus: "active" | "canceled" = sub.status === "active" ? "canceled" : "active";
         return { ...sub, status: nextStatus };
       }
       return sub;
-    }));
+    });
+    setSubscriptions(updatedSubs);
+    persistData("subscriptions", updatedSubs);
 
     // Trigger Notification
     const toggledSub = subscriptions.find(s => s.id === id);
@@ -511,7 +484,12 @@ export default function Dashboard() {
         uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
         type: file.name.split('.').pop()?.toUpperCase() || "PDF"
       };
-      setDocuments(prev => [newDoc, ...prev]);
+      
+      setDocuments(prev => {
+        const updated = [newDoc, ...prev];
+        persistData("documents", updated);
+        return updated;
+      });
       setUploadingDoc(false);
 
       // Trigger Notification
@@ -524,7 +502,9 @@ export default function Dashboard() {
 
   const handleDeleteDocument = (id: string) => {
     if (window.confirm("Are you sure you want to delete this document from your secure vault?")) {
-      setDocuments(documents.filter(d => d.id !== id));
+      const updated = documents.filter(d => d.id !== id);
+      setDocuments(updated);
+      persistData("documents", updated);
       setNotifications(prev => [
         { id: Date.now(), text: "Vault: Document has been permanently deleted from storage.", unread: true },
         ...prev
@@ -534,7 +514,9 @@ export default function Dashboard() {
 
   const handleDeleteGoal = (id: string) => {
     if (window.confirm("Are you sure you want to delete this goal?")) {
-      setGoals(goals.filter(g => g.id !== id));
+      const updated = goals.filter(g => g.id !== id);
+      setGoals(updated);
+      persistData("goals", updated);
       setNotifications(prev => [
         { id: Date.now(), text: "Goal Engine: Target goal deleted successfully.", unread: true },
         ...prev
@@ -553,30 +535,39 @@ export default function Dashboard() {
 
     setTimeout(() => {
       // 1. Boost Net Worth by ₹2,67,640 (simulate finding unclaimed capital/tax return)
-      setNetWorth(prev => prev + 267640);
+      const newNetWorth = netWorth + 267640;
+      setNetWorth(newNetWorth);
+      persistData("netWorth", newNetWorth);
 
       // 2. Boost Monthly Savings by ₹11,650 (consolidated optimizations)
-      setMonthlySavings(prev => prev + 11650);
+      const newSavings = monthlySavings + 11650;
+      setMonthlySavings(newSavings);
+      persistData("monthlySavings", newSavings);
 
       // 3. Set health score to 98
       setHealthScore(98);
+      persistData("healthScore", 98);
 
       // 4. Auto contribute ₹50,000 to Emergency Fund goal
-      setGoals(prev => prev.map(g => {
+      const updatedGoals = goals.map(g => {
         if (g.name === "Emergency Fund") {
           const nextVal = g.current + 50000;
           return { ...g, current: nextVal > g.target ? g.target : nextVal };
         }
         return g;
-      }));
+      });
+      setGoals(updatedGoals);
+      persistData("goals", updatedGoals);
 
       // 5. Canceled redundant subscriptions (auto-cancel Adobe CC if active)
-      setSubscriptions(prev => prev.map(sub => {
+      const updatedSubs = subscriptions.map(sub => {
         if (sub.name === "Adobe Creative Cloud") {
-          return { ...sub, status: "canceled" };
+          return { ...sub, status: "canceled" as "active" | "canceled" };
         }
         return sub;
-      }));
+      });
+      setSubscriptions(updatedSubs);
+      persistData("subscriptions", updatedSubs);
 
       setIsAnalyzing(false);
 
@@ -609,25 +600,27 @@ export default function Dashboard() {
     if (manualSalary) {
       calculatedSavings = Math.max(0, salaryVal - emiVal - otherExpVal - subSpend);
       setMonthlySavings(calculatedSavings);
+      persistData("monthlySavings", calculatedSavings);
       updatedLog.push(`Savings calculated to ₹${calculatedSavings.toLocaleString()}`);
-    }
 
-    // Calculate dynamic health score
-    if (manualSalary) {
+      // Calculate dynamic health score
       const savingsRate = calculatedSavings / (salaryVal || 1);
       const emiRate = emiVal / (salaryVal || 1);
       const computedHealth = Math.max(20, Math.min(100, Math.round(85 + savingsRate * 30 - emiRate * 25)));
       setHealthScore(computedHealth);
+      persistData("healthScore", computedHealth);
       updatedLog.push(`Health Score recalculated to ${computedHealth}`);
     }
 
     // Update Net Worth if entered
     if (manualNetWorth && !isNaN(netWorthVal)) {
       setNetWorth(netWorthVal);
+      persistData("netWorth", netWorthVal);
       updatedLog.push(`Net Worth set to ₹${netWorthVal.toLocaleString()}`);
     }
 
     // Add new subscription if filled
+    let nextSubs = subscriptions;
     if (manualSubscriptionName && manualSubscriptionPrice) {
       const priceVal = parseFloat(manualSubscriptionPrice);
       if (!isNaN(priceVal)) {
@@ -639,13 +632,16 @@ export default function Dashboard() {
           status: "active",
           category: "Manual Entry"
         };
-        setSubscriptions(prev => [...prev, newSub]);
+        nextSubs = [...subscriptions, newSub];
+        setSubscriptions(nextSubs);
+        persistData("subscriptions", nextSubs);
         updatedLog.push(`Added subscription ${manualSubscriptionName} (₹${priceVal})`);
       }
     }
 
     // Calculation start date log
     if (calculationStartDate) {
+      persistData("calculationStartDate", calculationStartDate);
       updatedLog.push(`Calculation start date set to ${calculationStartDate}`);
     }
 
@@ -657,7 +653,12 @@ export default function Dashboard() {
       uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
       type: "MANUAL"
     };
-    setDocuments(prev => [newDoc, ...prev]);
+    
+    setDocuments(prev => {
+      const updated = [newDoc, ...prev];
+      persistData("documents", updated);
+      return updated;
+    });
 
     // Notify
     if (updatedLog.length > 0) {
@@ -1175,7 +1176,11 @@ export default function Dashboard() {
                             min="2020"
                             max="2100"
                             value={startYear}
-                            onChange={(e) => setStartYear(Math.max(2020, parseInt(e.target.value) || 2026))}
+                            onChange={(e) => {
+                              const val = Math.max(2020, parseInt(e.target.value) || 2026);
+                              setStartYear(val);
+                              persistData("startYear", val);
+                            }}
                             className="w-14 bg-transparent text-center focus:outline-none text-blue-500"
                           />
                         </div>
@@ -1187,7 +1192,11 @@ export default function Dashboard() {
                             min="2020"
                             max="2100"
                             value={endYear}
-                            onChange={(e) => setEndYear(Math.max(startYear, parseInt(e.target.value) || 2040))}
+                            onChange={(e) => {
+                              const val = Math.max(startYear, parseInt(e.target.value) || 2040);
+                              setEndYear(val);
+                              persistData("endYear", val);
+                            }}
                             className="w-14 bg-transparent text-center focus:outline-none text-blue-500"
                           />
                         </div>
