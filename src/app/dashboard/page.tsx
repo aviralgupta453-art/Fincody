@@ -270,11 +270,104 @@ export default function Dashboard() {
   // Manual Entry States
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
   const [manualSalary, setManualSalary] = useState("");
-  const [manualSavings, setManualSavings] = useState("");
+  const [manualEMI, setManualEMI] = useState("");
+  const [manualOtherExpenses, setManualOtherExpenses] = useState("");
   const [manualNetWorth, setManualNetWorth] = useState("");
-  const [manualHealthScore, setManualHealthScore] = useState("");
   const [manualSubscriptionName, setManualSubscriptionName] = useState("");
   const [manualSubscriptionPrice, setManualSubscriptionPrice] = useState("");
+  const [calculationStartDate, setCalculationStartDate] = useState("2026-06-01");
+  const [startYear, setStartYear] = useState(2026);
+  const [endYear, setEndYear] = useState(2040);
+  // Persistence States & Effects
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  useEffect(() => {
+    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
+
+    try {
+      const savedGoals = localStorage.getItem(`${prefix}goals`);
+      if (savedGoals) setGoals(JSON.parse(savedGoals));
+
+      const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
+      if (savedSubs) setSubscriptions(JSON.parse(savedSubs));
+
+      const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
+      if (savedInsurance) setInsurancePolicies(JSON.parse(savedInsurance));
+
+      const savedDocs = localStorage.getItem(`${prefix}documents`);
+      if (savedDocs) setDocuments(JSON.parse(savedDocs));
+
+      const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
+      if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth));
+
+      const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
+      if (savedSavings) setMonthlySavings(parseFloat(savedSavings));
+
+      const savedScore = localStorage.getItem(`${prefix}healthScore`);
+      if (savedScore) setHealthScore(parseInt(savedScore));
+
+      const savedStartYear = localStorage.getItem(`${prefix}startYear`);
+      if (savedStartYear) setStartYear(parseInt(savedStartYear));
+
+      const savedEndYear = localStorage.getItem(`${prefix}endYear`);
+      if (savedEndYear) setEndYear(parseInt(savedEndYear));
+
+      const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
+      if (savedCalcStart) setCalculationStartDate(savedCalcStart);
+
+      const savedManualSalary = localStorage.getItem(`${prefix}manualSalary`);
+      if (savedManualSalary) setManualSalary(savedManualSalary);
+
+      const savedManualEMI = localStorage.getItem(`${prefix}manualEMI`);
+      if (savedManualEMI) setManualEMI(savedManualEMI);
+
+      const savedManualOtherExpenses = localStorage.getItem(`${prefix}manualOtherExpenses`);
+      if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
+    } catch (e) {
+      console.error("Error loading persisted state:", e);
+    }
+    setDataLoaded(true);
+  }, [user]);
+
+  useEffect(() => {
+    if (!dataLoaded) return;
+
+    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
+
+    try {
+      localStorage.setItem(`${prefix}goals`, JSON.stringify(goals));
+      localStorage.setItem(`${prefix}subscriptions`, JSON.stringify(subscriptions));
+      localStorage.setItem(`${prefix}insurancePolicies`, JSON.stringify(insurancePolicies));
+      localStorage.setItem(`${prefix}documents`, JSON.stringify(documents));
+      localStorage.setItem(`${prefix}netWorth`, netWorth.toString());
+      localStorage.setItem(`${prefix}monthlySavings`, monthlySavings.toString());
+      localStorage.setItem(`${prefix}healthScore`, healthScore.toString());
+      localStorage.setItem(`${prefix}startYear`, startYear.toString());
+      localStorage.setItem(`${prefix}endYear`, endYear.toString());
+      localStorage.setItem(`${prefix}calculationStartDate`, calculationStartDate);
+      localStorage.setItem(`${prefix}manualSalary`, manualSalary);
+      localStorage.setItem(`${prefix}manualEMI`, manualEMI);
+      localStorage.setItem(`${prefix}manualOtherExpenses`, manualOtherExpenses);
+    } catch (e) {
+      console.error("Error saving persisted state:", e);
+    }
+  }, [
+    goals,
+    subscriptions,
+    insurancePolicies,
+    documents,
+    netWorth,
+    monthlySavings,
+    healthScore,
+    startYear,
+    endYear,
+    calculationStartDate,
+    manualSalary,
+    manualEMI,
+    manualOtherExpenses,
+    dataLoaded,
+    user
+  ]);
 
   // Future Simulator interactive state
   const [simSalaryRate, setSimSalaryRate] = useState(12);
@@ -285,41 +378,44 @@ export default function Dashboard() {
   // Dynamic Chart Data Generator
   const getProjectionsChartData = () => {
     const data = [];
-    let netWorth = 38.45; // Starting Net Worth (₹ Lakhs)
-    let baseWorth = 38.45;
+    let netWorthVal = netWorth / 100000; // Dynamic Starting Net Worth (₹ Lakhs)
+    let baseWorth = netWorth / 100000;
     
-    const monthlyIncome = 2.0; // ₹2 Lakhs/mo starting
+    const monthlyIncome = (manualSalary ? parseFloat(manualSalary) : 200000) / 100000; // Dynamic Salary in Lakhs
     const growth = 1.08; // 8% asset return
+    const totalYears = Math.max(1, endYear - startYear + 1);
 
-    for (let year = 1; year <= 15; year++) {
+    for (let i = 0; i < totalYears; i++) {
+      const yearLabel = startYear + i;
+
       // Base Case
-      const baseSavings = (monthlyIncome * 12) * Math.pow(1.08, year - 1) * 0.25;
+      const baseSavings = (monthlyIncome * 12) * Math.pow(1.08, i) * 0.25;
       baseWorth = (baseWorth + baseSavings) * growth;
 
       // Simulated Case
-      const simulatedIncome = (monthlyIncome * 12) * Math.pow(1 + (simSalaryRate / 100), year - 1);
+      const simulatedIncome = (monthlyIncome * 12) * Math.pow(1 + (simSalaryRate / 100), i);
       let simulatedSavings = simulatedIncome * (simSavingsRate / 100);
 
       if (simMba > 0) {
-        if (year === 2 || year === 3) {
-          netWorth -= (simMba / 2);
+        if (i === 1 || i === 2) {
+          netWorthVal -= (simMba / 2);
           simulatedSavings = 0;
-        } else if (year > 3) {
+        } else if (i > 2) {
           // Bumps income post MBA
           simulatedSavings = (simulatedIncome * 1.5) * (simSavingsRate / 100);
         }
       }
 
-      if (simHouse > 0 && year === simHouse) {
-        netWorth -= 15; // ₹15L Downpayment
+      if (simHouse > 0 && i === simHouse) {
+        netWorthVal -= 15; // ₹15L Downpayment
       }
 
-      netWorth = (netWorth + simulatedSavings) * growth;
+      netWorthVal = (netWorthVal + simulatedSavings) * growth;
 
       data.push({
-        name: `Yr ${year}`,
+        name: `${yearLabel}`,
         "Standard": Math.round(baseWorth),
-        "Fincody Projections": Math.max(-20, Math.round(netWorth))
+        "Fincody Projections": Math.max(-20, Math.round(netWorthVal))
       });
     }
     return data;
@@ -499,34 +595,39 @@ export default function Dashboard() {
     
     let updatedLog: string[] = [];
 
-    // 1. Update Net Worth
-    if (manualNetWorth) {
-      const val = parseFloat(manualNetWorth);
-      if (!isNaN(val)) {
-        setNetWorth(val);
-        updatedLog.push(`Net Worth set to ₹${val.toLocaleString()}`);
-      }
+    const salaryVal = parseFloat(manualSalary) || 0;
+    const emiVal = parseFloat(manualEMI) || 0;
+    const otherExpVal = parseFloat(manualOtherExpenses) || 0;
+    const netWorthVal = parseFloat(manualNetWorth);
+
+    // Compute monthly subscription spend
+    const activeSubs = subscriptions.filter(sub => sub.status === "active");
+    const subSpend = activeSubs.reduce((acc, curr) => acc + curr.price, 0);
+
+    // Calculate dynamic savings
+    let calculatedSavings = monthlySavings;
+    if (manualSalary) {
+      calculatedSavings = Math.max(0, salaryVal - emiVal - otherExpVal - subSpend);
+      setMonthlySavings(calculatedSavings);
+      updatedLog.push(`Savings calculated to ₹${calculatedSavings.toLocaleString()}`);
     }
 
-    // 2. Update Savings
-    if (manualSavings) {
-      const val = parseFloat(manualSavings);
-      if (!isNaN(val)) {
-        setMonthlySavings(val);
-        updatedLog.push(`Savings set to ₹${val.toLocaleString()}`);
-      }
+    // Calculate dynamic health score
+    if (manualSalary) {
+      const savingsRate = calculatedSavings / (salaryVal || 1);
+      const emiRate = emiVal / (salaryVal || 1);
+      const computedHealth = Math.max(20, Math.min(100, Math.round(85 + savingsRate * 30 - emiRate * 25)));
+      setHealthScore(computedHealth);
+      updatedLog.push(`Health Score recalculated to ${computedHealth}`);
     }
 
-    // 3. Update Health Score
-    if (manualHealthScore) {
-      const val = parseInt(manualHealthScore);
-      if (!isNaN(val)) {
-        setHealthScore(val);
-        updatedLog.push(`Health Score set to ${val}`);
-      }
+    // Update Net Worth if entered
+    if (manualNetWorth && !isNaN(netWorthVal)) {
+      setNetWorth(netWorthVal);
+      updatedLog.push(`Net Worth set to ₹${netWorthVal.toLocaleString()}`);
     }
 
-    // 4. Add new subscription if filled
+    // Add new subscription if filled
     if (manualSubscriptionName && manualSubscriptionPrice) {
       const priceVal = parseFloat(manualSubscriptionPrice);
       if (!isNaN(priceVal)) {
@@ -543,17 +644,22 @@ export default function Dashboard() {
       }
     }
 
-    // 5. Append document record to file list
+    // Calculation start date log
+    if (calculationStartDate) {
+      updatedLog.push(`Calculation start date set to ${calculationStartDate}`);
+    }
+
+    // Append document record to file list
     const newDoc: DocumentFile = {
       id: Date.now().toString(),
       name: `Manual_Entry_Sheet_${new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "_")}.pdf`,
-      size: "15 KB",
+      size: "18 KB",
       uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
       type: "MANUAL"
     };
     setDocuments(prev => [newDoc, ...prev]);
 
-    // 6. Notify
+    // Notify
     if (updatedLog.length > 0) {
       setNotifications(prev => [
         { id: Date.now(), text: `Manual Entry: ${updatedLog.join(", ")}.`, unread: true },
@@ -563,9 +669,9 @@ export default function Dashboard() {
 
     // Clear inputs and close modal
     setManualSalary("");
-    setManualSavings("");
+    setManualEMI("");
+    setManualOtherExpenses("");
     setManualNetWorth("");
-    setManualHealthScore("");
     setManualSubscriptionName("");
     setManualSubscriptionPrice("");
     setShowManualEntryModal(false);
@@ -1054,11 +1160,39 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   {/* Chart */}
                   <div className="lg:col-span-8 glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 text-left">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div>
                         <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Growth Over Time</span>
                         <span className="text-xs text-slate-500 block">Values in ₹ Lakhs</span>
                       </div>
+
+                      {/* Start Year / End Year Selectors */}
+                      <div className="flex items-center gap-2 bg-slate-900/40 p-1.5 border border-[var(--border-color)] rounded-xl text-xs font-bold text-[var(--text-color)]">
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-500">From:</span>
+                          <input 
+                            type="number"
+                            min="2020"
+                            max="2100"
+                            value={startYear}
+                            onChange={(e) => setStartYear(Math.max(2020, parseInt(e.target.value) || 2026))}
+                            className="w-14 bg-transparent text-center focus:outline-none text-blue-500"
+                          />
+                        </div>
+                        <div className="w-px h-3 bg-slate-800" />
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-500">To:</span>
+                          <input 
+                            type="number"
+                            min="2020"
+                            max="2100"
+                            value={endYear}
+                            onChange={(e) => setEndYear(Math.max(startYear, parseInt(e.target.value) || 2040))}
+                            className="w-14 bg-transparent text-center focus:outline-none text-blue-500"
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex gap-4 text-xs font-semibold">
                         <span className="flex items-center gap-1.5 text-[var(--text-subtitle)]"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> Standard Path</span>
                         <span className="flex items-center gap-1.5 text-blue-500"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Fincody AI Path</span>
@@ -1688,6 +1822,10 @@ export default function Dashboard() {
                     
                     <div className="flex flex-col gap-3 text-xs leading-relaxed font-semibold">
                       <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Calculation Start Date</span>
+                        <span className="text-[var(--text-color)] font-mono font-bold">{calculationStartDate}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
                         <span className="text-slate-500">Storage Used</span>
                         <span className="text-[var(--text-color)] font-mono font-bold">13.1 MB / 5.0 GB</span>
                       </div>
@@ -2012,26 +2150,34 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Savings (₹)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">EMI (₹/month)</label>
                 <input
                   type="number"
-                  value={manualSavings}
-                  onChange={(e) => setManualSavings(e.target.value)}
-                  placeholder="e.g. 72450"
+                  value={manualEMI}
+                  onChange={(e) => setManualEMI(e.target.value)}
+                  placeholder="e.g. 35000"
                   className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Health Score (1-100)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Monthly Expenses (₹)</label>
                 <input
                   type="number"
-                  min="1"
-                  max="100"
-                  value={manualHealthScore}
-                  onChange={(e) => setManualHealthScore(e.target.value)}
-                  placeholder="e.g. 94"
+                  value={manualOtherExpenses}
+                  onChange={(e) => setManualOtherExpenses(e.target.value)}
+                  placeholder="e.g. 45000"
                   className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Calculation Start Date</label>
+                <input
+                  type="date"
+                  value={calculationStartDate}
+                  onChange={(e) => setCalculationStartDate(e.target.value)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] [color-scheme:dark] light:[color-scheme:light]"
                 />
               </div>
 
