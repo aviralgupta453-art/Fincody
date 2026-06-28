@@ -36,6 +36,7 @@ import {
   Sun,
   Moon,
   Loader2,
+  Play,
   Eye,
   EyeOff
 } from "lucide-react";
@@ -260,6 +261,11 @@ export default function Dashboard() {
     { id: "4", name: "PAN_Card_Copy.jpeg", size: "850 KB", uploadedAt: "Jan 15, 2026", type: "Image" }
   ]);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [netWorth, setNetWorth] = useState(3845210);
+  const [monthlySavings, setMonthlySavings] = useState(72450);
+  const [healthScore, setHealthScore] = useState(94);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Future Simulator interactive state
   const [simSalaryRate, setSimSalaryRate] = useState(12);
@@ -376,26 +382,102 @@ export default function Dashboard() {
     }
   };
 
-  // Document Upload Simulator
+  // Document Upload Uploader
   const handleUploadDocument = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setUploadingDoc(true);
     setTimeout(() => {
+      const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
       const newDoc: DocumentFile = {
         id: Date.now().toString(),
-        name: `Uploaded_Policy_${Math.floor(Math.random() * 1000)}.pdf`,
-        size: `${(Math.random() * 4 + 1).toFixed(1)} MB`,
+        name: file.name,
+        size: `${sizeInMB} MB`,
         uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-        type: "PDF"
+        type: file.name.split('.').pop()?.toUpperCase() || "PDF"
       };
-      setDocuments([newDoc, ...documents]);
+      setDocuments(prev => [newDoc, ...prev]);
       setUploadingDoc(false);
-      
-      // Auto notification
-      setNotifications([
-        { id: Date.now(), text: `Vault: New encrypted file ${newDoc.name} processed and stored.`, unread: true },
-        ...notifications
+
+      // Trigger Notification
+      setNotifications(prev => [
+        { id: Date.now(), text: `Vault: New encrypted file "${newDoc.name}" processed and stored.`, unread: true },
+        ...prev
       ]);
-    }, 1500);
+    }, 1200);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this document from your secure vault?")) {
+      setDocuments(documents.filter(d => d.id !== id));
+      setNotifications(prev => [
+        { id: Date.now(), text: "Vault: Document has been permanently deleted from storage.", unread: true },
+        ...prev
+      ]);
+    }
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this goal?")) {
+      setGoals(goals.filter(g => g.id !== id));
+      setNotifications(prev => [
+        { id: Date.now(), text: "Goal Engine: Target goal deleted successfully.", unread: true },
+        ...prev
+      ]);
+    }
+  };
+
+  const handleBeginAnalysis = () => {
+    if (documents.length === 0) return;
+    setIsAnalyzing(true);
+
+    setNotifications(prev => [
+      { id: Date.now() + 1, text: "AI Scanner: Commencing multi-document audit...", unread: true },
+      ...prev
+    ]);
+
+    setTimeout(() => {
+      // 1. Boost Net Worth by ₹2,67,640 (simulate finding unclaimed capital/tax return)
+      setNetWorth(prev => prev + 267640);
+
+      // 2. Boost Monthly Savings by ₹11,650 (consolidated optimizations)
+      setMonthlySavings(prev => prev + 11650);
+
+      // 3. Set health score to 98
+      setHealthScore(98);
+
+      // 4. Auto contribute ₹50,000 to Emergency Fund goal
+      setGoals(prev => prev.map(g => {
+        if (g.name === "Emergency Fund") {
+          const nextVal = g.current + 50000;
+          return { ...g, current: nextVal > g.target ? g.target : nextVal };
+        }
+        return g;
+      }));
+
+      // 5. Canceled redundant subscriptions (auto-cancel Adobe CC if active)
+      setSubscriptions(prev => prev.map(sub => {
+        if (sub.name === "Adobe Creative Cloud") {
+          return { ...sub, status: "canceled" };
+        }
+        return sub;
+      }));
+
+      setIsAnalyzing(false);
+
+      // Add success notifications
+      setNotifications(prev => [
+        { id: Date.now() + 2, text: "AI Scanner: Discovered ₹2,67,640 under-reported equity assets in Tax_Assessment_FY25.pdf. Consolidated successfully.", unread: true },
+        { id: Date.now() + 3, text: "AI Scanner: Auto-canceled Adobe Creative Cloud subscription, saving ₹4,220/month.", unread: true },
+        { id: Date.now() + 4, text: "AI Scanner: Overall Financial Health Score adjusted to 98/100.", unread: true },
+        ...prev
+      ]);
+    }, 2500);
   };
 
   // AI Chat Handlers
@@ -822,7 +904,7 @@ export default function Dashboard() {
             {/* Health Score */}
             <div className="flex items-center gap-2 border border-[var(--border-color)] rounded-xl px-3 py-1.5 bg-slate-900/5">
               <div className="w-7 h-7 rounded-full border-2 border-emerald-500 flex items-center justify-center text-[10px] font-black text-emerald-500">
-                94
+                {healthScore}
               </div>
               <span className="text-xs font-bold text-[var(--text-color)] hidden sm:inline">Score</span>
             </div>
@@ -846,7 +928,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Net Worth</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹38,45,210</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{netWorth.toLocaleString()}</div>
                     <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1 font-bold">
                       +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">this month</span>
                     </div>
@@ -854,7 +936,7 @@ export default function Dashboard() {
                   
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Monthly Savings</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹72,450</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{monthlySavings.toLocaleString()}</div>
                     <div className="text-xs text-[var(--text-subtitle)] mt-2 font-semibold">
                       36.2% <span className="text-slate-500">savings rate</span>
                     </div>
@@ -870,9 +952,9 @@ export default function Dashboard() {
 
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Goal Contributions</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹16,75,000</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{goals.reduce((acc, curr) => acc + curr.current, 0).toLocaleString()}</div>
                     <div className="text-xs text-blue-500 mt-2 font-semibold">
-                      3 goals <span className="text-slate-500 font-semibold">actively tracked</span>
+                      {goals.length} goals <span className="text-slate-500 font-semibold">actively tracked</span>
                     </div>
                   </div>
                 </div>
@@ -1005,7 +1087,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                      {goals.slice(0, 2).map((goal) => {
+                      {goals.map((goal) => {
                         const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
                         return (
                           <div key={goal.id} className="flex flex-col gap-1.5">
@@ -1047,7 +1129,16 @@ export default function Dashboard() {
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-bold text-[var(--text-color)]">{goal.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-bold text-[var(--text-color)]">{goal.name}</h3>
+                              <button
+                                onClick={() => handleDeleteGoal(goal.id)}
+                                className="text-rose-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer"
+                                title="Delete Goal"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                             <p className="text-xs text-[var(--text-subtitle)] mt-0.5">Target deadline: {goal.deadline}</p>
                           </div>
                           <div className="text-right">
@@ -1412,13 +1503,22 @@ export default function Dashboard() {
                       <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Secure Storage</span>
                       <span className="text-xs text-slate-500 mt-0.5 block">256-bit AES end-to-end encrypted files</span>
                     </div>
-                    <button
-                      onClick={handleUploadDocument}
-                      disabled={uploadingDoc}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all flex items-center gap-1.5"
-                    >
-                      {uploadingDoc ? <>Uploading...</> : <><Upload className="w-3.5 h-3.5" /> Upload File</>}
-                    </button>
+                    <div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        className="hidden" 
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" 
+                      />
+                      <button
+                        onClick={handleUploadDocument}
+                        disabled={uploadingDoc}
+                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {uploadingDoc ? <>Uploading...</> : <><Upload className="w-3.5 h-3.5" /> Upload File</>}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-3">
@@ -1439,15 +1539,54 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
-                          <Download className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="p-2 rounded-lg border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer"
+                            title="Delete Document"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="lg:col-span-4 flex flex-col gap-6">
+                  {/* Begin AI Analysis */}
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-blue-600/[0.02] flex flex-col gap-4">
+                    <span className="text-sm font-bold uppercase tracking-wider text-blue-500 border-b border-[var(--border-color)] pb-3 block flex items-center gap-1.5">
+                      <Sparkles className="w-4.5 h-4.5" /> AI Engine Analysis
+                    </span>
+                    <p className="text-xs text-[var(--text-subtitle)] leading-relaxed">
+                      Trigger Fincody's neural scanner to read uploaded tax policies, salary payslips, and investments to automatically sync and update your entire financial profile.
+                    </p>
+                    <button
+                      onClick={handleBeginAnalysis}
+                      disabled={isAnalyzing || documents.length === 0}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-xs font-bold text-white shadow shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin animate-duration-1000" /> Analyzing files...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4" /> Begin AI Analysis
+                        </>
+                      )}
+                    </button>
+                    {documents.length === 0 && (
+                      <span className="text-[10px] text-amber-500 font-bold text-center block">
+                        Upload at least one document to start analysis
+                      </span>
+                    )}
+                  </div>
+
                   <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
                     <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">Vault Integrity</span>
                     
