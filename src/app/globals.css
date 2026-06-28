@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--bg-color);
+  --color-foreground: var(--text-color);
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  
+  --color-electric-blue: var(--accent-color);
+  --color-electric-blue-hover: var(--accent-hover);
+  --color-electric-blue-glow: rgba(59, 130, 246, 0.15);
+  --color-emerald-green: #10b981;
+  --color-emerald-green-glow: rgba(16, 185, 129, 0.15);
+  --color-soft-amber: #f59e0b;
+  --color-deep-navy: #0B1020;
+  --color-deep-navy-light: #151c33;
+  --color-glass-card: var(--card-bg);
+  --color-glass-border: var(--card-border);
+}
+
+:root {
+  --bg-color: #0B1020;
+  --text-color: #ffffff;
+  --card-bg: rgba(21, 28, 51, 0.4);
+  --card-border: rgba(255, 255, 255, 0.04);
+  --nav-bg: rgba(11, 16, 32, 0.5);
+  --text-subtitle: #94a3b8;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --border-color: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glow-opacity: 0.15;
+}
+
+/* Override variables if root element has .light class */
+:root.light {
+  --bg-color: #f8fafc;
+  --text-color: #0b1020;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(11, 16, 32, 0.06);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --text-subtitle: #475569;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --border-color: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05);
+  --glow-opacity: 0.05;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-geist-sans), sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.06);
+}
+
+:root.light .glass-card-hover:hover {
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(37, 99, 235, 0.05);
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 40px 0 rgba(59, 130, 246, var(--glow-opacity));
+}
+
+.glow-emerald {
+  box-shadow: 0 0 40px 0 rgba(16, 185, 129, var(--glow-opacity));
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+/* Custom Cursor Hiding on Desktop */
+@media (pointer: fine) {
+  html.custom-cursor-active,
+  html.custom-cursor-active body,
+  html.custom-cursor-active a,
+  html.custom-cursor-active button,
+  html.custom-cursor-active input,
+  html.custom-cursor-active select,
+  html.custom-cursor-active [role="button"],
+  html.custom-cursor-active .cursor-pointer {
+    cursor: none !important;
+  }
+}
