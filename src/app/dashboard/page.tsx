@@ -101,8 +101,19 @@ export default function Dashboard() {
   const [authPassword, setAuthPassword] = useState("");
   const [authName, setAuthName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem("fincody_remember_email");
+      if (savedEmail) {
+        setAuthEmail(savedEmail);
+        setRememberMe(true);
+      }
+    }
+  }, []);
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<
@@ -154,6 +165,11 @@ export default function Dashboard() {
     if (error) {
       setAuthError(error.message);
     } else {
+      if (rememberMe) {
+        localStorage.setItem("fincody_remember_email", authEmail);
+      } else {
+        localStorage.removeItem("fincody_remember_email");
+      }
       setUser(data.user);
     }
   };
@@ -554,6 +570,20 @@ export default function Dashboard() {
                     </button>
                   </div>
                 </div>
+
+                {authMode === "signin" && (
+                  <div className="flex items-center justify-between mt-2 px-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-500 hover:text-[var(--text-color)] transition-colors select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-[var(--border-color)] bg-[var(--nav-bg)] text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                      />
+                      <span className="text-[11px] font-semibold">Remember email address</span>
+                    </label>
+                  </div>
+                )}
 
                 <button
                   type="submit"

@@ -24,7 +24,8 @@ import {
   Sun,
   Moon,
   Menu,
-  X
+  X,
+  User
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -303,21 +304,27 @@ export default function Home() {
               />
             </Link>
 
-            {/* Circular Profile Avatar (Visible only when logged in) */}
-            {user && (
-              <button
-                onClick={() => {
+            {/* Circular Profile Avatar (Always Visible) */}
+            <button
+              onClick={() => {
+                if (user) {
                   setEditName(user.user_metadata?.full_name ?? "");
                   setShowProfileModal(true);
-                }}
-                className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
-                title="View & Edit Profile"
-              >
-                {user.user_metadata?.full_name 
+                } else {
+                  window.location.href = "/dashboard";
+                }
+              }}
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              title={user ? "View & Edit Profile" : "Sign In"}
+            >
+              {user ? (
+                user.user_metadata?.full_name 
                   ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")}
-              </button>
-            )}
+                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")
+              ) : (
+                <User className="w-4.5 h-4.5 text-white" />
+              )}
+            </button>
           </div>
 
           {/* Desktop Nav */}
@@ -1103,72 +1110,65 @@ export default function Home() {
       </footer>
 
       {/* Profile Details & Edit Modal */}
-      <AnimatePresence>
-        {showProfileModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/90 text-center"
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/95 text-center animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => {
+                setShowProfileModal(false);
+                setProfileError("");
+                setProfileSuccess("");
+              }}
+              className="absolute right-4 top-4 text-[var(--text-subtitle)] hover:text-[var(--text-color)] p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
             >
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  setProfileError("");
-                  setProfileSuccess("");
-                }}
-                className="absolute right-4 top-4 text-[var(--text-subtitle)] hover:text-[var(--text-color)] p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <X className="w-4 h-4" />
+            </button>
 
-              <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
-                {user?.user_metadata?.full_name 
-                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                  : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+            <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+            </div>
+
+            <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">Your Profile</h3>
+            <p className="text-xs text-[var(--text-subtitle)] mb-6">{user?.email}</p>
+
+            {profileError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 text-left">
+                {profileError}
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 text-left">
+                {profileSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-4 text-left">
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                />
               </div>
 
-              <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">Your Profile</h3>
-              <p className="text-xs text-[var(--text-subtitle)] mb-6">{user?.email}</p>
-
-              {profileError && (
-                <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 text-left">
-                  {profileError}
-                </div>
-              )}
-
-              {profileSuccess && (
-                <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 text-left">
-                  {profileSuccess}
-                </div>
-              )}
-
-              <form onSubmit={handleUpdateProfile} className="space-y-4 text-left">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSavingProfile}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
-                >
-                  {isSavingProfile ? "Saving..." : "Save Changes"}
-                </button>
-              </form>
-            </motion.div>
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
+              >
+                {isSavingProfile ? "Saving..." : "Save Changes"}
+              </button>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
