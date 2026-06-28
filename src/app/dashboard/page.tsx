@@ -174,7 +174,10 @@ export default function Dashboard() {
     if (error) {
       setAuthError(error.message);
     } else {
-      setAuthSuccess("Account created successfully! You are registered.");
+      setAuthSuccess("Account created successfully! Redirecting to home page...");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
     }
   };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 import { 
   ArrowRight, 
   Bot, 
@@ -148,6 +149,14 @@ export default function Home() {
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
+  // Supabase Client state
+  const [user, setUser] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
   useEffect(() => {
     // Sync theme with HTML class
     const root = window.document.documentElement;
@@ -157,6 +166,48 @@ export default function Home() {
       root.classList.remove("light");
     }
   }, [theme]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    setProfileError("");
+    setProfileSuccess("");
+    
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: editName }
+    });
+
+    if (error) {
+      setProfileError(error.message);
+    } else {
+      setProfileSuccess("Profile updated successfully!");
+      setUser(data.user);
+      setTimeout(() => {
+        setProfileSuccess("");
+        setShowProfileModal(false);
+      }, 1500);
+    }
+    setIsSavingProfile(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // Future Simulator interactive state
   const [salaryIncrease, setSalaryIncrease] = useState(12); // %
@@ -243,13 +294,31 @@ export default function Home() {
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[var(--border-color)] backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <img 
-              src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-              alt="Fincody Logo" 
-              className="h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-            />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2 group">
+              <img 
+                src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
+                alt="Fincody Logo" 
+                className="h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+            </Link>
+
+            {/* Circular Profile Avatar (Visible only when logged in) */}
+            {user && (
+              <button
+                onClick={() => {
+                  setEditName(user.user_metadata?.full_name ?? "");
+                  setShowProfileModal(true);
+                }}
+                className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+                title="View & Edit Profile"
+              >
+                {user.user_metadata?.full_name 
+                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+              </button>
+            )}
+          </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
@@ -270,18 +339,29 @@ export default function Home() {
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
 
-            <Link 
-              href="/dashboard" 
-              className="text-sm font-medium text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link 
-              href="/dashboard"
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center gap-1.5"
-            >
-              Start Free <ArrowRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className="text-sm font-medium text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={handleSignOut}
+                  className="text-sm font-medium text-[var(--text-subtitle)] hover:text-rose-400 transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link 
+                href="/dashboard" 
+                className="text-sm font-medium text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors border border-[var(--border-color)] px-4 py-2 rounded-xl hover:bg-slate-500/10 transition-all"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Actions */}
@@ -320,20 +400,34 @@ export default function Home() {
             </div>
             <hr className="border-[var(--border-color)]" />
             <div className="flex flex-col gap-3">
-              <Link 
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-3 rounded-xl border border-[var(--border-color)] text-sm font-semibold hover:bg-slate-500/5"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25"
-              >
-                Start Free
-              </Link>
+              {user ? (
+                <>
+                  <Link 
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25"
+                  >
+                    Dashboard
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-center py-3 rounded-xl border border-[var(--border-color)] text-sm font-semibold hover:bg-rose-500/5 hover:text-rose-400 text-rose-500 transition-colors cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link 
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
@@ -364,7 +458,7 @@ export default function Home() {
               href="/dashboard"
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Start Free <ArrowRight className="w-5 h-5" />
+              {user ? "Go to Dashboard" : "Enter Dashboard"} <ArrowRight className="w-5 h-5" />
             </Link>
             <a 
               href="#demo"
@@ -1007,6 +1101,74 @@ export default function Home() {
           <span>&copy; {new Date().getFullYear()} Fincody Inc. All rights reserved.</span>
         </div>
       </footer>
+
+      {/* Profile Details & Edit Modal */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/90 text-center"
+            >
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  setProfileError("");
+                  setProfileSuccess("");
+                }}
+                className="absolute right-4 top-4 text-[var(--text-subtitle)] hover:text-[var(--text-color)] p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
+                {user?.user_metadata?.full_name 
+                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                  : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+              </div>
+
+              <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">Your Profile</h3>
+              <p className="text-xs text-[var(--text-subtitle)] mb-6">{user?.email}</p>
+
+              {profileError && (
+                <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 text-left">
+                  {profileError}
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 text-left">
+                  {profileSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4 text-left">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 block mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
