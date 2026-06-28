@@ -47,12 +47,29 @@
   --glow-opacity: 0.05;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-geist-sans), sans-serif;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hardware accelerated elements to ensure 60fps scrolling */
+.glass-panel,
+.glass-card,
+[class*="bg-blue-500/"],
+[class*="bg-indigo-500/"],
+[class*="bg-emerald-500/"] {
+  will-change: transform, backdrop-filter;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* Glassmorphism custom classes */
