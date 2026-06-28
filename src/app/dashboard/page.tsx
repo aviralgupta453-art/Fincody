@@ -35,7 +35,9 @@ import {
   Send,
   Sun,
   Moon,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -97,6 +99,8 @@ export default function Dashboard() {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
 
@@ -161,11 +165,16 @@ export default function Dashboard() {
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
       password: authPassword,
+      options: {
+        data: {
+          full_name: authName,
+        }
+      }
     });
     if (error) {
       setAuthError(error.message);
     } else {
-      setAuthSuccess("Registration successful! Check your email inbox for the verification link.");
+      setAuthSuccess("Account created successfully! You are registered.");
     }
   };
 
@@ -436,107 +445,155 @@ export default function Dashboard() {
             />
           </div>
 
-          <h2 className="text-2xl font-extrabold text-[var(--text-color)] tracking-tight mb-2">
-            {authMode === "signin" ? "Welcome back" : "Create your account"}
-          </h2>
-          <p className="text-xs text-[var(--text-subtitle)] mb-6">
-            {authMode === "signin" 
-              ? "Sign in to access your AI-powered life dashboard" 
-              : "Consolidate your life admin and start simulating your future"}
-          </p>
-
-          {authError && (
-            <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 flex items-start gap-2.5 text-left">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{authError}</span>
+          {authSuccess ? (
+            <div className="py-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 mx-auto mb-5 shadow-lg shadow-emerald-500/10 animate-bounce">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-extrabold text-[var(--text-color)] tracking-tight mb-2 animate-pulse">
+                Account Created!
+              </h2>
+              <p className="text-sm text-[var(--text-subtitle)] leading-relaxed mb-6">
+                Your Fincody profile has been successfully registered. 
+                <span className="block mt-2 font-semibold text-emerald-400">Please verify your email via the confirmation link sent to your inbox to log in.</span>
+              </p>
+              <button
+                onClick={() => {
+                  setAuthSuccess("");
+                  setAuthMode("signin");
+                }}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                Go to Sign In
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-          )}
+          ) : (
+            <>
+              <h2 className="text-2xl font-extrabold text-[var(--text-color)] tracking-tight mb-2">
+                {authMode === "signin" ? "Welcome back" : "Create your account"}
+              </h2>
+              <p className="text-xs text-[var(--text-subtitle)] mb-6">
+                {authMode === "signin" 
+                  ? "Sign in to access your AI-powered life dashboard" 
+                  : "Consolidate your life admin and start simulating your future"}
+              </p>
 
-          {authSuccess && (
-            <div className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 flex items-start gap-2.5 text-left">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{authSuccess}</span>
-            </div>
-          )}
+              {authError && (
+                <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 flex items-start gap-2.5 text-left">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
 
-          <form onSubmit={authMode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
-            <div className="text-left">
-              <label className="text-xs font-bold text-slate-500 block mb-1.5">Email Address</label>
-              <input
-                type="email"
-                required
-                value={authEmail}
-                onChange={(e) => setAuthEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
-              />
-            </div>
+              <form onSubmit={authMode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
+                {authMode === "signup" && (
+                  <div className="text-left">
+                    <label className="text-xs font-bold text-slate-500 block mb-1.5">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                    />
+                  </div>
+                )}
 
-            <div className="text-left">
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-bold text-slate-500 block">Password</label>
-                {authMode === "signin" && (
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setAuthError("Password reset is currently disabled. Please contact support.");
-                    }}
-                    className="text-[10px] font-bold text-blue-500 hover:text-blue-400"
-                  >
-                    Forgot?
-                  </button>
+                <div className="text-left">
+                  <label className="text-xs font-bold text-slate-500 block mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                  />
+                </div>
+
+                <div className="text-left">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-bold text-slate-500 block">Password</label>
+                    {authMode === "signin" && (
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setAuthError("Password reset is currently disabled. Please contact support.");
+                        }}
+                        className="text-[10px] font-bold text-blue-500 hover:text-blue-400"
+                      >
+                        Forgot?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl pl-4 pr-11 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-500 transition-colors p-1"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer mt-6"
+                >
+                  {authMode === "signin" ? "Sign In" : "Sign Up"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+
+              <div className="mt-6 border-t border-[var(--border-color)] pt-6 text-xs text-[var(--text-subtitle)]">
+                {authMode === "signin" ? (
+                  <>
+                    Don't have an account?{" "}
+                    <button
+                      onClick={() => {
+                        setAuthMode("signup");
+                        setAuthError("");
+                        setAuthSuccess("");
+                      }}
+                      className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
+                    >
+                      Create one
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => {
+                        setAuthMode("signin");
+                        setAuthError("");
+                        setAuthSuccess("");
+                      }}
+                      className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </>
                 )}
               </div>
-              <input
-                type="password"
-                required
-                value={authPassword}
-                onChange={(e) => setAuthPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
-            >
-              {authMode === "signin" ? "Sign In" : "Sign Up"}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-
-          <div className="mt-6 border-t border-[var(--border-color)] pt-6 text-xs text-[var(--text-subtitle)]">
-            {authMode === "signin" ? (
-              <>
-                Don't have an account?{" "}
-                <button
-                  onClick={() => {
-                    setAuthMode("signup");
-                    setAuthError("");
-                    setAuthSuccess("");
-                  }}
-                  className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
-                >
-                  Create one
-                </button>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <button
-                  onClick={() => {
-                    setAuthMode("signin");
-                    setAuthError("");
-                    setAuthSuccess("");
-                  }}
-                  className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
-                >
-                  Sign In
-                </button>
-              </>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -633,11 +690,13 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4 border-t border-[var(--border-color)] pt-6 px-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold text-sm text-blue-400">
-              {user?.email ? user.email.slice(0, 2).toUpperCase() : "AV"}
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 2).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 2).toUpperCase() : "AV")}
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-bold text-[var(--text-color)] truncate">
-                {user?.email ? user.email.split("@")[0] : "User"}
+                {user?.user_metadata?.full_name ?? (user?.email ? user.email.split("@")[0] : "User")}
               </p>
               <p className="text-xs text-[var(--text-subtitle)] truncate">
                 {user?.email ?? "no-email@fincody.com"}
