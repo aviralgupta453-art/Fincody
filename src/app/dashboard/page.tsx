@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 import { 
   Bot, 
   Sparkles, 
@@ -33,7 +34,8 @@ import {
   LogOut,
   Send,
   Sun,
-  Moon
+  Moon,
+  Loader2
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -89,6 +91,15 @@ interface DocumentFile {
 }
 
 export default function Dashboard() {
+  // Supabase Auth State
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
+
   // Navigation State
   const [activeTab, setActiveTab] = useState<
     "command" | "goals" | "investments" | "subscriptions" | "insurance" | "vault" | "decisions"
@@ -99,6 +110,26 @@ export default function Dashboard() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
+    // Check active session on mount
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    };
+    checkSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     const root = window.document.documentElement;
     if (theme === "light") {
       root.classList.add("light");
@@ -106,6 +137,42 @@ export default function Dashboard() {
       root.classList.remove("light");
     }
   }, [theme]);
+
+  // Auth Handlers
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthSuccess("");
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: authEmail,
+      password: authPassword,
+    });
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setUser(data.user);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthSuccess("");
+    const { data, error } = await supabase.auth.signUp({
+      email: authEmail,
+      password: authPassword,
+    });
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setAuthSuccess("Registration successful! Check your email inbox for the verification link.");
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // Notifications State
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -345,6 +412,136 @@ export default function Dashboard() {
     handleSendChat(q);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0B1020] flex flex-col items-center justify-center gap-4 text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <p className="text-sm font-semibold tracking-wide text-slate-400">Verifying session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden flex items-center justify-center p-6 transition-colors duration-300 relative">
+        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-blue-500/10 blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none" />
+
+        <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] overflow-hidden shadow-2xl p-8 relative z-10 bg-slate-950/20 text-center">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
+              alt="Fincody Logo" 
+              className="h-10 w-auto object-contain"
+            />
+          </div>
+
+          <h2 className="text-2xl font-extrabold text-[var(--text-color)] tracking-tight mb-2">
+            {authMode === "signin" ? "Welcome back" : "Create your account"}
+          </h2>
+          <p className="text-xs text-[var(--text-subtitle)] mb-6">
+            {authMode === "signin" 
+              ? "Sign in to access your AI-powered life dashboard" 
+              : "Consolidate your life admin and start simulating your future"}
+          </p>
+
+          {authError && (
+            <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 flex items-start gap-2.5 text-left">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {authSuccess && (
+            <div className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 flex items-start gap-2.5 text-left">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{authSuccess}</span>
+            </div>
+          )}
+
+          <form onSubmit={authMode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
+            <div className="text-left">
+              <label className="text-xs font-bold text-slate-500 block mb-1.5">Email Address</label>
+              <input
+                type="email"
+                required
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+              />
+            </div>
+
+            <div className="text-left">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-bold text-slate-500 block">Password</label>
+                {authMode === "signin" && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setAuthError("Password reset is currently disabled. Please contact support.");
+                    }}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-400"
+                  >
+                    Forgot?
+                  </button>
+                )}
+              </div>
+              <input
+                type="password"
+                required
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+            >
+              {authMode === "signin" ? "Sign In" : "Sign Up"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+
+          <div className="mt-6 border-t border-[var(--border-color)] pt-6 text-xs text-[var(--text-subtitle)]">
+            {authMode === "signin" ? (
+              <>
+                Don't have an account?{" "}
+                <button
+                  onClick={() => {
+                    setAuthMode("signup");
+                    setAuthError("");
+                    setAuthSuccess("");
+                  }}
+                  className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
+                >
+                  Create one
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => {
+                    setAuthMode("signin");
+                    setAuthError("");
+                    setAuthSuccess("");
+                  }}
+                  className="font-bold text-blue-500 hover:text-blue-400 cursor-pointer"
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] flex flex-col md:flex-row relative overflow-hidden transition-colors duration-300">
       
@@ -436,19 +633,23 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4 border-t border-[var(--border-color)] pt-6 px-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold text-sm text-blue-400">
-              AV
+              {user?.email ? user.email.slice(0, 2).toUpperCase() : "AV"}
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-bold text-[var(--text-color)] truncate">Aviraj Verma</p>
-              <p className="text-xs text-[var(--text-subtitle)] truncate">aviraj@fincody.com</p>
+              <p className="text-sm font-bold text-[var(--text-color)] truncate">
+                {user?.email ? user.email.split("@")[0] : "User"}
+              </p>
+              <p className="text-xs text-[var(--text-subtitle)] truncate">
+                {user?.email ?? "no-email@fincody.com"}
+              </p>
             </div>
           </div>
-          <Link 
-            href="/"
-            className="flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-subtitle)] hover:text-rose-400 py-2 border border-[var(--border-color)] rounded-xl hover:bg-rose-500/5 transition-all"
+          <button 
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-subtitle)] hover:text-rose-400 py-2 border border-[var(--border-color)] rounded-xl hover:bg-rose-500/5 transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" /> Log Out
-          </Link>
+          </button>
         </div>
       </aside>
 
