@@ -190,6 +190,9 @@ export default function Dashboard() {
     if (error) {
       setAuthError(error.message);
     } else {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fincody_user_name", authName);
+      }
       setAuthSuccess("Account created successfully! Redirecting to home page...");
       setTimeout(() => {
         window.location.href = "/";

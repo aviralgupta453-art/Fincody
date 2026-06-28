@@ -152,6 +152,7 @@ export default function Home() {
 
   // Supabase Client state
   const [user, setUser] = useState<any>(null);
+  const [tempName, setTempName] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [editName, setEditName] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -175,8 +176,20 @@ export default function Home() {
     };
     fetchUser();
 
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("fincody_user_name");
+      setTempName(saved);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const name = session.user.user_metadata?.full_name;
+        if (name) {
+          localStorage.setItem("fincody_user_name", name);
+          setTempName(name);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -188,6 +201,20 @@ export default function Home() {
     setProfileError("");
     setProfileSuccess("");
     
+    if (!user) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fincody_user_name", editName);
+        setTempName(editName);
+      }
+      setProfileSuccess("Name updated locally! Please verify your email to sync.");
+      setTimeout(() => {
+        setProfileSuccess("");
+        setShowProfileModal(false);
+      }, 2000);
+      setIsSavingProfile(false);
+      return;
+    }
+
     const { data, error } = await supabase.auth.updateUser({
       data: { full_name: editName }
     });
@@ -196,6 +223,10 @@ export default function Home() {
       setProfileError(error.message);
     } else {
       setProfileSuccess("Profile updated successfully!");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fincody_user_name", editName);
+        setTempName(editName);
+      }
       setUser(data.user);
       setTimeout(() => {
         setProfileSuccess("");
@@ -207,6 +238,10 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fincody_user_name");
+      setTempName(null);
+    }
     setUser(null);
   };
 
@@ -1111,7 +1146,7 @@ export default function Home() {
 
       {/* Profile Details & Edit Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/95 text-center animate-in zoom-in-95 duration-200">
             <button
               onClick={() => {
@@ -1127,11 +1162,15 @@ export default function Home() {
             <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
               {user?.user_metadata?.full_name 
                 ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+                : (tempName ? tempName.slice(0, 1).toUpperCase() : "U")}
             </div>
 
-            <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">Your Profile</h3>
-            <p className="text-xs text-[var(--text-subtitle)] mb-6">{user?.email}</p>
+            <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">
+              {user ? "Your Profile" : "Profile Settings"}
+            </h3>
+            <p className="text-xs text-[var(--text-subtitle)] mb-6">
+              {user ? user.email : "Pending email confirmation. Please check your inbox."}
+            </p>
 
             {profileError && (
               <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 text-left">
