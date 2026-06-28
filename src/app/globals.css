@@ -141,3 +141,38 @@ body {
     cursor: none !important;
   }
 }
+
+/* Accessibility contrast overrides for Light Mode */
+html.light .text-slate-500 {
+  color: #334155 !important; /* slate-700 */
+}
+html.light .text-slate-400 {
+  color: #475569 !important; /* slate-600 */
+}
+html.light .text-slate-300 {
+  color: #1e293b !important; /* slate-800 */
+}
+html.light .text-slate-600 {
+  color: #1e293b !important; /* slate-800 */
+}
+html.light .text-gray-400 {
+  color: #475569 !important; /* gray-600 */
+}
+html.light .text-gray-500 {
+  color: #334155 !important; /* gray-700 */
+}
+html.light .text-slate-500\/80 {
+  color: #334155 !important;
+}
+html.light .text-slate-400\/80 {
+  color: #475569 !important;
+}
+html.light .text-slate-500\/60 {
+  color: #475569 !important;
+}
+html.light .text-slate-400\/60 {
+  color: #64748b !important;
+}
+html.light .text-slate-300\/60 {
+  color: #475569 !important;
+}
