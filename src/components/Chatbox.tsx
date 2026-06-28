@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, X, Send, Sparkles, User, HelpCircle, Loader2 } from "lucide-react";
+import { Bot, X, Send, Sparkles, User, HelpCircle, Loader2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -116,11 +116,11 @@ export default function Chatbox() {
         {isOpen ? (
           <X className="w-6 h-6 transition-transform duration-300 rotate-90" />
         ) : (
-          <div className="relative">
-            <MessageSquare className="w-6 h-6 transition-transform duration-300 group-hover:rotate-6" />
-            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+          <div className="relative flex items-center justify-center">
+            <Bot className="w-7 h-7 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" />
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
           </div>
         )}
@@ -172,7 +172,7 @@ export default function Chatbox() {
                   {msg.sender === "user" ? (
                     <User className="w-3.5 h-3.5" />
                   ) : (
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Bot className="w-3.5 h-3.5" />
                   )}
                 </div>
 
