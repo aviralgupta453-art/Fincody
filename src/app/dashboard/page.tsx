@@ -267,6 +267,15 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Manual Entry States
+  const [showManualEntryModal, setShowManualEntryModal] = useState(false);
+  const [manualSalary, setManualSalary] = useState("");
+  const [manualSavings, setManualSavings] = useState("");
+  const [manualNetWorth, setManualNetWorth] = useState("");
+  const [manualHealthScore, setManualHealthScore] = useState("");
+  const [manualSubscriptionName, setManualSubscriptionName] = useState("");
+  const [manualSubscriptionPrice, setManualSubscriptionPrice] = useState("");
+
   // Future Simulator interactive state
   const [simSalaryRate, setSimSalaryRate] = useState(12);
   const [simSavingsRate, setSimSavingsRate] = useState(35);
@@ -335,12 +344,17 @@ export default function Dashboard() {
     e.preventDefault();
     if (!newGoalName || !newGoalTarget) return;
 
+    const dateObj = new Date(newGoalDeadline);
+    const formattedDeadline = isNaN(dateObj.getTime()) 
+      ? (newGoalDeadline || "No Date") 
+      : dateObj.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
     const newGoal: Goal = {
       id: Date.now().toString(),
       name: newGoalName,
       target: parseFloat(newGoalTarget),
       current: 0,
-      deadline: newGoalDeadline || "No Date"
+      deadline: formattedDeadline
     };
 
     setGoals([...goals, newGoal]);
@@ -478,6 +492,83 @@ export default function Dashboard() {
         ...prev
       ]);
     }, 2500);
+  };
+
+  const handleManualEntrySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    let updatedLog: string[] = [];
+
+    // 1. Update Net Worth
+    if (manualNetWorth) {
+      const val = parseFloat(manualNetWorth);
+      if (!isNaN(val)) {
+        setNetWorth(val);
+        updatedLog.push(`Net Worth set to ₹${val.toLocaleString()}`);
+      }
+    }
+
+    // 2. Update Savings
+    if (manualSavings) {
+      const val = parseFloat(manualSavings);
+      if (!isNaN(val)) {
+        setMonthlySavings(val);
+        updatedLog.push(`Savings set to ₹${val.toLocaleString()}`);
+      }
+    }
+
+    // 3. Update Health Score
+    if (manualHealthScore) {
+      const val = parseInt(manualHealthScore);
+      if (!isNaN(val)) {
+        setHealthScore(val);
+        updatedLog.push(`Health Score set to ${val}`);
+      }
+    }
+
+    // 4. Add new subscription if filled
+    if (manualSubscriptionName && manualSubscriptionPrice) {
+      const priceVal = parseFloat(manualSubscriptionPrice);
+      if (!isNaN(priceVal)) {
+        const newSub: Subscription = {
+          id: Date.now().toString(),
+          name: manualSubscriptionName,
+          price: priceVal,
+          interval: "monthly",
+          status: "active",
+          category: "Manual Entry"
+        };
+        setSubscriptions(prev => [...prev, newSub]);
+        updatedLog.push(`Added subscription ${manualSubscriptionName} (₹${priceVal})`);
+      }
+    }
+
+    // 5. Append document record to file list
+    const newDoc: DocumentFile = {
+      id: Date.now().toString(),
+      name: `Manual_Entry_Sheet_${new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "_")}.pdf`,
+      size: "15 KB",
+      uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+      type: "MANUAL"
+    };
+    setDocuments(prev => [newDoc, ...prev]);
+
+    // 6. Notify
+    if (updatedLog.length > 0) {
+      setNotifications(prev => [
+        { id: Date.now(), text: `Manual Entry: ${updatedLog.join(", ")}.`, unread: true },
+        ...prev
+      ]);
+    }
+
+    // Clear inputs and close modal
+    setManualSalary("");
+    setManualSavings("");
+    setManualNetWorth("");
+    setManualHealthScore("");
+    setManualSubscriptionName("");
+    setManualSubscriptionPrice("");
+    setShowManualEntryModal(false);
   };
 
   // AI Chat Handlers
@@ -1225,12 +1316,11 @@ export default function Dashboard() {
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Deadline Date</label>
                         <input
-                          type="text"
+                          type="date"
                           required
                           value={newGoalDeadline}
                           onChange={(e) => setNewGoalDeadline(e.target.value)}
-                          placeholder="e.g. Jun 2028"
-                          className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                          className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] [color-scheme:dark] light:[color-scheme:light]"
                         />
                       </div>
 
@@ -1503,7 +1593,7 @@ export default function Dashboard() {
                       <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Secure Storage</span>
                       <span className="text-xs text-slate-500 mt-0.5 block">256-bit AES end-to-end encrypted files</span>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <input 
                         type="file" 
                         ref={fileInputRef} 
@@ -1514,9 +1604,15 @@ export default function Dashboard() {
                       <button
                         onClick={handleUploadDocument}
                         disabled={uploadingDoc}
-                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-[var(--text-color)] transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         {uploadingDoc ? <>Uploading...</> : <><Upload className="w-3.5 h-3.5" /> Upload File</>}
+                      </button>
+                      <button
+                        onClick={() => setShowManualEntryModal(true)}
+                        className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Manual Entry
                       </button>
                     </div>
                   </div>
@@ -1874,6 +1970,101 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Manual Entry Modal */}
+      {showManualEntryModal && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/95 text-left animate-in zoom-in-95 duration-200 flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--text-color)]">Manual Financial Entry</h3>
+                <p className="text-xs text-[var(--text-subtitle)] mt-0.5">Override or link values manually</p>
+              </div>
+              <button
+                onClick={() => setShowManualEntryModal(false)}
+                className="text-[var(--text-subtitle)] hover:text-[var(--text-color)] p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualEntrySubmit} className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary (₹/month)</label>
+                <input
+                  type="number"
+                  value={manualSalary}
+                  onChange={(e) => setManualSalary(e.target.value)}
+                  placeholder="e.g. 200000"
+                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Worth (₹)</label>
+                <input
+                  type="number"
+                  value={manualNetWorth}
+                  onChange={(e) => setManualNetWorth(e.target.value)}
+                  placeholder="e.g. 3845210"
+                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Savings (₹)</label>
+                <input
+                  type="number"
+                  value={manualSavings}
+                  onChange={(e) => setManualSavings(e.target.value)}
+                  placeholder="e.g. 72450"
+                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Health Score (1-100)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={manualHealthScore}
+                  onChange={(e) => setManualHealthScore(e.target.value)}
+                  placeholder="e.g. 94"
+                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                />
+              </div>
+
+              <div className="border-t border-[var(--border-color)] pt-3 flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Add Linkable Subscription</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={manualSubscriptionName}
+                    onChange={(e) => setManualSubscriptionName(e.target.value)}
+                    placeholder="Subscription Name"
+                    className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                  />
+                  <input
+                    type="number"
+                    value={manualSubscriptionPrice}
+                    onChange={(e) => setManualSubscriptionPrice(e.target.value)}
+                    placeholder="Price (₹)"
+                    className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 mt-4 cursor-pointer"
+              >
+                Apply Updates
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
