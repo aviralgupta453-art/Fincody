@@ -1124,6 +1124,7 @@ export default function Home() {
             <h4 className="font-bold text-[var(--text-color)] text-xs uppercase tracking-wider">Resources</h4>
             <a href="#" className="hover:text-[var(--text-color)] transition-colors">Documentation</a>
             <a href="#" className="hover:text-[var(--text-color)] transition-colors">API Reference</a>
+            <Link href="/admin" className="hover:text-[var(--text-color)] transition-colors font-semibold text-blue-400">Admin Sign Up</Link>
             <a href="#" className="hover:text-[var(--text-color)] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[var(--text-color)] transition-colors">Terms of Service</a>
           </div>
