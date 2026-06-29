@@ -36,7 +36,6 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import FincodyLogo from "@/components/FincodyLogo";
-import BootSequence from "@/components/BootSequence";
 
 // Features data
 const FEATURES = [
@@ -152,17 +151,6 @@ export default function Home() {
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Boot Sequence State
-  const [showBoot, setShowBoot] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const hasBooted = localStorage.getItem("fincody_boot_completed");
-      if (!hasBooted) {
-        setShowBoot(true);
-      }
-    }
-  }, []);
 
   // Supabase Client state
   const [user, setUser] = useState<any>(null);
@@ -336,17 +324,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
       
-      {/* Cinematic Boot Sequence Overlay */}
-      <AnimatePresence>
-        {showBoot && (
-          <BootSequence
-            onComplete={() => {
-              localStorage.setItem("fincody_boot_completed", "true");
-              setShowBoot(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
+
       
       {/* Background Ambient Orbs (respecting light/dark opacity) */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 dark:bg-blue-500/10 light:bg-blue-500/5 blur-[120px] pointer-events-none transition-all duration-300" />
