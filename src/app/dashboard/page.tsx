@@ -1559,8 +1559,8 @@ export default function Dashboard() {
                         <span className="flex items-center gap-1.5 text-blue-500"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Fincody AI Path</span>
                       </div>
                     </div>
-                    <div className="w-full h-72">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="w-full min-w-0 h-72">
+                      <ResponsiveContainer width="99%" height="100%">
                         <AreaChart data={chartData}>
                           <defs>
                             <linearGradient id="chartGrad2" x1="0" y1="0" x2="0" y2="1">
@@ -1592,8 +1592,8 @@ export default function Dashboard() {
                       <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
                     </div>
 
-                    <div className="h-44 flex items-center justify-center relative">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-44 w-full min-w-0 flex items-center justify-center relative">
+                      <ResponsiveContainer width="99%" height="100%">
                         <PieChart>
                           <Pie
                             data={assetAllocationData}
@@ -2354,8 +2354,8 @@ export default function Dashboard() {
                                 <div className="flex items-center gap-4 shrink-0">
                                   {/* Sparkline chart */}
                                   {quote && quote.sparkline && (
-                                    <div className="w-20 h-8 shrink-0">
-                                      <ResponsiveContainer width="100%" height="100%">
+                                    <div className="w-20 h-8 shrink-0 min-w-0">
+                                      <ResponsiveContainer width="99%" height="100%">
                                         <AreaChart data={quote.sparkline.map((price: number, i: number) => ({ idx: i, price }))}>
                                           <defs>
                                             <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
@@ -2842,8 +2842,8 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="w-full h-80">
-                    <ResponsiveContainer width="100%" height="100%">
+                  <div className="w-full min-w-0 h-80">
+                    <ResponsiveContainer width="99%" height="100%">
                       <AreaChart data={chartData}>
                         <defs>
                           <linearGradient id="simGradDashboard" x1="0" y1="0" x2="0" y2="1">
@@ -3168,7 +3168,7 @@ export default function Dashboard() {
             </div>
 
             {/* Chart Area */}
-            <div className="w-full h-80 relative flex items-center justify-center bg-slate-950/15 rounded-xl border border-[var(--border-color)] p-4">
+            <div className="w-full min-w-0 h-80 relative flex items-center justify-center bg-slate-950/15 rounded-xl border border-[var(--border-color)] p-4">
               {historyLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -3180,7 +3180,7 @@ export default function Dashboard() {
                 const isOverallPositive = lastPrice >= firstPrice;
 
                 return (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="99%" height="100%">
                     <AreaChart data={selectedStockHistory}>
                       <defs>
                         <linearGradient id="chartOverlayGrad" x1="0" y1="0" x2="0" y2="1">
