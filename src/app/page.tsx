@@ -334,20 +334,19 @@ export default function Home() {
   const chartData = generateChartData();
 
   return (
-    <AnimatePresence mode="wait">
-      {showBoot ? (
-        <BootSequence key="boot" onComplete={() => {
-          localStorage.setItem("fincody_boot_completed", "true");
-          setShowBoot(false);
-        }} />
-      ) : (
-        <motion.div
-          key="content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.0, ease: "easeOut" }}
-          className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300"
-        >
+    <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
+      
+      {/* Cinematic Boot Sequence Overlay */}
+      <AnimatePresence>
+        {showBoot && (
+          <BootSequence
+            onComplete={() => {
+              localStorage.setItem("fincody_boot_completed", "true");
+              setShowBoot(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
       
       {/* Background Ambient Orbs (respecting light/dark opacity) */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 dark:bg-blue-500/10 light:bg-blue-500/5 blur-[120px] pointer-events-none transition-all duration-300" />
@@ -1228,8 +1227,6 @@ export default function Home() {
           </div>
         </div>
       )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </div>
   );
 }
