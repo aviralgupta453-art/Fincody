@@ -292,6 +292,15 @@ export default function Dashboard() {
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const [priceUpdateStatus, setPriceUpdateStatus] = useState<Record<string, "up" | "down" | null>>({});
 
+  // AI Portfolio Builder States
+  const [aiGoalPrompt, setAiGoalPrompt] = useState("");
+  const [isGeneratingPortfolio, setIsGeneratingPortfolio] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<any | null>(null);
+  const [savedPortfolios, setSavedPortfolios] = useState<any[]>([]);
+  const [activePortfolioName, setActivePortfolioName] = useState("Custom Portfolio");
+  const [showSavePortfolioModal, setShowSavePortfolioModal] = useState(false);
+  const [newPortfolioName, setNewPortfolioName] = useState("");
+
   // Persistence States & Helper
   const persistData = (key: string, data: any) => {
     const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
@@ -347,6 +356,15 @@ export default function Dashboard() {
 
       const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
       if (savedPortfolio) setPortfolio(JSON.parse(savedPortfolio));
+
+      const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
+      if (savedSavedPortfolios) setSavedPortfolios(JSON.parse(savedSavedPortfolios));
+
+      const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
+      if (savedActivePortName) setActivePortfolioName(savedActivePortName);
+
+      const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
+      if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
     } catch (e) {
       console.error("Error loading persisted state:", e);
     }
@@ -708,6 +726,182 @@ export default function Dashboard() {
     setManualSubscriptionName("");
     setManualSubscriptionPrice("");
     setShowManualEntryModal(false);
+  };
+
+  // ==================== AI PORTFOLIO BUILDER HANDLERS ====================
+  const handleGeneratePortfolio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiGoalPrompt.trim()) return;
+
+    setIsGeneratingPortfolio(true);
+    setAiRecommendation(null);
+
+    // Extract capital
+    let totalCapital = 100000;
+    const numberMatches = aiGoalPrompt.replace(/[,]/g, "").match(/\d+/g);
+    if (numberMatches && numberMatches.length > 0) {
+      const val = parseInt(numberMatches[0]);
+      if (val > 1000) totalCapital = val;
+    }
+
+    // Default portfolio setup
+    let rec: any = {
+      totalCapital,
+      risk: "Medium",
+      diversification: 85,
+      rationale: "Standard balanced allocation focusing on global and domestic market leaders.",
+      stocks: [
+        { symbol: "AAPL", name: "Apple Inc.", allocation: 25, sector: "Technology", rationale: "Stable consumer moat and hardware product cycles." },
+        { symbol: "MSFT", name: "Microsoft Corporation", allocation: 25, sector: "Technology", rationale: "Enterprise subscription models and Azure cloud growth." },
+        { symbol: "RELIANCE.NS", name: "Reliance Industries Ltd", allocation: 25, sector: "Energy", rationale: "Bedrock private conglomerate in Indian oil and telecom." },
+        { symbol: "HDFCBANK.NS", name: "HDFC Bank Ltd", allocation: 25, sector: "Finance", rationale: "Dominant lender capturing retail consumer expansion." }
+      ]
+    };
+
+    const promptLower = aiGoalPrompt.toLowerCase();
+    if (promptLower.includes("growth") || promptLower.includes("aggressive") || promptLower.includes("high-growth") || promptLower.includes("equity")) {
+      rec = {
+        totalCapital,
+        risk: "High",
+        diversification: 75,
+        rationale: "Aggressive beta configuration focused on GPU hardware acceleration, EV networks, and digital infrastructure.",
+        stocks: [
+          { symbol: "NVDA", name: "NVIDIA Corporation", allocation: 35, sector: "Technology", rationale: "Standard GPU provider for global machine learning networks." },
+          { symbol: "TSLA", name: "Tesla Inc", allocation: 25, sector: "Automotive", rationale: "Pioneer in electric transport, gigafactories, and robotic batteries." },
+          { symbol: "AAPL", name: "Apple Inc.", allocation: 20, sector: "Technology", rationale: "Massive consumer ecosystems with premium premium pricing power." },
+          { symbol: "RELIANCE.NS", name: "Reliance Industries Ltd", allocation: 20, sector: "Energy", rationale: "Leading digital networks (Jio) and emerging solar projects." }
+        ]
+      };
+    } else if (promptLower.includes("low") || promptLower.includes("safe") || promptLower.includes("conservative") || promptLower.includes("retirement")) {
+      rec = {
+        totalCapital,
+        risk: "Low",
+        diversification: 92,
+        rationale: "Defensive configuration with solid balance sheets and high cash resilience for downside shielding.",
+        stocks: [
+          { symbol: "MSFT", name: "Microsoft Corporation", allocation: 30, sector: "Technology", rationale: "Pristine balance sheet and low enterprise churn rates." },
+          { symbol: "TCS.NS", name: "Tata Consultancy Services Ltd", allocation: 25, sector: "Technology Services", rationale: "Indian service giant with high return on capital and steady dividend yields." },
+          { symbol: "HDFCBANK.NS", name: "HDFC Bank Ltd", allocation: 25, sector: "Finance", rationale: "Low cost of funds and strong asset quality ratios." },
+          { symbol: "JNJ", name: "Johnson & Johnson", allocation: 20, sector: "Healthcare", rationale: "Consistent healthcare provider with multi-decade dividend increases." }
+        ]
+      };
+    } else if (promptLower.includes("dividend") || promptLower.includes("income") || promptLower.includes("yield")) {
+      rec = {
+        totalCapital,
+        risk: "Low-Medium",
+        diversification: 88,
+        rationale: "Optimized yield distribution focusing on consumer staples and premier financial compounders.",
+        stocks: [
+          { symbol: "RELIANCE.NS", name: "Reliance Industries Ltd", allocation: 30, sector: "Energy", rationale: "High refinery margins powering retail growth payouts." },
+          { symbol: "HDFCBANK.NS", name: "HDFC Bank Ltd", allocation: 30, sector: "Finance", rationale: "Compounding financial asset with steady capital return history." },
+          { symbol: "KO", name: "The Coca-Cola Company", allocation: 20, sector: "Consumer Staples", rationale: "Unmatched worldwide distribution network and beverage pricing control." },
+          { symbol: "JNJ", name: "Johnson & Johnson", allocation: 20, sector: "Healthcare", rationale: "Pristine capital buffer shielding shareholders during downturns." }
+        ]
+      };
+    }
+
+    // Wait to simulate AI analysis
+    await new Promise(resolve => setTimeout(resolve, 2200));
+
+    // Fetch quote prices for all selected stocks
+    const tempQuotes: Record<string, any> = {};
+    await Promise.all(rec.stocks.map(async (st: any) => {
+      try {
+        const res = await fetch(`/api/stock?action=quote&symbol=${encodeURIComponent(st.symbol)}`);
+        if (res.ok) {
+          const data = await res.json();
+          tempQuotes[st.symbol] = data;
+        }
+      } catch (e) {
+        console.error("Quote fetch error in AI generator:", e);
+      }
+    }));
+
+    setQuotes(prev => ({ ...prev, ...tempQuotes }));
+
+    // Create new portfolio holdings based on totalCapital allocations
+    const newPortfolio = rec.stocks.map((st: any) => {
+      const livePrice = tempQuotes[st.symbol]?.price || 100;
+      const allocatedCap = totalCapital * (st.allocation / 100);
+      const qty = Math.max(1, Math.round(allocatedCap / livePrice));
+      return {
+        symbol: st.symbol,
+        name: st.name,
+        qty,
+        avgBuyPrice: livePrice,
+        logo: `https://logo.clearbit.com/${st.symbol.split(".")[0].toLowerCase()}.com`
+      };
+    });
+
+    setPortfolio(newPortfolio);
+    persistData("portfolio", newPortfolio);
+
+    setAiRecommendation(rec);
+    persistData("aiRecommendation", rec);
+
+    setIsGeneratingPortfolio(false);
+    setNotifications(prev => [
+      { id: Date.now(), text: `AI Advisor: Generated portfolio containing ${rec.stocks.length} assets based on target goal.`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleRebalancePortfolio = () => {
+    if (portfolio.length === 0) return;
+    const totalValue = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
+    if (totalValue === 0) return;
+
+    const targetPercent = 100 / portfolio.length;
+    const nextPortfolio = portfolio.map(item => {
+      const price = quotes[item.symbol]?.price || 1;
+      const targetAllocationValue = totalValue * (targetPercent / 100);
+      const suggestedQty = Math.max(1, Math.round(targetAllocationValue / price));
+      return {
+        ...item,
+        qty: suggestedQty
+      };
+    });
+
+    setPortfolio(nextPortfolio);
+    persistData("portfolio", nextPortfolio);
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `AI Co-Pilot: Suggested allocations rebalanced to equal distributions (${targetPercent.toFixed(1)}% each) based on live rates.`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleSaveCurrentPortfolio = (name: string) => {
+    if (!name.trim()) return;
+    const newPort = {
+      id: Date.now().toString(),
+      name,
+      portfolio: [...portfolio],
+      aiRecommendation: aiRecommendation ? { ...aiRecommendation } : null
+    };
+    const updatedList = [newPort, ...savedPortfolios.filter(p => p.name !== name)];
+    setSavedPortfolios(updatedList);
+    persistData("savedPortfolios", updatedList);
+    setActivePortfolioName(name);
+    persistData("activePortfolioName", name);
+    setShowSavePortfolioModal(false);
+    setNewPortfolioName("");
+  };
+
+  const handleLoadSavedPortfolio = (saved: any) => {
+    setPortfolio(saved.portfolio);
+    persistData("portfolio", saved.portfolio);
+    setAiRecommendation(saved.aiRecommendation);
+    persistData("aiRecommendation", saved.aiRecommendation);
+    setActivePortfolioName(saved.name);
+    persistData("activePortfolioName", saved.name);
+  };
+
+  const handleDeleteSavedPortfolio = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updatedList = savedPortfolios.filter(p => p.id !== id);
+    setSavedPortfolios(updatedList);
+    persistData("savedPortfolios", updatedList);
   };
 
   // ==================== LIVE PORTFOLIO TRACKER HANDLERS ====================
@@ -1651,111 +1845,391 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
+                className="flex flex-col gap-8 text-left"
               >
-                {/* Left Column: Asset Allocation & Summary */}
-                <div className="lg:col-span-5 flex flex-col gap-6">
-                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between bg-slate-950/10">
+                {/* 1. Premium AI Advisor Panel (Full Width) */}
+                <div className="glass-card p-6 md:p-8 rounded-2xl border border-[var(--border-color)] bg-gradient-to-tr from-blue-600/[0.03] to-indigo-500/[0.03] flex flex-col gap-6 relative overflow-hidden">
+                  {/* Glowing background decor */}
+                  <div className="absolute -right-24 -top-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border-color)] pb-5">
                     <div>
-                      <div className="border-b border-[var(--border-color)] pb-3">
-                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Allocation</span>
-                        <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-blue-500 animate-pulse" />
+                        <h2 className="text-lg font-black text-white uppercase tracking-wide">AI Portfolio Co-Pilot</h2>
+                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-blue-600/15 text-blue-400 border border-blue-500/20">
+                          PREMIUM
+                        </span>
                       </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Describe your investment parameters, risk threshold, or capital targets in natural language.
+                      </p>
+                    </div>
 
-                      <div className="h-64 flex items-center justify-center relative my-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={assetAllocationData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={70}
-                              outerRadius={100}
-                              paddingAngle={3}
-                              dataKey="value"
+                    {/* Saved Portfolios Selector */}
+                    {savedPortfolios.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Saved:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {savedPortfolios.map((port) => (
+                            <div 
+                              key={port.id}
+                              onClick={() => handleLoadSavedPortfolio(port)}
+                              className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                                activePortfolioName === port.name 
+                                  ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/25"
+                                  : "bg-slate-900/40 border-[var(--border-color)] text-slate-400 hover:text-[var(--text-color)]"
+                              }`}
                             >
-                              {assetAllocationData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute flex flex-col items-center justify-center">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Portfolio</span>
-                          <span className="text-xl font-black text-[var(--text-color)] font-mono">
-                            ₹{portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
+                              <span>{port.name}</span>
+                              <button
+                                onClick={(e) => handleDeleteSavedPortfolio(port.id, e)}
+                                className="text-slate-500 hover:text-rose-500 transition-colors p-0.5 rounded"
+                                title="Delete saved portfolio"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3 font-semibold text-xs border-t border-[var(--border-color)] pt-4 max-h-[220px] overflow-y-auto pr-1">
-                      {assetAllocationData.map((asset, idx) => (
-                        <div key={idx} className="flex justify-between items-center">
-                          <div className="flex items-center gap-2.5 text-slate-400">
-                            <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: asset.color }} />
-                            <span className="truncate max-w-[140px]">{asset.name}</span>
-                          </div>
-                          <span className="text-[var(--text-color)] font-mono">₹{asset.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                        </div>
-                      ))}
-                    </div>
+                    )}
                   </div>
 
-                  {/* Portfolio Returns Metrics Card */}
-                  {portfolio.length > 0 && (() => {
-                    const totalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
-                    const totalInvested = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
-                    const totalReturn = totalVal - totalInvested;
-                    const returnPct = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
+                  {/* Input Form */}
+                  <form onSubmit={handleGeneratePortfolio} className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 relative">
+                      <Bot className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                      <input
+                        type="text"
+                        value={aiGoalPrompt}
+                        onChange={(e) => setAiGoalPrompt(e.target.value)}
+                        placeholder='e.g., "I want a high-growth portfolio and have ₹1,50,000 to invest for long-term wealth"'
+                        className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-950/40 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/40 text-white transition-all font-semibold"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isGeneratingPortfolio || !aiGoalPrompt.trim()}
+                      className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white shadow shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {isGeneratingPortfolio ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-white" /> Allocating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" /> Generate Portfolio
+                        </>
+                      )}
+                    </button>
+                  </form>
 
-                    // Today's gains
-                    const todaysGains = portfolio.reduce((acc, item) => {
-                      const quote = quotes[item.symbol];
-                      return acc + (item.qty * (quote?.change || 0));
-                    }, 0);
+                  {/* Quick-Prompt suggestions */}
+                  <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
+                    <span className="mt-1">Try:</span>
+                    {[
+                      "I have ₹2,00,000 for high-growth stocks",
+                      "Build a safe, low-risk portfolio for retirement",
+                      "I want consistent dividend-paying companies"
+                    ].map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAiGoalPrompt(p)}
+                        className="px-3 py-1 rounded-lg border border-[var(--border-color)] bg-slate-900/25 hover:bg-slate-900/50 hover:text-[var(--text-color)] transition-all cursor-pointer"
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
 
-                    return (
-                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--border-color)] pb-2 block">
-                          Portfolio Metrics
-                        </span>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Invested</span>
-                            <span className="text-base font-bold text-white font-mono">₹{totalInvested.toLocaleString()}</span>
+                  {/* AI Recommendation Dashboard (Conditional) */}
+                  <AnimatePresence>
+                    {aiRecommendation && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="border-t border-[var(--border-color)] pt-6 mt-2 flex flex-col gap-6"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          
+                          {/* Risk & Diversification Panel */}
+                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col justify-between gap-4">
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">AI Asset Score</span>
+                              <div className="flex justify-between items-center mt-3">
+                                <span className="text-xs text-slate-400 font-semibold">Risk Rating:</span>
+                                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-black uppercase ${
+                                  aiRecommendation.risk === "High" 
+                                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                    : aiRecommendation.risk === "Low"
+                                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                                      : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                }`}>
+                                  {aiRecommendation.risk}
+                                </span>
+                              </div>
+
+                              {/* Risk Bar Meter */}
+                              <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden relative">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-1000 ${
+                                    aiRecommendation.risk === "High" 
+                                      ? "w-[85%] bg-gradient-to-r from-rose-500 to-red-600" 
+                                      : aiRecommendation.risk === "Low" 
+                                        ? "w-[30%] bg-gradient-to-r from-emerald-500 to-green-600"
+                                        : "w-[60%] bg-gradient-to-r from-amber-500 to-yellow-600"
+                                  }`} 
+                                />
+                              </div>
+
+                              <div className="flex justify-between items-center mt-4">
+                                <span className="text-xs text-slate-400 font-semibold">Diversification:</span>
+                                <span className="text-sm font-black text-white font-mono">{aiRecommendation.diversification}/100</span>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-[var(--border-color)] pt-3 text-[11px] text-slate-500 leading-relaxed font-semibold">
+                              &bull; Target Capital: <span className="text-white font-bold font-mono">₹{aiRecommendation.totalCapital.toLocaleString()}</span>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Current Value</span>
-                            <span className="text-base font-bold text-white font-mono">₹{totalVal.toLocaleString()}</span>
+
+                          {/* Sector Allocation Donut Chart */}
+                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sector Diversification</span>
+                            
+                            <div className="h-32 flex items-center justify-center relative my-1">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={(() => {
+                                      // Aggregate sector allocations
+                                      const sectors: Record<string, number> = {};
+                                      aiRecommendation.stocks.forEach((s: any) => {
+                                        sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
+                                      });
+                                      return Object.entries(sectors).map(([name, value], idx) => ({
+                                        name,
+                                        value,
+                                        color: ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5]
+                                      }));
+                                    })()}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={30}
+                                    outerRadius={45}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                  >
+                                    {(() => {
+                                      const sectors: Record<string, number> = {};
+                                      aiRecommendation.stocks.forEach((s: any) => {
+                                        sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
+                                      });
+                                      return Object.entries(sectors).map(([_, __], idx) => (
+                                        <Cell key={`cell-${idx}`} fill={["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5]} />
+                                      ));
+                                    })()}
+                                  </Pie>
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div className="absolute flex flex-col items-center">
+                                <span className="text-[9px] font-bold text-slate-500">Sectors</span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 justify-center text-[9px] text-slate-400 font-bold">
+                              {(() => {
+                                const sectors: Record<string, number> = {};
+                                aiRecommendation.stocks.forEach((s: any) => {
+                                  sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
+                                });
+                                return Object.entries(sectors).map(([name, value], idx) => (
+                                  <div key={idx} className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5] }} />
+                                    <span>{name} ({value}%)</span>
+                                  </div>
+                                ));
+                              })()}
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Returns</span>
-                            <span className={`text-base font-black font-mono ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                              ₹{totalReturn.toLocaleString()} ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
-                            </span>
+
+                          {/* Scenarios projection chart */}
+                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">10-Year Growth Projection</span>
+                            
+                            <div className="h-32 my-1">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={(() => {
+                                  const data = [];
+                                  const cap = aiRecommendation.totalCapital;
+                                  for (let year = 0; year <= 10; year += 2) {
+                                    data.push({
+                                      year: `${year}Y`,
+                                      Conservative: Math.round(cap * Math.pow(1.06, year)),
+                                      Moderate: Math.round(cap * Math.pow(1.12, year)),
+                                      Optimistic: Math.round(cap * Math.pow(1.18, year))
+                                    });
+                                  }
+                                  return data;
+                                })()}>
+                                  <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
+                                  <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} />
+                                  <Area type="monotone" dataKey="Optimistic" stroke="#10b981" fillOpacity={0.03} strokeWidth={1} fill="#10b981" />
+                                  <Area type="monotone" dataKey="Moderate" stroke="#3b82f6" fillOpacity={0.05} strokeWidth={1.5} fill="#3b82f6" />
+                                  <Area type="monotone" dataKey="Conservative" stroke="#64748b" fillOpacity={0} strokeWidth={1} fill="transparent" />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </div>
+
+                            <div className="flex gap-4 text-[9px] justify-center text-slate-500 font-bold mt-1">
+                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> Cons (6%)</span>
+                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Mod (12%)</span>
+                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Opt (18%)</span>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Today's Gain/Loss</span>
-                            <span className={`text-base font-black font-mono ${todaysGains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                              {todaysGains >= 0 ? "▲" : "▼"} ₹{Math.abs(todaysGains).toLocaleString()}
+
+                        </div>
+
+                        {/* Rationale and Strategy */}
+                        <div className="p-4 rounded-xl bg-blue-500/[0.02] border border-blue-500/10 text-xs leading-relaxed text-[var(--text-subtitle)]">
+                          <span className="font-extrabold text-blue-400 block mb-1">Co-Pilot Strategy Description:</span>
+                          {aiRecommendation.rationale}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                </div>
+
+                {/* 2. Holdings and Core Engine Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Left Column: Asset Allocation & Summary */}
+                  <div className="lg:col-span-5 flex flex-col gap-6">
+                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between bg-slate-950/10">
+                      <div>
+                        <div className="border-b border-[var(--border-color)] pb-3">
+                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Allocation</span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
+                        </div>
+
+                        <div className="h-64 flex items-center justify-center relative my-4">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={assetAllocationData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={70}
+                                outerRadius={100}
+                                paddingAngle={3}
+                                dataKey="value"
+                              >
+                                {assetAllocationData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute flex flex-col items-center justify-center">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Portfolio</span>
+                            <span className="text-xl font-black text-[var(--text-color)] font-mono">
+                              ₹{portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </span>
                           </div>
                         </div>
                       </div>
-                    );
-                  })()}
-                </div>
 
-                {/* Right Column: Holdings Grid & Smart Search */}
-                <div className="lg:col-span-7 flex flex-col gap-6">
-                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-5 bg-slate-900/5">
-                    
-                    {/* Search and Autocomplete Header */}
-                    <div className="border-b border-[var(--border-color)] pb-4 flex flex-col gap-4">
-                      <div>
-                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Live Market Tracker</span>
-                        <span className="text-xs text-slate-500 mt-0.5 block">Quotes updated automatically every 20s</span>
+                      <div className="flex flex-col gap-3 font-semibold text-xs border-t border-[var(--border-color)] pt-4 max-h-[220px] overflow-y-auto pr-1">
+                        {assetAllocationData.map((asset, idx) => (
+                          <div key={idx} className="flex justify-between items-center">
+                            <div className="flex items-center gap-2.5 text-slate-400">
+                              <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: asset.color }} />
+                              <span className="truncate max-w-[140px]">{asset.name}</span>
+                            </div>
+                            <span className="text-[var(--text-color)] font-mono">₹{asset.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Portfolio Returns Metrics Card */}
+                    {portfolio.length > 0 && (() => {
+                      const totalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
+                      const totalInvested = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
+                      const totalReturn = totalVal - totalInvested;
+                      const returnPct = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
+
+                      // Today's gains
+                      const todaysGains = portfolio.reduce((acc, item) => {
+                        const quote = quotes[item.symbol];
+                        return acc + (item.qty * (quote?.change || 0));
+                      }, 0);
+
+                      return (
+                        <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--border-color)] pb-2 block">
+                            Portfolio Metrics
+                          </span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Invested</span>
+                              <span className="text-base font-bold text-white font-mono">₹{totalInvested.toLocaleString()}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Current Value</span>
+                              <span className="text-base font-bold text-white font-mono">₹{totalVal.toLocaleString()}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Returns</span>
+                              <span className={`text-base font-black font-mono ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                ₹{totalReturn.toLocaleString()} ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Today's Gain/Loss</span>
+                              <span className={`text-base font-black font-mono ${todaysGains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                {todaysGains >= 0 ? "▲" : "▼"} ₹{Math.abs(todaysGains).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Right Column: Holdings Grid & Smart Search */}
+                  <div className="lg:col-span-7 flex flex-col gap-6">
+                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-5 bg-slate-900/5">
+                      
+                      {/* Search and Autocomplete Header */}
+                      <div className="border-b border-[var(--border-color)] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Live Market Tracker</span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">Quotes updated automatically every 20s</span>
+                        </div>
+
+                        {/* Action buttons */}
+                        {portfolio.length > 0 && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleRebalancePortfolio}
+                              className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-[11px] font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+                              title="Rebalance allocations evenly based on current market rates"
+                            >
+                              Rebalance
+                            </button>
+                            <button
+                              onClick={() => setShowSavePortfolioModal(true)}
+                              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-[11px] font-bold text-white transition-all cursor-pointer shadow shadow-blue-500/10"
+                            >
+                              Save Portfolio
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Smart Search Bar */}
