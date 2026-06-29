@@ -264,11 +264,27 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         className="w-full h-full"
       >
         <defs>
-          {/* Gradients */}
-          {/* Responsive gradients (navy/blue for light mode, vibrant sapphire for dark mode) */}
-          <linearGradient id="fincoGrad" x1="0" y1="0" x2="100" y2="0">
-            <stop offset="0%" stopColor="#0f172a" className="dark:stop-color-[#3B82F6]" />
-            <stop offset="100%" stopColor="#1e3a8a" className="dark:stop-color-[#1D4ED8]" />
+          <style>{`
+            .finco-letter {
+              fill: url(#fincoDarkGrad);
+              transition: fill 0.3s ease;
+            }
+            html.light .finco-letter {
+              fill: url(#fincoLightGrad);
+            }
+          `}</style>
+
+          {/* Light Mode Gradient (Deep Navy) */}
+          <linearGradient id="fincoLightGrad" x1="0" y1="0" x2="100" y2="0">
+            <stop offset="0%" stopColor="#0B1F4D" />
+            <stop offset="100%" stopColor="#1E3A8A" />
+          </linearGradient>
+
+          {/* Dark Mode Gradient (Premium Silver-White blending into Ice Blue) */}
+          <linearGradient id="fincoDarkGrad" x1="0" y1="0" x2="100" y2="0">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="60%" stopColor="#F0F9FF" />
+            <stop offset="100%" stopColor="#38BDF8" />
           </linearGradient>
 
           <linearGradient id="dGrad" x1="0" y1="0" x2="0" y2="35">
@@ -347,7 +363,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x="5"
             y={isCompact ? "25" : "32"}
-            fill="url(#fincoGrad)"
+            className="finco-letter"
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -367,7 +383,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "20" : "24"}
             y={isCompact ? "25" : "32"}
-            fill="url(#fincoGrad)"
+            className="finco-letter"
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -387,7 +403,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "29" : "35"}
             y={isCompact ? "25" : "32"}
-            fill="url(#fincoGrad)"
+            className="finco-letter"
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -407,7 +423,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "48" : "60"}
             y={isCompact ? "25" : "32"}
-            fill="url(#fincoGrad)"
+            className="finco-letter"
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -427,7 +443,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "66" : "82"}
             y={isCompact ? "25" : "32"}
-            fill="url(#fincoGrad)"
+            className="finco-letter"
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
