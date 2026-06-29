@@ -85,9 +85,13 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
 
   // Letter bounce staggered animation variants
   const letterVariants: any = {
+    hidden: {
+      opacity: 0,
+      y: 12
+    },
     load: (i: number) => ({
-      opacity: [0, 1],
-      y: [12, 0],
+      opacity: 1,
+      y: 0,
       transition: {
         duration: 0.8,
         ease: premiumEase as any,
@@ -356,7 +360,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter F */}
         <motion.g
           custom={0}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -376,7 +380,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter I */}
         <motion.g
           custom={1}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -396,7 +400,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter N */}
         <motion.g
           custom={2}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -416,7 +420,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter C */}
         <motion.g
           custom={3}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -436,7 +440,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter O */}
         <motion.g
           custom={4}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -456,7 +460,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter D (The smiling character center) */}
         <motion.g
           custom={5}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
@@ -515,7 +519,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         {/* Letter Y (Financial Growth Arrow) */}
         <motion.g
           custom={6}
-          initial="load"
+          initial="hidden"
           animate={isHovered ? "bounce" : "load"}
           variants={letterVariants}
         >
