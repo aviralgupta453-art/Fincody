@@ -322,7 +322,7 @@ export default function Home() {
   const chartData = generateChartData();
 
   return (
-    <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
+    <div className="min-h-screen w-full bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
       
 
       
