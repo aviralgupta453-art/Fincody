@@ -39,6 +39,7 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from "recharts";
+import FincodyLogo from "@/components/FincodyLogo";
 
 // Interfaces
 interface UserProfile {
@@ -461,11 +462,7 @@ export default function AdminPortal() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
-              <img 
-                src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-                alt="Fincody Logo" 
-                className="h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-              />
+              <FincodyLogo variant="desktop" />
             </Link>
             <span className="text-[10px] font-black uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full flex items-center gap-1">
               <Shield className="w-3 h-3" /> Admin Gate

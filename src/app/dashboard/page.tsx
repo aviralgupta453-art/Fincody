@@ -51,6 +51,7 @@ import {
   Pie, 
   Cell 
 } from "recharts";
+import FincodyLogo from "@/components/FincodyLogo";
 
 // TypeScript Interfaces
 interface Message {
@@ -1284,11 +1285,7 @@ export default function Dashboard() {
       {/* Mobile Drawer Trigger Bar */}
       <div className="md:hidden h-16 glass-panel border-b border-[var(--border-color)] flex items-center justify-between px-6 z-30">
         <Link href="/" className="flex items-center gap-2">
-          <img 
-            src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-            alt="Fincody Logo" 
-            className="h-9 w-auto object-contain"
-          />
+          <FincodyLogo variant="mobile" />
         </Link>
         <div className="flex items-center gap-2">
           <button
@@ -1314,11 +1311,7 @@ export default function Dashboard() {
           {/* Logo */}
           <div className="flex items-center justify-between px-3">
             <Link href="/" className="flex items-center gap-2 group">
-              <img 
-                src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-                alt="Fincody Logo" 
-                className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-              />
+              <FincodyLogo variant="compact" />
             </Link>
             <button 
               onClick={() => setMobileSidebarOpen(false)}

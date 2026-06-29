@@ -35,6 +35,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from "recharts";
+import FincodyLogo from "@/components/FincodyLogo";
 
 // Features data
 const FEATURES = [
@@ -332,11 +333,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
-              <img 
-                src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-                alt="Fincody Logo" 
-                className="h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-              />
+              <FincodyLogo variant="desktop" />
             </Link>
 
             {/* Circular Profile Avatar (Always Visible) */}
@@ -1103,11 +1100,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="flex flex-col gap-4 text-left">
             <Link href="/" className="flex items-center gap-2">
-              <img 
-                src={theme === "dark" ? "/logo_dark.png" : "/logo_light.png"} 
-                alt="Fincody Logo" 
-                className="h-11 md:h-12 w-auto object-contain"
-              />
+              <FincodyLogo variant="desktop" />
             </Link>
             <p className="text-xs text-slate-500 leading-relaxed mt-2 max-w-xs">
               Fincody is an AI-powered Life Operating System that organizes assets, scenarios, insurance policies, and subscription tracking.
