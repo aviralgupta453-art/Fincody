@@ -123,6 +123,9 @@ export default function Dashboard() {
   >("command");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // Sync Status State
+  const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error" | "guest">("guest");
+
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -130,14 +133,26 @@ export default function Dashboard() {
     // Check active session on mount
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      if (session) {
+        // Fetch fresh metadata from database server to enable cross-device updates
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        setUser(freshUser ?? session.user);
+      } else {
+        setUser(null);
+      }
       setAuthLoading(false);
     };
     checkSession();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        // Fetch fresh user details
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        setUser(freshUser ?? session.user);
+      } else {
+        setUser(null);
+      }
       setAuthLoading(false);
     });
 
@@ -313,8 +328,101 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
+    if (!user) {
+      // Load guest data from LocalStorage
+      const prefix = "fincody_guest_";
+      try {
+        const savedGoals = localStorage.getItem(`${prefix}goals`);
+        if (savedGoals) setGoals(JSON.parse(savedGoals));
 
+        const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
+        if (savedSubs) setSubscriptions(JSON.parse(savedSubs));
+
+        const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
+        if (savedInsurance) setInsurancePolicies(JSON.parse(savedInsurance));
+
+        const savedDocs = localStorage.getItem(`${prefix}documents`);
+        if (savedDocs) setDocuments(JSON.parse(savedDocs));
+
+        const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
+        if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth));
+
+        const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
+        if (savedSavings) setMonthlySavings(parseFloat(savedSavings));
+
+        const savedScore = localStorage.getItem(`${prefix}healthScore`);
+        if (savedScore) setHealthScore(parseInt(savedScore));
+
+        const savedStartYear = localStorage.getItem(`${prefix}startYear`);
+        if (savedStartYear) setStartYear(parseInt(savedStartYear));
+
+        const savedEndYear = localStorage.getItem(`${prefix}endYear`);
+        if (savedEndYear) setEndYear(parseInt(savedEndYear));
+
+        const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
+        if (savedCalcStart) setCalculationStartDate(savedCalcStart);
+
+        const savedManualSalary = localStorage.getItem(`${prefix}manualSalary`);
+        if (savedManualSalary) setManualSalary(savedManualSalary);
+
+        const savedManualEMI = localStorage.getItem(`${prefix}manualEMI`);
+        if (savedManualEMI) setManualEMI(savedManualEMI);
+
+        const savedManualOtherExpenses = localStorage.getItem(`${prefix}manualOtherExpenses`);
+        if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
+
+        const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
+        if (savedPortfolio) setPortfolio(JSON.parse(savedPortfolio));
+
+        const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
+        if (savedSavedPortfolios) setSavedPortfolios(JSON.parse(savedSavedPortfolios));
+
+        const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
+        if (savedActivePortName) setActivePortfolioName(savedActivePortName);
+
+        const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
+        if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
+      } catch (e) {
+        console.error("Error loading guest persisted state:", e);
+      }
+      setSyncStatus("guest");
+      return;
+    }
+
+    // Authenticated User Hydration
+    // 1. Try to load from Supabase Cloud User Metadata
+    const cloudDataStr = user.user_metadata?.fincody_dashboard_data;
+    if (cloudDataStr) {
+      try {
+        const data = JSON.parse(cloudDataStr);
+        if (data.goals) setGoals(data.goals);
+        if (data.subscriptions) setSubscriptions(data.subscriptions);
+        if (data.insurancePolicies) setInsurancePolicies(data.insurancePolicies);
+        if (data.documents) setDocuments(data.documents);
+        if (data.netWorth !== undefined) setNetWorth(data.netWorth);
+        if (data.monthlySavings !== undefined) setMonthlySavings(data.monthlySavings);
+        if (data.healthScore !== undefined) setHealthScore(data.healthScore);
+        if (data.startYear !== undefined) setStartYear(data.startYear);
+        if (data.endYear !== undefined) setEndYear(data.endYear);
+        if (data.calculationStartDate) setCalculationStartDate(data.calculationStartDate);
+        if (data.manualSalary !== undefined) setManualSalary(data.manualSalary);
+        if (data.manualEMI !== undefined) setManualEMI(data.manualEMI);
+        if (data.manualOtherExpenses !== undefined) setManualOtherExpenses(data.manualOtherExpenses);
+        if (data.portfolio) setPortfolio(data.portfolio);
+        if (data.savedPortfolios) setSavedPortfolios(data.savedPortfolios);
+        if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
+        if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
+
+        setSyncStatus("synced");
+        console.log("Hydrated Fincody dashboard from Cloud Vault.");
+        return;
+      } catch (e) {
+        console.error("Failed to parse cloud dashboard data:", e);
+      }
+    }
+
+    // 2. Local Storage Fallback if metadata is not populated yet
+    const prefix = `fincody_user_${user.id}_`;
     try {
       const savedGoals = localStorage.getItem(`${prefix}goals`);
       if (savedGoals) setGoals(JSON.parse(savedGoals));
@@ -367,9 +475,75 @@ export default function Dashboard() {
       const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
       if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
     } catch (e) {
-      console.error("Error loading persisted state:", e);
+      console.error("Error loading persisted state fallback:", e);
     }
+    setSyncStatus("synced");
   }, [user]);
+
+  // Debounced Autosave Sync to Supabase User Metadata
+  useEffect(() => {
+    if (!user) return;
+
+    // We only want to trigger the sync after the initial load completes
+    // A delay of 2500ms debounces continuous user edits (like typing networth/names)
+    const delayDebounceFn = setTimeout(async () => {
+      setSyncStatus("syncing");
+
+      const dashboardDataObj = {
+        goals,
+        subscriptions,
+        insurancePolicies,
+        documents,
+        netWorth,
+        monthlySavings,
+        healthScore,
+        startYear,
+        endYear,
+        calculationStartDate,
+        manualSalary,
+        manualEMI,
+        manualOtherExpenses,
+        portfolio,
+        savedPortfolios,
+        activePortfolioName,
+        aiRecommendation
+      };
+
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          fincody_dashboard_data: JSON.stringify(dashboardDataObj)
+        }
+      });
+
+      if (error) {
+        console.error("Failed to sync dashboard to Supabase Cloud:", error);
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("synced");
+      }
+    }, 2500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    user,
+    goals,
+    subscriptions,
+    insurancePolicies,
+    documents,
+    netWorth,
+    monthlySavings,
+    healthScore,
+    startYear,
+    endYear,
+    calculationStartDate,
+    manualSalary,
+    manualEMI,
+    manualOtherExpenses,
+    portfolio,
+    savedPortfolios,
+    activePortfolioName,
+    aiRecommendation
+  ]);
 
   // Future Simulator interactive state
   const [simSalaryRate, setSimSalaryRate] = useState(12);
@@ -1389,9 +1563,26 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold tracking-tight text-[var(--text-color)] capitalize">
               {activeTab === "command" ? "Command Center" : activeTab + " Engine"}
             </h2>
-            <div className="hidden sm:flex items-center gap-1 bg-[#10b981]/10 text-emerald-500 dark:text-emerald-400 text-xs px-2.5 py-0.5 rounded-full font-bold border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Connected
-            </div>
+            {syncStatus === "syncing" && (
+              <div className="hidden sm:flex items-center gap-1 bg-blue-500/10 text-blue-500 dark:text-blue-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-blue-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" /> Saving to Cloud...
+              </div>
+            )}
+            {syncStatus === "synced" && (
+              <div className="hidden sm:flex items-center gap-1 bg-[#10b981]/10 text-emerald-500 dark:text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Cloud Synced
+              </div>
+            )}
+            {syncStatus === "error" && (
+              <div className="hidden sm:flex items-center gap-1 bg-rose-500/10 text-rose-500 dark:text-rose-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-rose-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" /> Sync Error
+              </div>
+            )}
+            {syncStatus === "guest" && (
+              <div className="hidden sm:flex items-center gap-1 bg-slate-500/10 text-slate-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Guest Mode (Local)
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
