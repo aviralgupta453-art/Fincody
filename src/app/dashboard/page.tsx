@@ -278,6 +278,20 @@ export default function Dashboard() {
   const [calculationStartDate, setCalculationStartDate] = useState("2026-06-01");
   const [startYear, setStartYear] = useState(2026);
   const [endYear, setEndYear] = useState(2040);
+
+  // Live Portfolio Tracker States
+  const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [quotes, setQuotes] = useState<Record<string, any>>({});
+  const [stockSearchQuery, setStockSearchQuery] = useState("");
+  const [stockSearchResults, setStockSearchResults] = useState<any[]>([]);
+  const [stockSearchLoading, setStockSearchLoading] = useState(false);
+  const [selectedStockSymbol, setSelectedStockSymbol] = useState("");
+  const [selectedStockHistory, setSelectedStockHistory] = useState<any[] | null>(null);
+  const [selectedStockHistoryRange, setSelectedStockHistoryRange] = useState("1M");
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
+  const [priceUpdateStatus, setPriceUpdateStatus] = useState<Record<string, "up" | "down" | null>>({});
+
   // Persistence States & Helper
   const persistData = (key: string, data: any) => {
     const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
@@ -330,6 +344,9 @@ export default function Dashboard() {
 
       const savedManualOtherExpenses = localStorage.getItem(`${prefix}manualOtherExpenses`);
       if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
+
+      const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
+      if (savedPortfolio) setPortfolio(JSON.parse(savedPortfolio));
     } catch (e) {
       console.error("Error loading persisted state:", e);
     }
@@ -389,13 +406,28 @@ export default function Dashboard() {
 
   const chartData = getProjectionsChartData();
 
-  // Investment Allocation Data
-  const assetAllocationData = [
-    { name: "Stocks & Mutual Funds", value: 2450000, color: "#3B82F6" },
-    { name: "Cryptocurrency", value: 350000, color: "#A855F7" },
-    { name: "Gold & Commodities", value: 450000, color: "#EAB308" },
-    { name: "Liquid Cash/FDs", value: 595210, color: "#10B981" }
-  ];
+  // Dynamic Investment Allocation Data
+  const getDynamicAssetAllocation = () => {
+    if (portfolio.length === 0) {
+      return [
+        { name: "Stocks & Mutual Funds", value: 2450000, color: "#3B82F6" },
+        { name: "Cryptocurrency", value: 350000, color: "#A855F7" },
+        { name: "Gold & Commodities", value: 450000, color: "#EAB308" },
+        { name: "Liquid Cash/FDs", value: 595210, color: "#10B981" }
+      ];
+    }
+    
+    return portfolio.map((item, idx) => {
+      const price = quotes[item.symbol]?.price || 0;
+      return {
+        name: item.symbol,
+        value: item.qty * price || 1,
+        color: ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899", "#ef4444"][idx % 6]
+      };
+    });
+  };
+
+  const assetAllocationData = getDynamicAssetAllocation();
 
   // Subscriptions calculations
   const activeSubscriptions = subscriptions.filter(sub => sub.status === "active");
@@ -677,6 +709,139 @@ export default function Dashboard() {
     setManualSubscriptionPrice("");
     setShowManualEntryModal(false);
   };
+
+  // ==================== LIVE PORTFOLIO TRACKER HANDLERS ====================
+  const handleStockSearch = async (query: string) => {
+    setStockSearchQuery(query);
+    if (!query || query.trim().length === 0) {
+      setStockSearchResults([]);
+      return;
+    }
+    setStockSearchLoading(true);
+    try {
+      const res = await fetch(`/api/stock?action=search&query=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStockSearchResults(data || []);
+      }
+    } catch (err) {
+      console.error("Error searching stocks:", err);
+    } finally {
+      setStockSearchLoading(false);
+    }
+  };
+
+  const fetchQuote = async (symbol: string) => {
+    try {
+      const res = await fetch(`/api/stock?action=quote&symbol=${encodeURIComponent(symbol)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      
+      setQuotes(prev => {
+        const prevQuote = prev[symbol];
+        if (prevQuote && prevQuote.price !== data.price) {
+          const status = data.price > prevQuote.price ? "up" : "down";
+          setPriceUpdateStatus(prevStatus => ({ ...prevStatus, [symbol]: status }));
+          
+          setTimeout(() => {
+            setPriceUpdateStatus(prevStatus => ({ ...prevStatus, [symbol]: null }));
+          }, 1500);
+        }
+        return { ...prev, [symbol]: data };
+      });
+    } catch (err) {
+      console.error(`Error fetching quote for ${symbol}:`, err);
+    }
+  };
+
+  const handleAddStock = async (stock: any) => {
+    if (portfolio.some(s => s.symbol === stock.symbol)) {
+      setStockSearchQuery("");
+      setStockSearchResults([]);
+      return;
+    }
+
+    const newHolding = {
+      symbol: stock.symbol,
+      name: stock.name,
+      qty: 1,
+      avgBuyPrice: 0,
+      logo: stock.logo || ""
+    };
+
+    const updatedPortfolio = [...portfolio, newHolding];
+    setPortfolio(updatedPortfolio);
+    persistData("portfolio", updatedPortfolio);
+
+    // Initial fetch of quote
+    await fetchQuote(stock.symbol);
+
+    setStockSearchQuery("");
+    setStockSearchResults([]);
+  };
+
+  const handleRemoveStock = (symbol: string) => {
+    if (window.confirm(`Are you sure you want to remove ${symbol} from your portfolio?`)) {
+      const updatedPortfolio = portfolio.filter(s => s.symbol !== symbol);
+      setPortfolio(updatedPortfolio);
+      persistData("portfolio", updatedPortfolio);
+
+      setQuotes(prev => {
+        const nextQuotes = { ...prev };
+        delete nextQuotes[symbol];
+        return nextQuotes;
+      });
+    }
+  };
+
+  const handleUpdateHolding = (symbol: string, qty: number, avgBuyPrice: number) => {
+    const updatedPortfolio = portfolio.map(s => {
+      if (s.symbol === symbol) {
+        return { ...s, qty, avgBuyPrice };
+      }
+      return s;
+    });
+    setPortfolio(updatedPortfolio);
+    persistData("portfolio", updatedPortfolio);
+  };
+
+  const handleOpenChart = async (symbol: string) => {
+    setSelectedStockSymbol(symbol);
+    setSelectedStockHistory(null);
+    setHistoryLoading(true);
+    setIsChartModalOpen(true);
+    await fetchChartHistory(symbol, "1M");
+  };
+
+  const fetchChartHistory = async (symbol: string, range: string) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/stock?action=history&symbol=${encodeURIComponent(symbol)}&range=${range}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedStockHistory(data || []);
+        setSelectedStockHistoryRange(range);
+      }
+    } catch (err) {
+      console.error(`Error fetching history for ${symbol}:`, err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Poll all quotes when portfolio symbols change
+  useEffect(() => {
+    if (portfolio.length === 0) return;
+    
+    const fetchAll = () => {
+      portfolio.forEach(item => fetchQuote(item.symbol));
+    };
+
+    fetchAll();
+    const intervalId = setInterval(fetchAll, 20000); // Poll every 20s
+
+    return () => clearInterval(intervalId);
+  }, [portfolio.map(p => p.symbol).join(",")]);
 
   // AI Chat Handlers
   const handleSendChat = async (text: string) => {
@@ -1488,88 +1653,332 @@ export default function Dashboard() {
                 exit={{ opacity: 0, y: 15 }}
                 className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
               >
-                <div className="lg:col-span-5 glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between bg-slate-950/10">
-                  <div>
-                    <div className="border-b border-[var(--border-color)] pb-3">
-                      <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Allocation</span>
-                      <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
-                    </div>
-
-                    <div className="h-64 flex items-center justify-center relative my-4">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={assetAllocationData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={70}
-                            outerRadius={100}
-                            paddingAngle={3}
-                            dataKey="value"
-                          >
-                            {assetAllocationData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="absolute flex flex-col items-center justify-center">
-                        <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">Net Assets</span>
-                        <span className="text-2xl font-black text-[var(--text-color)]">₹38.4L</span>
+                {/* Left Column: Asset Allocation & Summary */}
+                <div className="lg:col-span-5 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between bg-slate-950/10">
+                    <div>
+                      <div className="border-b border-[var(--border-color)] pb-3">
+                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Allocation</span>
+                        <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col gap-3 font-semibold text-sm border-t border-[var(--border-color)] pt-4">
-                    {assetAllocationData.map((asset, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <div className="flex items-center gap-2.5 text-slate-400">
-                          <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: asset.color }} />
-                          <span>{asset.name}</span>
+                      <div className="h-64 flex items-center justify-center relative my-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={assetAllocationData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={70}
+                              outerRadius={100}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {assetAllocationData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute flex flex-col items-center justify-center">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Portfolio</span>
+                          <span className="text-xl font-black text-[var(--text-color)] font-mono">
+                            ₹{portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </span>
                         </div>
-                        <span className="text-[var(--text-color)] font-mono">₹{asset.value.toLocaleString()}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Stock holdings lists */}
-                <div className="lg:col-span-7 flex flex-col gap-6">
-                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-900/5">
-                    <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
-                      <div>
-                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Equity Holdings</span>
-                        <span className="text-xs text-slate-500 mt-0.5 block">Simulated real-time feeds</span>
-                      </div>
-                      <button className="px-3.5 py-1.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-blue-500 dark:text-blue-400 flex items-center gap-1 transition-all">
-                        <Plus className="w-3.5 h-3.5" /> Add Holding
-                      </button>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      {[
-                        { symbol: "Reliance Industries", qty: 25, price: "₹2,450", change: "+1.2%", positive: true, currentVal: "₹61,250" },
-                        { symbol: "TCS", qty: 15, price: "₹3,840", change: "-0.8%", positive: false, currentVal: "₹57,600" },
-                        { symbol: "HDFC Bank", qty: 80, price: "₹1,640", change: "+2.1%", positive: true, currentVal: "₹1,31,200" },
-                        { symbol: "Nifty 50 Index Mutual Fund", qty: 450, price: "₹210", change: "+1.6%", positive: true, currentVal: "₹94,500" }
-                      ].map((holding, idx) => (
-                        <div 
-                          key={idx} 
-                          className="p-3.5 rounded-xl bg-slate-900/10 border border-[var(--border-color)] flex items-center justify-between hover:border-blue-500/20 transition-colors animate-pulse"
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[var(--text-color)] text-sm">{holding.symbol}</span>
-                            <span className="text-xs text-slate-500 mt-0.5">{holding.qty} Shares &bull; Market Price {holding.price}</span>
+                    <div className="flex flex-col gap-3 font-semibold text-xs border-t border-[var(--border-color)] pt-4 max-h-[220px] overflow-y-auto pr-1">
+                      {assetAllocationData.map((asset, idx) => (
+                        <div key={idx} className="flex justify-between items-center">
+                          <div className="flex items-center gap-2.5 text-slate-400">
+                            <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: asset.color }} />
+                            <span className="truncate max-w-[140px]">{asset.name}</span>
                           </div>
-                          <div className="text-right">
-                            <span className="font-bold text-[var(--text-color)] text-sm block font-mono">{holding.currentVal}</span>
-                            <span className={`text-xs font-bold mt-0.5 inline-block ${holding.positive ? "text-emerald-500" : "text-rose-500"}`}>
-                              {holding.change}
-                            </span>
-                          </div>
+                          <span className="text-[var(--text-color)] font-mono">₹{asset.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Portfolio Returns Metrics Card */}
+                  {portfolio.length > 0 && (() => {
+                    const totalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
+                    const totalInvested = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
+                    const totalReturn = totalVal - totalInvested;
+                    const returnPct = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
+
+                    // Today's gains
+                    const todaysGains = portfolio.reduce((acc, item) => {
+                      const quote = quotes[item.symbol];
+                      return acc + (item.qty * (quote?.change || 0));
+                    }, 0);
+
+                    return (
+                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--border-color)] pb-2 block">
+                          Portfolio Metrics
+                        </span>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Invested</span>
+                            <span className="text-base font-bold text-white font-mono">₹{totalInvested.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Current Value</span>
+                            <span className="text-base font-bold text-white font-mono">₹{totalVal.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Returns</span>
+                            <span className={`text-base font-black font-mono ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                              ₹{totalReturn.toLocaleString()} ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Today's Gain/Loss</span>
+                            <span className={`text-base font-black font-mono ${todaysGains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                              {todaysGains >= 0 ? "▲" : "▼"} ₹{Math.abs(todaysGains).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Right Column: Holdings Grid & Smart Search */}
+                <div className="lg:col-span-7 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-5 bg-slate-900/5">
+                    
+                    {/* Search and Autocomplete Header */}
+                    <div className="border-b border-[var(--border-color)] pb-4 flex flex-col gap-4">
+                      <div>
+                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Live Market Tracker</span>
+                        <span className="text-xs text-slate-500 mt-0.5 block">Quotes updated automatically every 20s</span>
+                      </div>
+
+                      {/* Smart Search Bar */}
+                      <div className="relative w-full">
+                        <div className="relative">
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                          <input
+                            type="text"
+                            value={stockSearchQuery}
+                            onChange={(e) => handleStockSearch(e.target.value)}
+                            placeholder="Search by company name or stock symbol (e.g. AAPL, RELIANCE)..."
+                            className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-900/50 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] transition-all font-semibold"
+                          />
+                          {stockSearchLoading && (
+                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-blue-500" />
+                          )}
+                        </div>
+
+                        {/* Search Autocomplete Results List */}
+                        <AnimatePresence>
+                          {stockSearchResults.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 10 }}
+                              className="absolute left-0 right-0 top-[110%] z-[9999] glass-card rounded-2xl border border-[var(--border-color)] bg-slate-900/95 shadow-2xl p-2 max-h-60 overflow-y-auto text-left"
+                            >
+                              {stockSearchResults.map((stock) => (
+                                <button
+                                  key={stock.symbol}
+                                  onClick={() => handleAddStock(stock)}
+                                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-500/10 transition-all text-left cursor-pointer group"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {stock.logo ? (
+                                      <img 
+                                        src={stock.logo} 
+                                        alt={stock.symbol} 
+                                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                        className="w-7 h-7 rounded-full bg-slate-800 object-contain p-0.5 border border-slate-700/50" 
+                                      />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded-full bg-blue-600/10 border border-blue-500/25 flex items-center justify-center font-bold text-[10px] text-blue-400">
+                                        {stock.symbol.slice(0, 2).toUpperCase()}
+                                      </div>
+                                    )}
+                                    <div className="flex flex-col text-left">
+                                      <span className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">{stock.symbol}</span>
+                                      <span className="text-[10px] text-slate-400 truncate max-w-[220px]">{stock.name}</span>
+                                    </div>
+                                  </div>
+                                  <span className="text-[9px] font-black uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-500 border border-slate-700/50">
+                                    {stock.exchange}
+                                  </span>
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    {/* Holdings list */}
+                    <div className="flex flex-col gap-3">
+                      {portfolio.length === 0 ? (
+                        // Empty State view
+                        <div className="py-12 px-6 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in duration-300">
+                          <div className="w-16 h-16 rounded-full bg-blue-600/5 border border-blue-500/10 flex items-center justify-center text-3xl">
+                            📈
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">Start building your investment portfolio</h4>
+                            <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">
+                              Search any stock symbol (NSE or global US tickers) in the input above to begin tracking live market performance.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        portfolio.map((item) => {
+                          const quote = quotes[item.symbol];
+                          const flashStatus = priceUpdateStatus[item.symbol];
+                          const isPositive = quote ? quote.change >= 0 : true;
+
+                          // Compute return stats
+                          const livePrice = quote?.price || 0;
+                          const currentVal = item.qty * livePrice;
+                          const totalCost = item.qty * item.avgBuyPrice;
+                          const totalReturn = currentVal - totalCost;
+                          const returnPct = item.avgBuyPrice > 0 ? (totalReturn / totalCost) * 100 : 0;
+
+                          return (
+                            <motion.div
+                              key={item.symbol}
+                              layout
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.25 }}
+                              onClick={() => handleOpenChart(item.symbol)}
+                              className={`p-4 rounded-xl border flex flex-col gap-4 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/5 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
+                                flashStatus === "up" 
+                                  ? "bg-emerald-500/10 border-emerald-500/40" 
+                                  : flashStatus === "down" 
+                                    ? "bg-rose-500/10 border-rose-500/40" 
+                                    : "bg-slate-900/10 border-[var(--border-color)] hover:border-blue-500/25"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  {item.logo ? (
+                                    <img 
+                                      src={item.logo} 
+                                      alt={item.symbol} 
+                                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                      className="w-8.5 h-8.5 rounded-full bg-slate-800 object-contain p-0.5 border border-slate-700/50 group-hover:scale-105 transition-transform" 
+                                    />
+                                  ) : (
+                                    <div className="w-8.5 h-8.5 rounded-full bg-blue-600/10 border border-blue-500/20 text-blue-500 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                                      {item.symbol.slice(0, 2)}
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col text-left">
+                                    <span className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors">{item.symbol}</span>
+                                    <span className="text-[10px] text-slate-500 truncate max-w-[150px]">{item.name}</span>
+                                  </div>
+                                </div>
+
+                                {/* Sparkline & Price Stats */}
+                                <div className="flex items-center gap-4 shrink-0">
+                                  {/* Sparkline chart */}
+                                  {quote && quote.sparkline && (
+                                    <div className="w-20 h-8 shrink-0">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={quote.sparkline.map((price: number, i: number) => ({ idx: i, price }))}>
+                                          <defs>
+                                            <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                                              <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.15}/>
+                                              <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0}/>
+                                            </linearGradient>
+                                          </defs>
+                                          <Area
+                                            type="monotone"
+                                            dataKey="price"
+                                            stroke={isPositive ? "#10b981" : "#ef4444"}
+                                            strokeWidth={1.5}
+                                            fillOpacity={1}
+                                            fill={`url(#grad-${item.symbol})`}
+                                            dot={false}
+                                          />
+                                        </AreaChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  )}
+
+                                  <div className="text-right">
+                                    <span className="font-bold text-white text-sm block font-mono">
+                                      {quote ? `₹${quote.price.toLocaleString()}` : "Loading..."}
+                                    </span>
+                                    {quote && (
+                                      <span className={`text-[10px] font-bold mt-0.5 flex items-center gap-0.5 justify-end ${isPositive ? "text-emerald-500" : "text-rose-500"}`}>
+                                        {isPositive ? "▲" : "▼"} {quote.changePercent.toFixed(2)}%
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Form Inputs (Stop Propagation to prevent triggering chart modal) */}
+                              <div 
+                                onClick={(e) => e.stopPropagation()} 
+                                className="grid grid-cols-3 gap-3 pt-3 border-t border-[var(--border-color)] items-end"
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Shares</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.qty}
+                                    onChange={(e) => handleUpdateHolding(item.symbol, parseInt(e.target.value) || 1, item.avgBuyPrice)}
+                                    className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1 text-xs text-white font-mono text-center focus:outline-none focus:border-blue-500/30"
+                                  />
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost (₹)</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={item.avgBuyPrice}
+                                    onChange={(e) => handleUpdateHolding(item.symbol, item.qty, parseFloat(e.target.value) || 0)}
+                                    className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1 text-xs text-white font-mono text-left focus:outline-none focus:border-blue-500/30"
+                                  />
+                                </div>
+
+                                <div className="flex flex-col text-right">
+                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
+                                  <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                    {totalReturn >= 0 ? "+" : ""}₹{totalReturn.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Status Footer */}
+                              <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mt-1">
+                                <span>
+                                  {quote ? `${quote.marketState} Market • Updated ${quote.lastUpdated}` : "Connecting to exchange..."}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveStock(item.symbol);
+                                  }}
+                                  className="text-rose-500 hover:text-rose-400 p-0.5 rounded flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })
+                      )}
+                    </div>
+
                   </div>
                 </div>
               </motion.div>
@@ -2217,6 +2626,151 @@ export default function Dashboard() {
                 Apply Updates
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Stock Chart Modal */}
+      {isChartModalOpen && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl glass-card rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 shadow-2xl relative bg-slate-900/95 text-left animate-in zoom-in-95 duration-200 flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-white font-mono">{selectedStockSymbol}</h3>
+                  {quotes[selectedStockSymbol] && (
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                      quotes[selectedStockSymbol].marketState === "Open" 
+                        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+                        : "bg-slate-800 text-slate-400 border border-slate-700/50"
+                    }`}>
+                      {quotes[selectedStockSymbol].marketState} Market
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Interactive real-time chart • Quotes refreshed every 20s
+                </p>
+              </div>
+              <button
+                onClick={() => setIsChartModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Price Info Banner */}
+            {quotes[selectedStockSymbol] && (() => {
+              const q = quotes[selectedStockSymbol];
+              const isPositive = q.change >= 0;
+              return (
+                <div className="flex justify-between items-end bg-slate-950/30 p-4 rounded-xl border border-[var(--border-color)]">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Live Market Value</span>
+                    <span className="text-3xl font-black text-white font-mono block mt-1">
+                      ₹{q.price.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Day Change</span>
+                    <span className={`text-base font-black font-mono block mt-1 ${isPositive ? "text-emerald-500" : "text-rose-500"}`}>
+                      {isPositive ? "▲" : "▼"} ₹{Math.abs(q.change).toFixed(2)} ({isPositive ? "+" : ""}{q.changePercent.toFixed(2)}%)
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Timeframe Selectors */}
+            <div className="flex gap-2 border-b border-[var(--border-color)] pb-3 overflow-x-auto shrink-0">
+              {["1D", "1W", "1M", "6M", "1Y", "Max"].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => fetchChartHistory(selectedStockSymbol, range)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    selectedStockHistoryRange === range
+                      ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/20"
+                      : "bg-[#11172a]/30 border-[var(--border-color)] text-slate-400 hover:text-white hover:bg-[#11172a]/50"
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+
+            {/* Chart Area */}
+            <div className="w-full h-80 relative flex items-center justify-center bg-slate-950/15 rounded-xl border border-[var(--border-color)] p-4">
+              {historyLoading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                  <span className="text-xs text-slate-500">Retrieving exchange history...</span>
+                </div>
+              ) : selectedStockHistory && selectedStockHistory.length > 0 ? (() => {
+                const firstPrice = selectedStockHistory[0].price;
+                const lastPrice = selectedStockHistory[selectedStockHistory.length - 1].price;
+                const isOverallPositive = lastPrice >= firstPrice;
+
+                return (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={selectedStockHistory}>
+                      <defs>
+                        <linearGradient id="chartOverlayGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={isOverallPositive ? "#10b981" : "#ef4444"} stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor={isOverallPositive ? "#10b981" : "#ef4444"} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="time" 
+                        stroke="#475569" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        dy={10}
+                      />
+                      <YAxis 
+                        stroke="#475569" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        domain={["auto", "auto"]}
+                        dx={-5}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--bg-color)",
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "12px",
+                          color: "var(--text-color)"
+                        }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="price" 
+                        stroke={isOverallPositive ? "#10b981" : "#ef4444"} 
+                        strokeWidth={2.5} 
+                        fillOpacity={1} 
+                        fill="url(#chartOverlayGrad)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                );
+              })() : (
+                <div className="text-xs text-slate-500">No chart data found for this range.</div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end border-t border-[var(--border-color)] pt-4">
+              <button
+                onClick={() => setIsChartModalOpen(false)}
+                className="px-6 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/30 hover:bg-slate-900/60 text-xs font-bold text-white transition-all"
+              >
+                Close Portal
+              </button>
+            </div>
+
           </div>
         </div>
       )}
