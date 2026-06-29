@@ -36,6 +36,7 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import FincodyLogo from "@/components/FincodyLogo";
+import BootSequence from "@/components/BootSequence";
 
 // Features data
 const FEATURES = [
@@ -150,6 +151,18 @@ export default function Home() {
   
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  // Boot Sequence State
+  const [showBoot, setShowBoot] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasBooted = localStorage.getItem("fincody_boot_completed");
+      if (!hasBooted) {
+        setShowBoot(true);
+      }
+    }
+  }, []);
 
   // Supabase Client state
   const [user, setUser] = useState<any>(null);
@@ -321,7 +334,20 @@ export default function Home() {
   const chartData = generateChartData();
 
   return (
-    <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
+    <AnimatePresence mode="wait">
+      {showBoot ? (
+        <BootSequence key="boot" onComplete={() => {
+          localStorage.setItem("fincody_boot_completed", "true");
+          setShowBoot(false);
+        }} />
+      ) : (
+        <motion.div
+          key="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.0, ease: "easeOut" }}
+          className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300"
+        >
       
       {/* Background Ambient Orbs (respecting light/dark opacity) */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 dark:bg-blue-500/10 light:bg-blue-500/5 blur-[120px] pointer-events-none transition-all duration-300" />
@@ -1202,6 +1228,8 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
