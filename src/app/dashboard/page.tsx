@@ -1994,8 +1994,8 @@ export default function Dashboard() {
                           <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sector Diversification</span>
                             
-                            <div className="h-32 flex items-center justify-center relative my-1">
-                              <ResponsiveContainer width="100%" height="100%">
+                            <div className="h-32 w-full min-w-0 flex items-center justify-center relative my-1">
+                              <ResponsiveContainer width="99%" height="100%">
                                 <PieChart>
                                   <Pie
                                     data={(() => {
@@ -2054,8 +2054,8 @@ export default function Dashboard() {
                           <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">10-Year Growth Projection</span>
                             
-                            <div className="h-32 my-1">
-                              <ResponsiveContainer width="100%" height="100%">
+                            <div className="h-32 w-full min-w-0 my-1">
+                              <ResponsiveContainer width="99%" height="100%">
                                 <AreaChart data={(() => {
                                   const data = [];
                                   const cap = aiRecommendation.totalCapital;
@@ -2109,8 +2109,8 @@ export default function Dashboard() {
                           <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
                         </div>
 
-                        <div className="h-64 flex items-center justify-center relative my-4">
-                          <ResponsiveContainer width="100%" height="100%">
+                        <div className="h-64 w-full min-w-0 flex items-center justify-center relative my-4">
+                          <ResponsiveContainer width="99%" height="100%">
                             <PieChart>
                               <Pie
                                 data={assetAllocationData}
