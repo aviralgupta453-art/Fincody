@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} min-h-screen w-full antialiased`}
     >
-      <body className="flex flex-col">
+      <body className="min-h-screen w-full flex flex-col">
         <MagicCursor />
         <Chatbox />
         {children}
