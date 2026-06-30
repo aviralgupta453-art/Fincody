@@ -25,7 +25,11 @@ import {
   Moon,
   Menu,
   X,
-  User
+  User,
+  Clock,
+  BookOpen,
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -144,6 +148,148 @@ const AI_DEMO_DATA = [
   }
 ];
 
+
+const LIVE_NEWS_DATA = [
+  {
+    id: "news-1",
+    country: "India",
+    category: "Markets",
+    headline: "Sensex reaches historic milestone, crosses 90,000 mark amid record inflows",
+    summary: "Domestic equities surged on strong institutional buy-side support and robust GDP projections. Private banking and solar energy sectors led the market rally.",
+    source: "Bloomberg Quint",
+    timestamp: "Just now",
+    breaking: true,
+    impact: "Bullish",
+    severity: "High Impact",
+    confidence: 96,
+    affected: [
+      { symbol: "^BSESN", name: "SENSEX", change: 1.15 },
+      { symbol: "RELIANCE.NS", name: "Reliance Industries", change: 2.34 },
+      { symbol: "HDFCBANK.NS", name: "HDFC Bank Ltd", change: 1.85 }
+    ],
+    whyItMatters: "Crossing 90,000 indicates absolute retail investor strength and rising global asset allocations to Indian equities.",
+    whoIsAffected: "Retail investors, domestic mutual funds, and foreign institutional portfolios.",
+    shortTerm: "Equities will likely see minor profit booking but remain highly liquid.",
+    longTerm: "Signals a structural transition of the Indian economy to higher valuation multiple brackets.",
+    opportunities: "Accumulate banking blue chips and high-growth energy providers.",
+    risks: "Slight short-term valuation stretch; potential global headwinds."
+  },
+  {
+    id: "news-2",
+    country: "USA",
+    category: "Stocks",
+    headline: "Apple beats Q3 earnings expectations with double-digit growth in services",
+    summary: "Tech giant posts record Q3 revenues, powered by high service margins and strong international device upgrades. Cash flow conversion reaches all-time high.",
+    source: "Wall Street Journal",
+    timestamp: "3 mins ago",
+    breaking: true,
+    impact: "Bullish",
+    severity: "High Impact",
+    confidence: 94,
+    affected: [
+      { symbol: "AAPL", name: "Apple Inc.", change: 4.82 },
+      { symbol: "COMPQ", name: "Nasdaq", change: 1.25 }
+    ],
+    whyItMatters: "Apple's service expansion offsets traditional hardware cyclicality, raising its premium recurring revenue valuation.",
+    whoIsAffected: "Mega-cap tech holders, passive index funds, and global supply chain suppliers.",
+    shortTerm: "Shares are expected to open up 4% to 5% with strong volume support.",
+    longTerm: "Secures Apple's position as the primary high-end consumer wallet holder.",
+    opportunities: "Excellent baseline addition for defensive growth investors.",
+    risks: "Supply chain chip delivery bottlenecks in partner semiconductor sites."
+  },
+  {
+    id: "news-3",
+    country: "Global",
+    category: "Economy",
+    headline: "US Inflation drops to 2.4%, raising expectations of an upcoming Fed rate cut",
+    summary: "Consumer Price Index registers lower-than-anticipated core inflation, signaling interest rate relief. Yield curves flatten across 10-year US Treasuries.",
+    source: "Financial Times",
+    timestamp: "12 mins ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "High Impact",
+    confidence: 88,
+    affected: [
+      { symbol: "SPX", name: "S&P 500", change: 0.85 },
+      { symbol: "TNX", name: "US 10Y Yield", change: -3.42 }
+    ],
+    whyItMatters: "Lower inflation provides the Federal Reserve the necessary room to decrease cost of funds, supporting risk assets globally.",
+    whoIsAffected: "Global borrowers, emerging market equities, and corporate debt holders.",
+    shortTerm: "Bond yields decrease, causing money to flow back into high-growth equity sectors.",
+    longTerm: "Decreases refinancing costs, strengthening corporate balance sheets over 24 months.",
+    opportunities: "Long-duration bonds and high-dividend growth sectors.",
+    risks: "Potential lag in employment rates if cut is delayed."
+  },
+  {
+    id: "news-4",
+    country: "Europe",
+    category: "Banking",
+    headline: "European Central Bank announces surprise 25bps repo rate cut to stimulate growth",
+    summary: "ECB cuts borrowing rates for the second time this quarter to counteract manufacturing slumps in Germany and boost consumer demand.",
+    source: "Reuters",
+    timestamp: "32 mins ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "Medium Impact",
+    confidence: 91,
+    affected: [
+      { symbol: "^FCHI", name: "CAC 40", change: 0.64 },
+      { symbol: "^GDAXI", name: "DAX Index", change: 0.72 }
+    ],
+    whyItMatters: "First major rate cycle decoupling from the Federal Reserve, aiming to shield the EU bloc from credit crunches.",
+    whoIsAffected: "EU commercial banks, export manufacturers, and real estate developers.",
+    shortTerm: "Euro weakens slightly against USD, supporting export-oriented corporations.",
+    longTerm: "Provides liquidity cushion, mitigating banking defaults in industrial hubs.",
+    opportunities: "EU blue-chip industrial and luxury exporters.",
+    risks: "Slight threat of import inflation if Euro drops significantly."
+  },
+  {
+    id: "news-5",
+    country: "Japan",
+    category: "Policy",
+    headline: "Bank of Japan increases interest rates to defend Yen against currency depreciation",
+    summary: "In a landmark policy shift, the BOJ raised baseline yields to 0.25%, ending decades of negative carry trade patterns and currency defense campaigns.",
+    source: "Nikkei Asia",
+    timestamp: "1 hour ago",
+    breaking: true,
+    impact: "Bearish",
+    severity: "High Impact",
+    confidence: 95,
+    affected: [
+      { symbol: "^N225", name: "NIKKEI 225", change: -2.14 },
+      { symbol: "USDJPY", name: "USD/JPY", change: -1.82 }
+    ],
+    whyItMatters: "Unwinding of the global Yen carry trade causes temporary liquidity reshuffles across international hedge funds.",
+    whoIsAffected: "Carry traders, global tech equities, and Japanese exporting giants.",
+    shortTerm: "Initial sell-off in Nikkei; Yen gains strength.",
+    longTerm: "Restores normal capital cost structures within Japan; attracts local savers.",
+    opportunities: "Japanese domestic retail banks and domestic real estate companies.",
+    risks: "Short-term leverage margin calls across global asset markets."
+  },
+  {
+    id: "news-6",
+    country: "Asia",
+    category: "Technology",
+    headline: "TSMC reports 40% surge in advanced AI silicon packaging demand",
+    summary: "The semiconductor giant reports packaging pipelines are fully booked through 2027, driven by cloud hyperscaler chip packaging demand.",
+    source: "TechCrunch",
+    timestamp: "2 hours ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "Medium Impact",
+    confidence: 92,
+    affected: [
+      { symbol: "TSM", name: "TSMC Ltd", change: 3.12 },
+      { symbol: "NVDA", name: "NVIDIA Corp", change: 2.85 }
+    ],
+    whyItMatters: "Confirms AI infrastructure spending continues at institutional scale with no immediate signs of capital deceleration.",
+    whoIsAffected: "Semiconductor supply chains, AI design houses, and cloud computing providers.",
+    shortTerm: "Attracts buy-volume back into AI equipment and lithography suppliers.",
+    longTerm: "Enables mass scale cloud deployments of autonomous systems and agents.",
+    opportunities: "Equipment builders (ASML) and silicon packaging suppliers.",
+    risks: "High geographical concentration of silicon fabrication facilities."
+  }
+];
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState(0);
@@ -152,6 +298,32 @@ export default function Home() {
   
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  // Fincody Live Feed States
+  const [selectedCountry, setSelectedCountry] = useState("Global");
+  const [selectedCategory, setSelectedCategory] = useState("Markets");
+  const [activeArticle, setActiveArticle] = useState<any>(null);
+  const [countdownString, setCountdownString] = useState("02:14:45");
+
+  // Countdown timer simulation for economic calendar
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const hours = 24 - now.getHours() - 1;
+      const minutes = 60 - now.getMinutes() - 1;
+      const seconds = 60 - now.getSeconds();
+      setCountdownString(
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filteredNews = LIVE_NEWS_DATA.filter((item) => {
+    const countryMatch = selectedCountry === "Global" || item.country === selectedCountry;
+    const categoryMatch = selectedCategory === "Markets" || item.category === selectedCategory;
+    return countryMatch && categoryMatch;
+  });
+
 
 
   // Supabase Client state
@@ -514,101 +686,370 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Dashboard Mockup Preview */}
+        
+        {/* Fincody Live Financial Intelligence Feed */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-16 md:mt-24 max-w-6xl mx-auto rounded-2xl overflow-hidden glass-card shadow-2xl relative border border-[var(--border-color)] p-2 bg-slate-950/20"
+          className="mt-16 md:mt-24 max-w-6xl mx-auto rounded-2xl overflow-hidden glass-card shadow-2xl relative border border-blue-500/10 p-1.5 bg-slate-950/40 text-left"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-color)] via-transparent to-transparent z-10 pointer-events-none" />
-          <div className="h-10 border-b border-[var(--border-color)] flex items-center justify-between px-4 bg-slate-950/40 rounded-t-xl">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500/60" />
-              <span className="w-3 h-3 rounded-full bg-amber-500/60" />
-              <span className="w-3 h-3 rounded-full bg-emerald-500/60" />
+          <style>{`
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee-loop {
+              display: flex;
+              width: max-content;
+              animation: marquee 35s linear infinite;
+            }
+            .scrollbar-none::-webkit-scrollbar {
+              display: none;
+            }
+            .scrollbar-none {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+          `}</style>
+
+          {/* Infinite Scrolling Ticker */}
+          <div className="h-10 border-b border-blue-500/10 bg-slate-950/60 overflow-hidden flex items-center relative rounded-t-xl z-20">
+            <div className="absolute left-0 top-0 bottom-0 px-3 bg-red-600/90 text-white text-[9px] font-black tracking-widest flex items-center gap-1 z-30 uppercase shadow-lg shadow-red-500/10 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Live Market Ticker
             </div>
-            <span className="text-xs text-slate-500 font-medium">fincody.com/dashboard</span>
-            <div className="w-12" />
-          </div>
-
-          <div className="p-6 md:p-8 flex flex-col md:flex-row gap-6 bg-slate-950/10">
-            {/* Mock Sidebar */}
-            <div className="w-full md:w-56 flex flex-col gap-4 text-left border-r border-[var(--border-color)] pr-4 hidden md:flex">
-              <div className="flex items-center gap-3 px-3 py-2 bg-blue-500/10 text-blue-400 rounded-lg">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-sm font-semibold">Command Center</span>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 text-[var(--text-subtitle)] hover:bg-slate-500/5 hover:text-[var(--text-color)] rounded-lg transition-colors">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-sm">Future Simulator</span>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 text-[var(--text-subtitle)] hover:bg-slate-500/5 hover:text-[var(--text-color)] rounded-lg transition-colors">
-                <Compass className="w-4 h-4" />
-                <span className="text-sm">Goal Engine</span>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 text-[var(--text-subtitle)] hover:bg-slate-500/5 hover:text-[var(--text-color)] rounded-lg transition-colors">
-                <Calendar className="w-4 h-4" />
-                <span className="text-sm">Subscriptions</span>
-              </div>
-            </div>
-
-            {/* Mock Dashboard Workspace */}
-            <div className="flex-1 flex flex-col gap-6 text-left">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Net Worth</div>
-                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">
-                    <RollingNumber value={3845210} />
+            <div className="pl-28 w-full overflow-hidden">
+              <div className="animate-marquee-loop flex gap-8 py-1">
+                {[...Array(2)].map((_, loopIdx) => (
+                  <div key={loopIdx} className="flex gap-8 text-[10px] font-bold text-slate-400 select-none">
+                    <span>NIFTY <span className="text-emerald-500 font-mono">▲ +0.42%</span></span>
+                    <span>SENSEX <span className="text-emerald-500 font-mono">▲ +0.37%</span></span>
+                    <span>NASDAQ <span className="text-rose-500 font-mono">▼ -0.18%</span></span>
+                    <span>S&P 500 <span className="text-emerald-500 font-mono">▲ +0.52%</span></span>
+                    <span>BTC <span className="text-emerald-500 font-mono">▲ +2.81%</span></span>
+                    <span>GOLD <span className="text-rose-500 font-mono">▼ -0.23%</span></span>
+                    <span>OIL <span className="text-emerald-500 font-mono">▲ +1.12%</span></span>
                   </div>
-                  <div className="text-xs text-emerald-400 mt-1 flex items-center gap-0.5 font-medium">
-                    +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500">this month</span>
-                  </div>
-                </div>
-                <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Monthly Savings</div>
-                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">
-                    <RollingNumber value={72450} />
-                  </div>
-                  <div className="text-xs text-[var(--text-subtitle)] mt-1">36% of monthly income</div>
-                </div>
-                <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Health Score</div>
-                  <div className="text-2xl font-bold mt-1 text-emerald-500 flex items-center gap-1.5">
-                    94/100 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <div className="text-xs text-[var(--text-subtitle)] mt-1">Excellent financial status</div>
-                </div>
-              </div>
-
-              {/* Area Chart visualization */}
-              <div className="glass-card p-5 rounded-xl border border-[var(--border-color)] h-60 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-semibold text-[var(--text-color)]">10-Year Projections</span>
-                  <div className="flex gap-4 text-xs font-semibold">
-                    <span className="flex items-center gap-1 text-[var(--text-subtitle)]"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> Standard</span>
-                    <span className="flex items-center gap-1 text-blue-500"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Fincody AI</span>
-                  </div>
-                </div>
-                <div className="w-full h-40 opacity-70">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData.slice(0, 10)}>
-                      <defs>
-                        <linearGradient id="colorPvHero" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <Area type="monotone" dataKey="Standard" stroke="#475569" strokeWidth={1.5} fill="transparent" />
-                      <Area type="monotone" dataKey="Fincody Projections" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorPvHero)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                ))}
               </div>
             </div>
           </div>
+
+          <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 bg-slate-950/20">
+            
+            {/* Main News Stream Column (Left) */}
+            <div className="lg:col-span-8 flex flex-col gap-6">
+              
+              {/* Header Controls Block */}
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                      FINCODY LIVE <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5 font-bold uppercase tracking-widest">Global Financial Intelligence Feed</p>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-bold bg-slate-900/50 border border-blue-500/5 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-blue-400" /> Updated just now
+                  </div>
+                </div>
+
+                {/* Country filter pills */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                  {["Global", "India", "USA", "Europe", "Japan", "Asia"].map((c) => {
+                    const isActive = selectedCountry === c;
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => setSelectedCountry(c)}
+                        className={`px-3.5 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                          isActive 
+                            ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
+                            : "bg-slate-900/30 border-blue-500/5 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {c === "Global" ? "🌍 Global" : c === "India" ? "🇮🇳 India" : c === "USA" ? "🇺🇸 USA" : c === "Europe" ? "🇪🇺 Europe" : c === "Japan" ? "🇯🇵 Japan" : "🌏 Asia"}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Category tabs */}
+                <div className="flex gap-1.5 border-b border-blue-500/5 pb-2 overflow-x-auto scrollbar-none">
+                  {["Markets", "Stocks", "Economy", "IPO", "Crypto", "Banking", "Policy", "Technology"].map((cat) => {
+                    const isActive = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+                          isActive ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+                        }`}
+                      >
+                        {cat}
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeTabIndicatorLanding"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Scrolling News Stream */}
+              <div className="flex flex-col gap-4 max-h-[520px] overflow-y-auto pr-2 scrollbar-none">
+                {filteredNews.length === 0 ? (
+                  <div className="py-16 text-center text-slate-500 border border-dashed border-blue-500/10 rounded-2xl">
+                    No active events matching the selected filters.
+                  </div>
+                ) : (
+                  filteredNews.map((news) => (
+                    <motion.div
+                      key={news.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-4 rounded-xl border transition-all duration-300 bg-slate-900/20 relative group overflow-hidden ${
+                        news.breaking 
+                          ? "border-red-500/30 hover:border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.03)]" 
+                          : "border-blue-500/10 hover:border-blue-500/25"
+                      }`}
+                    >
+                      {news.breaking && (
+                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-red-600 animate-pulse" />
+                      )}
+
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-slate-950/60 border border-blue-500/10 px-2 py-0.5 rounded text-slate-400 font-extrabold uppercase">
+                            {news.source}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-semibold">{news.timestamp}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {news.breaking && (
+                            <span className="text-[8px] bg-red-600/20 border border-red-500/30 text-red-500 font-extrabold px-1.5 py-0.5 rounded tracking-widest uppercase animate-pulse">
+                              🚨 Breaking
+                            </span>
+                          )}
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase ${
+                            news.impact === "Bullish" 
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                              : news.impact === "Bearish"
+                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                              : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                          }`}>
+                            {news.impact}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h4 className="text-xs font-black text-white mt-2.5 leading-relaxed group-hover:text-blue-400 transition-colors">
+                        {news.headline}
+                      </h4>
+
+                      <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                        {news.summary}
+                      </p>
+
+                      {/* Affected targets */}
+                      <div className="flex flex-wrap items-center gap-2 border-t border-blue-500/5 mt-3 pt-3">
+                        <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Affected Targets</span>
+                        {news.affected.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            className="flex items-center gap-1 bg-slate-950/60 border border-blue-500/5 px-2 py-1 rounded text-[9px] font-mono font-bold"
+                          >
+                            <span className="text-slate-400">{item.name}</span>
+                            <span className={item.change >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                              {item.change >= 0 ? `+${item.change}%` : `${item.change}%`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Action trigger footer */}
+                      <div className="flex justify-between items-center border-t border-blue-500/5 mt-3 pt-2.5">
+                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">Confidence Score: <span className="text-blue-400 font-mono">${news.confidence}%</span></span>
+                        <button 
+                          onClick={() => setActiveArticle(news)}
+                          className="text-[10px] font-bold text-blue-400 hover:text-white flex items-center gap-1.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 px-3 py-1 rounded-lg transition-all cursor-pointer"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" /> Explain
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Side drawer widgets */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              
+              {/* Daily AI Brief */}
+              <div className="glass-card p-4 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
+                <div>
+                  <span className="text-[8px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                    AI Brief
+                  </span>
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider mt-1.5">Today's Market Brief</h4>
+                  <p className="text-[9px] text-slate-500">Curated by FINCODY AI</p>
+                </div>
+
+                <div className="space-y-2.5 text-[10px]">
+                  {[
+                    "Sensex hits historic 90k milestone.",
+                    "US CPI drops to 2.4% easing Treasury yields.",
+                    "ECB cuts repo rate to stimulate exports.",
+                    "Yen carry-trade unwinds due to BOJ hike.",
+                    "Actionable Insight: Rebalance 10% cash into high-yield index blue chips."
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-2 text-slate-300 text-left">
+                      <span className="text-blue-500 font-bold">${idx + 1}.</span>
+                      <span className="leading-normal">${item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Economic Calendar */}
+              <div className="glass-card p-4 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider">Economic Calendar</h4>
+                  <p className="text-[9px] text-slate-500">Upcoming global triggers</p>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { title: "Fed Rate Decision", trigger: "FOMC Meeting", count: countdownString, sub: "Tomorrow" },
+                    { title: "US CPI Release", trigger: "Inflation Stats", count: "12:14:00", sub: "Jul 12, 2026" },
+                    { title: "RBI Policy Announcement", trigger: "Repo Rates", count: "3d 14h", sub: "Jul 15, 2026" }
+                  ].map((event, idx) => (
+                    <div key={idx} className="p-2 rounded-lg bg-slate-950/40 border border-blue-500/5 text-left flex justify-between items-center">
+                      <div>
+                        <span className="text-[10px] font-black text-white block">${event.title}</span>
+                        <span className="text-[9px] text-slate-500 font-semibold block">${event.trigger} • ${event.sub}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded block">
+                          ${event.count}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Side Drawer Explainer Panel */}
+          <AnimatePresence>
+            {activeArticle && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setActiveArticle(null)}
+                  className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[99998]"
+                />
+
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                  className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/95 border-l border-blue-500/20 shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
+                >
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 animate-pulse">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">JARVIS INTEL EXPLAINER</h4>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Fincody Live AI Co-Pilot</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setActiveArticle(null)}
+                        className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-[8px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-black uppercase">
+                          ${activeArticle.source}
+                        </span>
+                        <h3 className="text-sm font-black text-white mt-2 leading-relaxed">${activeArticle.headline}</h3>
+                      </div>
+
+                      <div className="space-y-4 pt-2">
+                        <div>
+                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Why this matters</span>
+                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">${activeArticle.whyItMatters}</p>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Who is affected</span>
+                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">${activeArticle.whoIsAffected}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">Short-term Impact</span>
+                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">${activeArticle.shortTerm}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-wider block">Long-term Impact</span>
+                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">${activeArticle.longTerm}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-blue-900/[0.04] border border-blue-500/10 space-y-2">
+                          <div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block flex items-center gap-1">
+                              <Zap className="w-3.5 h-3.5" /> Potential Opportunities
+                            </span>
+                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">${activeArticle.opportunities}</p>
+                          </div>
+                          <div className="border-t border-blue-500/5 pt-2">
+                            <span className="text-[10px] font-black text-rose-400 uppercase tracking-wider block flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> Risk Factors
+                            </span>
+                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">${activeArticle.risks}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-blue-500/10 pt-4 mt-6">
+                    <button
+                      onClick={() => {
+                        setActiveArticle(null);
+                        window.location.href = '/dashboard';
+                      }}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" /> Discuss Opportunity on Dashboard
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </motion.div>
-      </section>
+</section>
 
       {/* Interactive AI Demo Section */}
       <section id="demo" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
