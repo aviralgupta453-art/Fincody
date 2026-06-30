@@ -52,6 +52,9 @@ import {
   Cell 
 } from "recharts";
 import FincodyLogo from "@/components/FincodyLogo";
+import CurrencyRibbon from "@/components/CurrencyRibbon";
+import RollingNumber from "@/components/RollingNumber";
+import { useCurrency } from "@/context/CurrencyContext";
 
 // TypeScript Interfaces
 interface Message {
@@ -95,6 +98,9 @@ interface DocumentFile {
 }
 
 export default function Dashboard() {
+  // Global Currency Context
+  const { activeCurrency, format, convert } = useCurrency();
+
   // Supabase Auth State
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -1633,7 +1639,10 @@ export default function Dashboard() {
                             n.unread ? "bg-blue-500/5 border-blue-500/10 text-[var(--text-color)] font-medium" : "bg-slate-900/10 border-[var(--border-color)] text-[var(--text-subtitle)]"
                           }`}
                         >
-                          {n.text}
+                          {n.text.replace(/₹([0-9,]+)/g, (match, p1) => {
+                            const rawNum = parseInt(p1.replace(/,/g, ''));
+                            return isNaN(rawNum) ? match : format(rawNum);
+                          })}
                         </div>
                       ))}
                     </div>
@@ -1652,8 +1661,11 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Global Currency Selection Ribbon */}
+        <CurrencyRibbon />
+
         {/* Tab Content Panels */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans">
           <AnimatePresence mode="wait">
             
             {/* Command Center */}
@@ -1669,7 +1681,9 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Net Worth</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{netWorth.toLocaleString()}</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
+                      <RollingNumber value={netWorth} />
+                    </div>
                     <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1 font-bold">
                       +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">this month</span>
                     </div>
@@ -1677,7 +1691,9 @@ export default function Dashboard() {
                   
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Monthly Savings</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{monthlySavings.toLocaleString()}</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
+                      <RollingNumber value={monthlySavings} />
+                    </div>
                     <div className="text-xs text-[var(--text-subtitle)] mt-2 font-semibold">
                       36.2% <span className="text-slate-500">savings rate</span>
                     </div>
@@ -1685,7 +1701,9 @@ export default function Dashboard() {
 
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Active Subscriptions</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{monthlySubscriptionSpend.toLocaleString()}</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
+                      <RollingNumber value={monthlySubscriptionSpend} />
+                    </div>
                     <div className="text-xs text-rose-500 mt-2 flex items-center gap-1 font-bold">
                       -2.4% <TrendingDown className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">from last month</span>
                     </div>
@@ -1693,7 +1711,9 @@ export default function Dashboard() {
 
                   <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                     <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Goal Contributions</div>
-                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">₹{goals.reduce((acc, curr) => acc + curr.current, 0).toLocaleString()}</div>
+                    <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
+                      <RollingNumber value={goals.reduce((acc, curr) => acc + curr.current, 0)} />
+                    </div>
                     <div className="text-xs text-blue-500 mt-2 font-semibold">
                       {goals.length} goals <span className="text-slate-500 font-semibold">actively tracked</span>
                     </div>
@@ -1707,7 +1727,7 @@ export default function Dashboard() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div>
                         <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Growth Over Time</span>
-                        <span className="text-xs text-slate-500 block">Values in ₹ Lakhs</span>
+                        <span className="text-xs text-slate-500 block">Values in {activeCurrency.code}</span>
                       </div>
 
                       {/* Start Year / End Year Selectors */}
@@ -1760,15 +1780,22 @@ export default function Dashboard() {
                             </linearGradient>
                           </defs>
                           <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} />
-                          <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ 
-                              background: "var(--bg-color)", 
-                              border: "1px solid var(--border-color)", 
-                              borderRadius: "12px", 
-                              color: "var(--text-color)" 
-                            }} 
-                          />
+                          <YAxis 
+                             stroke="#475569" 
+                             fontSize={11} 
+                             tickLine={false} 
+                             axisLine={false} 
+                             tickFormatter={(val) => format(val * 100000, true)} 
+                           />
+                           <Tooltip 
+                             contentStyle={{ 
+                               background: "var(--bg-color)", 
+                               border: "1px solid var(--border-color)", 
+                               borderRadius: "12px", 
+                               color: "var(--text-color)" 
+                             }} 
+                             formatter={(value) => [format(Number(value) * 100000), "Value"]}
+                           />
                           <Area type="monotone" dataKey="Standard" stroke="#475569" strokeWidth={1.5} fill="transparent" />
                           <Area type="monotone" dataKey="Fincody Projections" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#chartGrad2)" />
                         </AreaChart>
@@ -1803,7 +1830,9 @@ export default function Dashboard() {
                       </ResponsiveContainer>
                       <div className="absolute flex flex-col items-center justify-center">
                         <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Assets</span>
-                        <span className="text-sm font-black text-[var(--text-color)]">₹38.4L</span>
+                        <span className="text-sm font-black text-[var(--text-color)]">
+                           <RollingNumber value={3845210} />
+                         </span>
                       </div>
                     </div>
 
@@ -1814,7 +1843,9 @@ export default function Dashboard() {
                             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: asset.color }} />
                             <span>{asset.name}</span>
                           </div>
-                          <span className="text-[var(--text-color)] font-mono">₹{(asset.value / 100000).toFixed(1)}L</span>
+                          <span className="text-[var(--text-color)] font-mono">
+                             <RollingNumber value={asset.value} />
+                           </span>
                         </div>
                       ))}
                     </div>
@@ -1842,7 +1873,7 @@ export default function Dashboard() {
                         <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <span className="font-bold text-[var(--text-color)] block mb-0.5">Overlapping Subscriptions Detected</span>
-                          <p className="text-[var(--text-subtitle)]">Adobe Creative Cloud usage has dropped below 15% this quarter. Cancellation could save ₹4,220/month.</p>
+                          <p className="text-[var(--text-subtitle)]">Adobe Creative Cloud usage has dropped below 15% this quarter. Cancellation could save <RollingNumber value={4220} />/month.</p>
                         </div>
                       </div>
                     </div>
@@ -1921,7 +1952,7 @@ export default function Dashboard() {
                           <div className="text-right">
                             <span className="text-xs text-slate-500 block uppercase font-bold tracking-wider">Current / Target</span>
                             <span className="text-lg font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">
-                              ₹{goal.current.toLocaleString()} / ₹{goal.target.toLocaleString()}
+                              <RollingNumber value={goal.current} /> / <RollingNumber value={goal.target} />
                             </span>
                           </div>
                         </div>
@@ -1946,19 +1977,19 @@ export default function Dashboard() {
                             onClick={() => handleContributeToGoal(goal.id, 10000)}
                             className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all"
                           >
-                            + ₹10k Contribution
+                            + {format(10000)} Contribution
                           </button>
                           <button
                             onClick={() => handleContributeToGoal(goal.id, 50000)}
                             className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all"
                           >
-                            + ₹50k Contribution
+                            + {format(50000)} Contribution
                           </button>
                           <button
                             onClick={() => handleContributeToGoal(goal.id, 100000)}
                             className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all"
                           >
-                            + ₹1 Lakh Contribution
+                            + {format(100000)} Contribution
                           </button>
                         </div>
                       </div>
@@ -1988,7 +2019,7 @@ export default function Dashboard() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Capital (₹)</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Capital ({activeCurrency.symbol})</label>
                         <input
                           type="number"
                           required
@@ -2177,7 +2208,7 @@ export default function Dashboard() {
                             </div>
 
                             <div className="border-t border-[var(--border-color)] pt-3 text-[11px] text-slate-500 leading-relaxed font-semibold">
-                              &bull; Target Capital: <span className="text-white font-bold font-mono">₹{aiRecommendation.totalCapital.toLocaleString()}</span>
+                              &bull; Target Capital: <span className="text-white font-bold font-mono"><RollingNumber value={aiRecommendation.totalCapital} /></span>
                             </div>
                           </div>
 
@@ -2261,7 +2292,7 @@ export default function Dashboard() {
                                   return data;
                                 })()}>
                                   <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
-                                  <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} />
+                                  <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} formatter={(value) => [format(Number(value)), "Value"]} />
                                   <Area type="monotone" dataKey="Optimistic" stroke="#10b981" fillOpacity={0.03} strokeWidth={1} fill="#10b981" />
                                   <Area type="monotone" dataKey="Moderate" stroke="#3b82f6" fillOpacity={0.05} strokeWidth={1.5} fill="#3b82f6" />
                                   <Area type="monotone" dataKey="Conservative" stroke="#64748b" fillOpacity={0} strokeWidth={1} fill="transparent" />
@@ -2321,7 +2352,7 @@ export default function Dashboard() {
                           <div className="absolute flex flex-col items-center justify-center">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Portfolio</span>
                             <span className="text-xl font-black text-[var(--text-color)] font-mono">
-                              ₹{portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              <RollingNumber value={portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0)} />
                             </span>
                           </div>
                         </div>
@@ -2334,7 +2365,7 @@ export default function Dashboard() {
                               <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: asset.color }} />
                               <span className="truncate max-w-[140px]">{asset.name}</span>
                             </div>
-                            <span className="text-[var(--text-color)] font-mono">₹{asset.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                            <span className="text-[var(--text-color)] font-mono"><RollingNumber value={asset.value} /></span>
                           </div>
                         ))}
                       </div>
@@ -2361,22 +2392,22 @@ export default function Dashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Invested</span>
-                              <span className="text-base font-bold text-white font-mono">₹{totalInvested.toLocaleString()}</span>
+                              <span className="text-base font-bold text-white font-mono"><RollingNumber value={totalInvested} /></span>
                             </div>
                             <div>
                               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Current Value</span>
-                              <span className="text-base font-bold text-white font-mono">₹{totalVal.toLocaleString()}</span>
+                              <span className="text-base font-bold text-white font-mono"><RollingNumber value={totalVal} /></span>
                             </div>
                             <div>
                               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Returns</span>
                               <span className={`text-base font-black font-mono ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                ₹{totalReturn.toLocaleString()} ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
+                                <RollingNumber value={totalReturn} /> ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
                               </span>
                             </div>
                             <div>
                               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Today's Gain/Loss</span>
                               <span className={`text-base font-black font-mono ${todaysGains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                {todaysGains >= 0 ? "▲" : "▼"} ₹{Math.abs(todaysGains).toLocaleString()}
+                                {todaysGains >= 0 ? "▲" : "▼"} <RollingNumber value={Math.abs(todaysGains)} />
                               </span>
                             </div>
                           </div>
@@ -2570,7 +2601,7 @@ export default function Dashboard() {
 
                                   <div className="text-right">
                                     <span className="font-bold text-white text-sm block font-mono">
-                                      {quote ? `₹${quote.price.toLocaleString()}` : "Loading..."}
+                                      {quote ? <RollingNumber value={quote.price} /> : "Loading..."}
                                     </span>
                                     {quote && (
                                       <span className={`text-[10px] font-bold mt-0.5 flex items-center gap-0.5 justify-end ${isPositive ? "text-emerald-500" : "text-rose-500"}`}>
@@ -2598,7 +2629,7 @@ export default function Dashboard() {
                                 </div>
 
                                 <div className="flex flex-col gap-1">
-                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost (₹)</span>
+                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost ({activeCurrency.symbol})</span>
                                   <input
                                     type="number"
                                     min="0"
@@ -2611,7 +2642,7 @@ export default function Dashboard() {
                                 <div className="flex flex-col text-right">
                                   <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
                                   <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                    {totalReturn >= 0 ? "+" : ""}₹{totalReturn.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} />
                                   </span>
                                 </div>
                               </div>
@@ -2654,7 +2685,7 @@ export default function Dashboard() {
                 <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-950/10">
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-slate-500 font-bold uppercase tracking-wider font-semibold">Total Monthly Subscription Spend</span>
-                    <span className="text-3xl font-black text-[var(--text-color)] font-mono">₹{monthlySubscriptionSpend.toLocaleString()} <span className="text-sm text-slate-500 font-medium">/month</span></span>
+                    <span className="text-3xl font-black text-[var(--text-color)] font-mono"><RollingNumber value={monthlySubscriptionSpend} /> <span className="text-sm text-slate-500 font-medium">/month</span></span>
                   </div>
                   <div className="flex gap-4">
                     <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
@@ -2663,7 +2694,7 @@ export default function Dashboard() {
                     </div>
                     <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
                       <span className="text-slate-500 block">AI savings found</span>
-                      <span className="text-emerald-500 font-bold mt-0.5 block">₹4,220/mo projected</span>
+                      <span className="text-emerald-500 font-bold mt-0.5 block"><RollingNumber value={4220} />/mo projected</span>
                     </div>
                   </div>
                 </div>
@@ -2695,7 +2726,7 @@ export default function Dashboard() {
 
                         <div className="flex items-center justify-between sm:justify-end gap-6">
                           <div className="text-right">
-                            <span className="font-bold text-[var(--text-color)] text-sm block font-mono">₹{sub.price}</span>
+                            <span className="font-bold text-[var(--text-color)] text-sm block font-mono"><RollingNumber value={sub.price} /></span>
                             <span className="text-[10px] text-slate-500 mt-0.5 block uppercase tracking-wider font-bold">{sub.interval}</span>
                           </div>
 
@@ -2751,11 +2782,11 @@ export default function Dashboard() {
                       <div className="grid grid-cols-2 gap-4 my-1">
                         <div>
                           <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Coverage Sum</span>
-                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">₹{(policy.coverage / 100000).toFixed(1)} Lakhs</span>
+                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono"><RollingNumber value={policy.coverage} /></span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Premium</span>
-                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">₹{policy.premium} <span className="text-[10px] text-slate-500 font-semibold">/month</span></span>
+                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono"><RollingNumber value={policy.premium} /> <span className="text-[10px] text-slate-500 font-semibold">/month</span></span>
                         </div>
                       </div>
                     </div>
@@ -2771,7 +2802,7 @@ export default function Dashboard() {
                         <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <span className="font-bold text-[var(--text-color)] block mb-0.5">Auto Policy Redundancy</span>
-                          <p className="text-[var(--text-subtitle)]">Your ICICI Auto Policy duplicates emergency roadside recovery features. Eliminating this saves ₹400/mo.</p>
+                          <p className="text-[var(--text-subtitle)]">Your ICICI Auto Policy duplicates emergency roadside recovery features. Eliminating this saves <RollingNumber value={400} />/mo.</p>
                         </div>
                       </div>
 
@@ -2779,7 +2810,7 @@ export default function Dashboard() {
                         <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <span className="font-bold text-[var(--text-color)] block mb-0.5">Critical Health Buffer Met</span>
-                          <p className="text-[var(--text-subtitle)]">Health insurance cover of ₹15L matches optimal threshold recommendations.</p>
+                          <p className="text-[var(--text-subtitle)]">Health insurance cover of <RollingNumber value={1500000} /> matches optimal threshold recommendations.</p>
                         </div>
                       </div>
                     </div>
@@ -2974,8 +3005,8 @@ export default function Dashboard() {
                       <div className="grid grid-cols-3 gap-2">
                         {[
                           { label: "None", value: 0 },
-                          { label: "₹20 Lakhs", value: 20 },
-                          { label: "₹40 Lakhs", value: 40 }
+                          { label: `${format(2000000)}`, value: 20 },
+                          { label: `${format(4000000)}`, value: 40 }
                         ].map((item) => (
                           <button
                             key={item.value}
@@ -3025,7 +3056,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
                     <div>
                       <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">15-Year Scenario Forecast</span>
-                      <span className="text-xs text-slate-500 mt-0.5 block">Estimated values in ₹ Lakhs</span>
+                      <span className="text-xs text-slate-500 mt-0.5 block">Projections in {activeCurrency.code}</span>
                     </div>
                     <div className="flex gap-4 text-xs font-semibold">
                       <span className="flex items-center gap-1 text-[var(--text-subtitle)]"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> Standard</span>
@@ -3043,7 +3074,7 @@ export default function Dashboard() {
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => format(val * 100000, true)} />
                         <Tooltip 
                           contentStyle={{ 
                             background: "var(--bg-color)", 
@@ -3051,6 +3082,7 @@ export default function Dashboard() {
                             borderRadius: "12px", 
                             color: "var(--text-color)" 
                           }} 
+                          formatter={(value) => [format(Number(value) * 100000), "Value"]}
                         />
                         <Area type="monotone" dataKey="Standard" stroke="#475569" strokeWidth={1.5} fill="transparent" />
                         <Area type="monotone" dataKey="Fincody Projections" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#simGradDashboard)" />
@@ -3204,7 +3236,7 @@ export default function Dashboard() {
 
             <form onSubmit={handleManualEntrySubmit} className="space-y-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary (₹/month)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salary ({activeCurrency.symbol}/month)</label>
                 <input
                   type="number"
                   value={manualSalary}
@@ -3215,7 +3247,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Worth (₹)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Worth ({activeCurrency.symbol})</label>
                 <input
                   type="number"
                   value={manualNetWorth}
@@ -3226,7 +3258,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">EMI (₹/month)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">EMI ({activeCurrency.symbol}/month)</label>
                 <input
                   type="number"
                   value={manualEMI}
@@ -3237,7 +3269,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Monthly Expenses (₹)</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Monthly Expenses ({activeCurrency.symbol})</label>
                 <input
                   type="number"
                   value={manualOtherExpenses}
@@ -3271,7 +3303,7 @@ export default function Dashboard() {
                     type="number"
                     value={manualSubscriptionPrice}
                     onChange={(e) => setManualSubscriptionPrice(e.target.value)}
-                    placeholder="Price (₹)"
+                    placeholder={`Price (${activeCurrency.symbol})`}
                     className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
                   />
                 </div>
@@ -3328,13 +3360,13 @@ export default function Dashboard() {
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Live Market Value</span>
                     <span className="text-3xl font-black text-white font-mono block mt-1">
-                      ₹{q.price.toLocaleString()}
+                      <RollingNumber value={q.price} />
                     </span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Day Change</span>
                     <span className={`text-base font-black font-mono block mt-1 ${isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                      {isPositive ? "▲" : "▼"} ₹{Math.abs(q.change).toFixed(2)} ({isPositive ? "+" : ""}{q.changePercent.toFixed(2)}%)
+                      {isPositive ? "▲" : "▼"} <RollingNumber value={Math.abs(q.change)} /> ({isPositive ? "+" : ""}{q.changePercent.toFixed(2)}%)
                     </span>
                   </div>
                 </div>
@@ -3394,6 +3426,7 @@ export default function Dashboard() {
                         axisLine={false} 
                         domain={["auto", "auto"]}
                         dx={-5}
+                        tickFormatter={(val) => format(val, true)}
                       />
                       <Tooltip
                         contentStyle={{
@@ -3402,6 +3435,7 @@ export default function Dashboard() {
                           borderRadius: "12px",
                           color: "var(--text-color)"
                         }}
+                        formatter={(value) => [format(Number(value)), "Price"]}
                       />
                       <Area 
                         type="monotone" 

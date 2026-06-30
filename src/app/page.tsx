@@ -36,6 +36,8 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import FincodyLogo from "@/components/FincodyLogo";
+import CurrencyRibbon from "@/components/CurrencyRibbon";
+import RollingNumber from "@/components/RollingNumber";
 
 // Features data
 const FEATURES = [
@@ -424,6 +426,7 @@ export default function Home() {
         </div>
       </header>
       <div className="h-20" /> {/* Spacer for fixed header */}
+      <CurrencyRibbon />
 
       {/* Mobile Drawer Menu */}
       <AnimatePresence>
@@ -555,14 +558,18 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
                   <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Net Worth</div>
-                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">₹38,45,210</div>
+                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">
+                    <RollingNumber value={3845210} />
+                  </div>
                   <div className="text-xs text-emerald-400 mt-1 flex items-center gap-0.5 font-medium">
                     +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500">this month</span>
                   </div>
                 </div>
                 <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
                   <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Monthly Savings</div>
-                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">₹72,450</div>
+                  <div className="text-2xl font-bold mt-1 text-[var(--text-color)] font-mono">
+                    <RollingNumber value={72450} />
+                  </div>
                   <div className="text-xs text-[var(--text-subtitle)] mt-1">36% of monthly income</div>
                 </div>
                 <div className="glass-card p-4 rounded-xl border border-[var(--border-color)]">
@@ -1017,7 +1024,9 @@ export default function Home() {
                   <p className="text-xs text-slate-500 mt-0.5">Core life dashboard</p>
                 </div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-[var(--text-color)]">₹0</span>
+                  <span className="text-4xl font-extrabold text-[var(--text-color)]">
+                    <RollingNumber value={0} />
+                  </span>
                   <span className="text-sm text-slate-500 font-medium">/month</span>
                 </div>
                 <hr className="border-[var(--border-color)]" />
@@ -1047,7 +1056,9 @@ export default function Home() {
                   <p className="text-xs text-blue-500 dark:text-blue-400 mt-0.5 font-bold">Unlimited automated optimizations</p>
                 </div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-[var(--text-color)]">₹499</span>
+                  <span className="text-4xl font-extrabold text-[var(--text-color)]">
+                    <RollingNumber value={499} />
+                  </span>
                   <span className="text-sm text-slate-500 font-medium">/month</span>
                 </div>
                 <hr className="border-[var(--border-color)]" />
@@ -1075,7 +1086,9 @@ export default function Home() {
                   <p className="text-xs text-slate-500 mt-0.5">Advanced advisory services</p>
                 </div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-[var(--text-color)]">₹1,999</span>
+                  <span className="text-4xl font-extrabold text-[var(--text-color)]">
+                    <RollingNumber value={1999} />
+                  </span>
                   <span className="text-sm text-slate-500 font-medium">/month</span>
                 </div>
                 <hr className="border-[var(--border-color)]" />
