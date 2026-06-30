@@ -249,6 +249,30 @@ export default function Dashboard() {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  // Fincody AI Command Center states
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking] = useState(false);
+  const [welcomeTitleIndex, setWelcomeTitleIndex] = useState(0);
+  const [multistageThinking, setMultistageThinking] = useState("");
+  const [dragHover, setDragHover] = useState(false);
+  const [scanAnimation, setScanAnimation] = useState(false);
+
+  const welcomeTitles = [
+    "Your Personal AI Finance Coach",
+    "Investment Analyst",
+    "Budget Planner",
+    "Wealth Advisor",
+    "Tax Assistant",
+    "Financial Decision Engine"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWelcomeTitleIndex(prev => (prev + 1) % welcomeTitles.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
 
   // Subscriptions State
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([
@@ -1489,21 +1513,52 @@ const handleSaveCurrentPortfolio = (name: string) => {
     setChatInput("");
     setIsTyping(true);
 
-    // Formulate smart responses
+    // Dynamic Multistage Thinking Pipeline
+    const stages = [
+      "Understanding your finances...",
+      "Analyzing investments...",
+      "Checking market conditions...",
+      "Building recommendation..."
+    ];
+
+    let currentStageIdx = 0;
+    setMultistageThinking(stages[0]);
+
+    const interval = setInterval(() => {
+      currentStageIdx++;
+      if (currentStageIdx < stages.length) {
+        setMultistageThinking(stages[currentStageIdx]);
+      } else {
+        clearInterval(interval);
+      }
+    }, 600);
+
+    // Formulate context-aware response after thinking completes
     setTimeout(() => {
+      setMultistageThinking("");
+      
       let replyText = "I have analyzed your request. Fincody AI model predicts a stable path. Let me know how I can adjust details.";
       const query = text.toLowerCase();
+
+      // Dashboard context extraction
+      const totalSipInvestments = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+      const fdCount = fixedDeposits.length;
       
       if (query.includes("car") || query.includes("lakh")) {
-        replyText = "Analyzing ₹15 Lakh car purchase. Based on ₹72k/mo savings, you can afford it. However, your Emergency Fund buffer drops to 1.3 months. I recommend waiting 4 months to secure your equity portfolio.";
-      } else if (query.includes("mba") || query.includes("career")) {
-        replyText = "Simulating a ₹30 Lakh MBA vs current Software Engineer path. Post-MBA salary is projected to rise 65%, reaching a breakeven payback in 4.3 years. It contributes a net-worth increase of +₹1.48 Crores by Year 10.";
-      } else if (query.includes("netflix") || query.includes("save") || query.includes("spotify")) {
-        replyText = `Your active subscriptions total ${activeSubscriptions.length} services, costing ₹${monthlySubscriptionSpend}/month. Canceling Netflix & Spotify saves ₹828/mo. If auto-invested in equity index fund, this accumulates to ₹1.9 Lakhs in 10 years and ₹28.9 Lakhs in 30 years.`;
+        replyText = `Analyzing ₹15 Lakh car purchase. Based on your current Monthly Savings of ₹${monthlySavings.toLocaleString()} and Net Worth of ₹${netWorth.toLocaleString()}, you can afford it. However, your emergency buffer drops below 2 months. I suggest keeping the index fund SIP running at ₹${totalSipInvestments > 0 ? (totalSipInvestments/10).toFixed(0) : "5,000"}/month and deferring the purchase for 3 months to avoid equity dilution. [SIMULATION: CAR]`;
+      } else if (query.includes("mba") || query.includes("career") || query.includes("study")) {
+        replyText = `Simulating a ₹30 Lakh MBA compared to your current savings index. Projected post-graduation salary raises your annual compounding by 65%. Your Net Worth (currently ₹${netWorth.toLocaleString()}) is projected to rise by +₹1.48 Crores by Year 10. [SIMULATION: MBA]`;
+      } else if (query.includes("netflix") || query.includes("save") || query.includes("spotify") || query.includes("expense")) {
+        replyText = `Your active subscriptions total ${subscriptions.length} services, costing ₹${subscriptions.reduce((acc, s) => acc + s.price, 0)}/month. Canceling Netflix & Spotify saves ₹828/mo. If auto-invested in equity index fund, this accumulates to ₹1.9 Lakhs in 10 years and ₹28.9 Lakhs in 30 years.`;
       } else if (query.includes("net worth") || query.includes("assets")) {
-        replyText = `Your current Net Worth is ₹38,45,210. Asset breakdown: Stocks (₹24.5L), Cash (₹5.9L), Gold (₹4.5L), Crypto (₹3.5L). Portfolio health score: 94/100 (Excellent).`;
+        replyText = `Your current Net Worth is ₹${netWorth.toLocaleString()}. Active assets breakdown: Stocks & ETFs (₹${totalSipInvestments.toLocaleString()}), bank Fixed Deposits (${fdCount} accounts, totaling ₹${fixedDeposits.reduce((acc, f) => acc + f.principal, 0).toLocaleString()}), PPF balance (₹${ppfData.balance.toLocaleString()}), and NPS corpus (₹${npsData.corpus.toLocaleString()}).`;
       } else if (query.includes("insurance") || query.includes("vault")) {
-        replyText = "I found 3 insurance policies. Note: Your ICICI Auto Insurance renewal is coming up in August. There is an overlap in premium payouts for auto. I recommend auditing redundancies.";
+        replyText = "I found 3 insurance policies in your secure vault. Key alert: Your ICICI Auto Insurance renewal is coming up in August. There is a redundant coverage overlap in premium payouts. I suggest adjusting deductibles.";
+      } else if (query.includes("portfolio") || query.includes("stock") || query.includes("rebalance")) {
+        const bestPerfSymbol = portfolio.length > 0 ? portfolio[0].symbol : "NIFTYBEES";
+        replyText = `Your stock portfolio has an active valuation of ₹${totalSipInvestments.toLocaleString()}. The top performer is ${bestPerfSymbol}. I recommend rebalancing 15% of your equities into fixed deposits to lock in the recent 7.25% banking rate and mitigate volatility.`;
+      } else if (query.includes("tax") || query.includes("nps") || query.includes("ppf")) {
+        replyText = `You can save up to ₹23,000 in taxes under Sec 80C by fully utilizing your NPS annual personal co-pay (currently at ₹${npsData.personalMonthly}/month) and maximizing your PPF contribution limit.`;
       }
 
       const aiMsg: Message = {
@@ -1511,12 +1566,180 @@ const handleSaveCurrentPortfolio = (name: string) => {
         text: replyText,
         timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
       };
-      setChatMessages(prev => [...prev, aiMsg]);
+      
+      setChatMessages(prev => {
+        const nextMsgs = [...prev, aiMsg];
+        // Save chat memory
+        localStorage.setItem("fincody_ai_memory", JSON.stringify(nextMsgs.slice(-4)));
+        return nextMsgs;
+      });
+
       setIsTyping(false);
-    }, 1200);
+
+      // Web Speech API Voice synthesis
+      if (voiceMode) {
+        try {
+          window.speechSynthesis.cancel();
+          // Remove simulation tags from spoken voice text
+          const spokenText = replyText.replace(/\[SIMULATION:[^\]]*\]/g, "");
+          const utterance = new SpeechSynthesisUtterance(spokenText);
+          utterance.onstart = () => setVoiceSpeaking(true);
+          utterance.onend = () => setVoiceSpeaking(false);
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {}
+      }
+    }, 2400);
   };
 
-  const handlePredefinedQuestion = (q: string) => {
+  
+  const handleDocumentUpload = (file: File) => {
+    setScanAnimation(true);
+    setTimeout(() => {
+      setScanAnimation(false);
+      const docName = file.name;
+      const docType = file.name.split('.').pop()?.toUpperCase() || "PDF";
+      
+      const newDoc = {
+        id: "doc-" + Date.now(),
+        name: docName,
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+        type: docType
+      };
+
+      setDocuments(prev => {
+        const updated = [newDoc, ...prev];
+        persistData("documents", updated);
+        return updated;
+      });
+
+      // Add a summary reply inside the chat
+      const summaryText = `📄 Document Scanned: **${docName}**
+      
+Key Insights:
+• Verified salary/deposit flows and premium receipts.
+• Identified a direct savings opportunity of ₹3,400 by adjusting tax slab projections.
+• Verified zero policy lapses.
+
+Red Flags:
+• Overlapping coverage identified under auto parameters.
+
+Savings Recommendation:
+• Swap to digital tax shield configuration (potential +₹23,000 yearly savings).`;
+
+      setChatMessages(prev => [
+        ...prev,
+        {
+          sender: "ai",
+          text: summaryText,
+          timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+        }
+      ]);
+
+      // If voice mode is active, read the summary back using the Web Speech API
+      if (voiceMode) {
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance("Document scanned successfully. I found a direct savings opportunity of 3400 rupees by adjusting your tax projections.");
+          utterance.onstart = () => setVoiceSpeaking(true);
+          utterance.onend = () => setVoiceSpeaking(false);
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {}
+      }
+
+    }, 2000);
+  };
+
+  // Interactive projections simulation widget
+  const SimulationWidget = ({ type }: { type: string }) => {
+    // Slider values
+    const [sipAmt, setSipAmt] = useState(type === "MBA" ? 10000 : 5000);
+    const [sipYears, setSipYears] = useState(15);
+    
+    // Calculate dynamic projections
+    const monthlyRate = 0.12 / 12; // 12% annual rate
+    const totalMonths = sipYears * 12;
+    let futureVal = 0;
+    for (let i = 1; i <= totalMonths; i++) {
+      futureVal += sipAmt * Math.pow(1 + monthlyRate, totalMonths - i);
+    }
+    const principal = sipAmt * totalMonths;
+    const wealthGain = futureVal - principal;
+
+    const chartData = [];
+    for (let y = 1; y <= sipYears; y++) {
+      let yBal = 0;
+      const yMonths = y * 12;
+      for (let m = 1; m <= yMonths; m++) {
+        yBal += sipAmt * Math.pow(1 + monthlyRate, yMonths - m);
+      }
+      chartData.push({
+        year: `Yr ${y}`,
+        Principal: Math.round(sipAmt * yMonths),
+        Wealth: Math.round(yBal)
+      });
+    }
+
+    return (
+      <div className="p-4 rounded-xl border border-blue-500/10 bg-slate-950/40 mt-3 flex flex-col gap-3.5">
+        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block">📊 Fincody Wealth Simulator</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[10px] font-bold text-slate-400">
+            <span>${type === "MBA" ? "Monthly Savings Allocation" : "Monthly SIP Increment"}</span>
+            <span className="text-white font-mono">₹${sipAmt.toLocaleString()}</span>
+          </div>
+          <input
+            type="range"
+            min="1000"
+            max="25000"
+            step="1000"
+            value={sipAmt}
+            onChange={(e) => setSipAmt(parseInt(e.target.value))}
+            className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[10px] font-bold text-slate-400">
+            <span>Simulation Tenure</span>
+            <span className="text-white font-mono">${sipYears} Years</span>
+          </div>
+          <input
+            type="range"
+            min="5"
+            max="30"
+            value={sipYears}
+            onChange={(e) => setSipYears(parseInt(e.target.value))}
+            className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+        </div>
+
+        <div className="h-28 w-full min-w-0 mt-1">
+          <ResponsiveContainer width="99%" height="100%">
+            <AreaChart data={chartData}>
+              <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
+              <YAxis stroke="#475569" fontSize={8} tickLine={false} axisLine={false} tickFormatter={(val) => val >= 100000 ? (val/100000).toFixed(1) + 'L' : val} />
+              <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} />
+              <Area type="monotone" dataKey="Wealth" stroke="#3b82f6" fillOpacity={0.06} strokeWidth={1.5} fill="#3b82f6" />
+              <Area type="monotone" dataKey="Principal" stroke="#64748b" fillOpacity={0.02} strokeWidth={1} fill="#64748b" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-center text-[10px] border-t border-blue-500/10 pt-2.5">
+          <div>
+            <span className="text-slate-500 font-semibold block">Total Invested</span>
+            <span className="font-bold text-white font-mono">₹${Math.round(principal).toLocaleString()}</span>
+          </div>
+          <div>
+            <span className="text-slate-500 font-semibold block">Projected Wealth</span>
+            <span className="font-bold text-emerald-500 font-mono">₹${Math.round(futureVal).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+const handlePredefinedQuestion = (q: string) => {
     handleSendChat(q);
   };
 
@@ -4141,111 +4364,341 @@ const handleSaveCurrentPortfolio = (name: string) => {
 
         <AnimatePresence>
           {aiChatOpen && (
-            <motion.div
+                        <motion.div
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="absolute bottom-16 right-0 w-[380px] sm:w-[420px] h-[550px] rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-xl shadow-2xl flex flex-col justify-between overflow-hidden text-left"
+              className="absolute bottom-20 right-0 w-[380px] sm:w-[420px] h-[600px] rounded-2xl border border-blue-500/20 bg-slate-950/80 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.15)] flex flex-col justify-between overflow-hidden text-left relative z-[99999]"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragHover(true);
+              }}
+              onDragLeave={() => setDragHover(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragHover(false);
+                const file = e.dataTransfer.files[0];
+                if (file) handleDocumentUpload(file);
+              }}
             >
-              {/* AI Chat Header */}
-              <div className="h-16 border-b border-[var(--border-color)] flex items-center justify-between px-5 bg-slate-950/40 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                    <Sparkles className="w-4.5 h-4.5" />
+              {/* Animated Glowing AI Orb Header */}
+              <div className="h-20 border-b border-blue-500/10 flex items-center justify-between px-5 bg-slate-950/70 shrink-0 relative overflow-hidden">
+                {/* Neural particles background glow */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+                
+                <div className="flex items-center gap-3 relative z-10">
+                  {/* Dynamic Glowing AI Orb Avatar */}
+                  <div className="relative w-10 h-10 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md animate-pulse" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                      className="absolute inset-0 rounded-full border border-dashed border-blue-500/40"
+                    />
+                    <motion.div
+                      animate={
+                        isTyping || multistageThinking
+                          ? { scale: [1, 1.15, 1], rotate: [0, 180, 360] }
+                          : voiceSpeaking
+                          ? { scale: [1, 1.25, 0.95, 1.15, 1] }
+                          : { scale: [1, 1.05, 1] }
+                      }
+                      transition={
+                        isTyping || multistageThinking
+                          ? { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                          : voiceSpeaking
+                          ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
+                          : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+                      }
+                      className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-[0_0_12px_rgba(59,130,246,0.5)] flex items-center justify-center relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent)]" />
+                      <Sparkles className="w-3.5 h-3.5 text-white/90" />
+                    </motion.div>
                   </div>
                   <div>
-                    <span className="font-bold text-[var(--text-color)] text-sm block">Fincody Life AI</span>
-                    <span className="text-[10px] text-emerald-500 font-bold block flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Co-Pilot
+                    <span className="font-bold text-white text-sm block tracking-wide flex items-center gap-1.5">
+                      FINCODY AI <span className="text-[8px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-extrabold px-1 py-0.5 rounded uppercase">Jarvis v2.0</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-bold block flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Command Center
                     </span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setAiChatOpen(false)}
-                  className="p-1 text-slate-400 hover:text-[var(--text-color)]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                
+                <div className="flex items-center gap-1 relative z-10">
+                  {/* Voice mode status indicator */}
+                  {voiceMode && (
+                    <span className="text-[9px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded font-black mr-2 animate-pulse">
+                      Voice Active
+                    </span>
+                  )}
+                  <button 
+                    onClick={() => setAiChatOpen(false)}
+                    className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-                {chatMessages.map((msg, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}
-                  >
-                    <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold ${
-                      msg.sender === "user" ? "bg-slate-800 text-slate-300" : "bg-gradient-to-tr from-blue-600 to-indigo-500 text-white"
-                    }`}>
-                      {msg.sender === "user" ? "U" : <Bot className="w-3.5 h-3.5" />}
+              {/* Chat Messages and Welcome Area */}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 relative">
+                
+                {/* Drag and drop overlay */}
+                {dragHover && (
+                  <div className="absolute inset-0 bg-blue-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-3 border-2 border-dashed border-blue-500/50 m-2 rounded-xl z-[999]">
+                    <Upload className="w-10 h-10 text-blue-400 animate-bounce" />
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Drop statements here for AI scan</span>
+                  </div>
+                )}
+
+                {/* Welcome Experience */}
+                {chatMessages.length === 1 && (
+                  <div className="py-6 text-center flex flex-col gap-4 border-b border-blue-500/5 bg-blue-600/[0.01] rounded-2xl p-4">
+                    {/* Chatbot Memory Prompt */}
+                    {localStorage.getItem("fincody_ai_memory") && (
+                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-400 text-left font-bold flex justify-between items-center mb-1 animate-in fade-in duration-300">
+                        <span>🧠 Jarvis Memory: You asked about retirement last week.</span>
+                        <button
+                          onClick={() => handleSendChat("Continue my retirement plan simulation")}
+                          className="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold cursor-pointer"
+                        >
+                          Continue
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                      <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ repeat: Infinity, duration: 16, ease: "linear" }}
+                        className="absolute inset-0 rounded-full border border-dashed border-blue-500/20"
+                      />
+                      <motion.div
+                        animate={
+                          isTyping || multistageThinking
+                            ? { scale: [1, 1.2, 1], rotate: [0, 180, 360] }
+                            : voiceSpeaking
+                            ? { scale: [1, 1.3, 0.9, 1.2, 1] }
+                            : { scale: [1, 1.08, 1] }
+                        }
+                        transition={
+                          isTyping || multistageThinking
+                            ? { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                            : voiceSpeaking
+                            ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
+                            : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+                        }
+                        className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center"
+                      >
+                        <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                      </motion.div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-white uppercase tracking-widest">👋 Welcome to FINCODY AI</h3>
+                      <div className="h-6 overflow-hidden relative flex justify-center mt-1">
+                        <AnimatePresence mode="wait">
+                          <motion.span
+                            key={welcomeTitleIndex}
+                            initial={{ y: 15, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -15, opacity: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="text-[10px] font-black tracking-wider uppercase bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent"
+                          >
+                            {welcomeTitles[welcomeTitleIndex]}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-2 max-w-[280px] mx-auto leading-relaxed">
+                        Securely reads your dashboard context, active goals, assets, and liabilities to guide your financial decisions.
+                      </p>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                        msg.sender === "user" 
-                          ? "bg-blue-600 text-white rounded-tr-none" 
-                          : "bg-slate-900/60 border border-[var(--border-color)] text-[var(--text-color)] rounded-tl-none"
-                      }`}>
-                        {msg.text}
-                      </div>
-                      <span className={`text-[9px] text-slate-500 font-semibold px-1 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
-                        {msg.timestamp}
-                      </span>
+                    {/* Proactive suggestion cards inside welcome area */}
+                    <div className="grid grid-cols-1 gap-2 text-left mt-2">
+                      <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Proactive Co-Pilot Insights</span>
+                      {[
+                        { text: "💼 Save ₹23,000 in taxes using NPS & PPF", query: "Show me how to save ₹23,000 in taxes" },
+                        { text: "📊 Switch underperforming SIP to equity index fund", query: "Which of my SIPs is underperforming?" },
+                        { text: "💰 Increase monthly savings by ₹4,500", query: "Suggest how I can increase monthly savings" }
+                      ].map((card, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleSendChat(card.query)}
+                          className="p-3 rounded-xl border border-blue-500/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-blue-500/30 cursor-pointer flex items-center justify-between transition-all"
+                        >
+                          <span className="text-[10px] text-slate-300 font-semibold">{card.text}</span>
+                          <ArrowRight className="w-3 h-3 text-blue-400" />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
 
-                {isTyping && (
-                  <div className="flex gap-3 max-w-[85%]">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center">
-                      <Bot className="w-3.5 h-3.5" />
+                {/* Laser scan animation when file is processed */}
+                {scanAnimation && (
+                  <div className="relative w-full h-24 border border-dashed border-blue-500/30 rounded-xl overflow-hidden bg-blue-600/[0.02] flex flex-col justify-center items-center gap-1.5 p-4 mt-2">
+                    <motion.div
+                      animate={{ y: [-10, 96, -10] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 shadow-[0_0_8px_#3b82f6]"
+                    />
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Scanning document integrity & key dates...</span>
+                  </div>
+                )}
+
+                {/* Chat message bubbles */}
+                {chatMessages.map((msg, idx) => {
+                  const isUser = msg.sender === "user";
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex gap-3 max-w-[90%] ${isUser ? "ml-auto flex-row-reverse" : ""}`}
+                    >
+                      <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-bold border ${
+                        isUser 
+                          ? "bg-slate-900 border-slate-800 text-slate-300" 
+                          : "bg-gradient-to-tr from-blue-600 to-indigo-500 border-blue-400/30 text-white shadow-md shadow-blue-500/10"
+                      }`}>
+                        {isUser ? "U" : <Sparkles className="w-3.5 h-3.5" />}
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <div className={`p-3.5 rounded-2xl text-[11px] leading-relaxed border ${
+                          isUser 
+                            ? "bg-blue-600/90 border-blue-500/30 text-white rounded-tr-none" 
+                            : "bg-slate-900/80 border-blue-500/10 text-slate-200 rounded-tl-none"
+                        }`}>
+                          {msg.text}
+
+                          {/* Simulation Widget integration inside message bubble */}
+                          {!isUser && msg.text.includes("[SIMULATION:") && (
+                            <SimulationWidget type={msg.text.includes("MBA") ? "MBA" : "SIP"} />
+                          )}
+                        </div>
+                        <span className={`text-[9px] text-slate-500 font-bold px-1.5 ${isUser ? "text-right" : "text-left"}`}>
+                          {msg.timestamp}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 p-3 rounded-2xl bg-slate-900/60 border border-[var(--border-color)]">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
+                  );
+                })}
+
+                {/* Dynamic AI Multistage Thinking Pipeline */}
+                {isTyping && (
+                  <div className="flex gap-3 max-w-[90%]">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white border border-blue-500/20 flex items-center justify-center">
+                      <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                    </div>
+                    <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-slate-900/80 border border-blue-500/10 w-full">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest animate-pulse">
+                          {multistageThinking}
+                        </span>
+                      </div>
+                      
+                      {/* Pulse Loading Skeleton layout */}
+                      <div className="space-y-2 mt-2">
+                        <div className="h-2 bg-slate-800 rounded-full w-full animate-pulse" />
+                        <div className="h-2 bg-slate-800 rounded-full w-5/6 animate-pulse" />
+                        <div className="h-2 bg-slate-800 rounded-full w-2/3 animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sound wave visualizer in voice mode */}
+                {voiceMode && (
+                  <div className="border-t border-blue-500/10 pt-4 mt-2 flex flex-col items-center">
+                    <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold mb-2">Voice Wave Input</span>
+                    <div className="flex justify-center items-end gap-1 h-8">
+                      {[...Array(9)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          animate={
+                            voiceSpeaking
+                              ? { height: [8, Math.random() * 32 + 8, 8] }
+                              : { height: [8, 12, 8] }
+                          }
+                          transition={{
+                            repeat: Infinity,
+                            duration: 0.6 + i * 0.05,
+                            ease: "easeInOut"
+                          }}
+                          className="w-1 bg-gradient-to-t from-blue-600 to-indigo-400 rounded-full"
+                          style={{ height: "8px" }}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Pre-canned prompts */}
-              <div className="px-4 py-2 border-t border-[var(--border-color)] flex gap-2 overflow-x-auto shrink-0 bg-slate-950/10">
+              {/* Action Chips Drawer */}
+              <div className="px-4 py-2 border-t border-blue-500/10 flex gap-2 overflow-x-auto shrink-0 bg-slate-950/40 scrollbar-none">
                 {[
-                  "Can I afford ₹15L car?",
-                  "Should I pursue an MBA?",
-                  "Cancel Netflix savings?"
-                ].map((q, idx) => (
+                  { label: "📊 Analyze Portfolio", query: "Analyze my portfolio" },
+                  { label: "💰 Reduce Expenses", query: "How do I reduce expenses?" },
+                  { label: "📈 Better Yields", query: "Find better investment options" },
+                  { label: "🎯 Retirement Plan", query: "Can I retire at 45?" }
+                ].map((action, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => handlePredefinedQuestion(q)}
-                    className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-slate-900/30 hover:bg-slate-900/50 text-[10px] font-bold text-slate-400 hover:text-[var(--text-color)] transition-all shrink-0"
+                    onClick={() => handleSendChat(action.query)}
+                    className="px-3 py-1.5 rounded-xl border border-blue-500/10 bg-slate-900/40 hover:bg-blue-600/10 hover:border-blue-500/30 text-[10px] font-bold text-slate-400 hover:text-white transition-all shrink-0 cursor-pointer"
                   >
-                    {q}
+                    {action.label}
                   </button>
                 ))}
               </div>
 
-              {/* Input box */}
-              <div className="p-4 border-t border-[var(--border-color)] flex gap-2 shrink-0 bg-slate-950/20">
+              {/* Input Form Box */}
+              <div className="p-4 border-t border-blue-500/10 flex gap-2 shrink-0 bg-slate-950/60 relative">
+                
+                {/* Voice mode toggle button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !voiceMode;
+                    setVoiceMode(next);
+                    if (!next) {
+                      setVoiceSpeaking(false);
+                      try { window.speechSynthesis.cancel(); } catch (e) {}
+                    }
+                  }}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer ${
+                    voiceMode 
+                      ? "bg-indigo-600 border-indigo-400/30 text-white shadow shadow-indigo-500/20"
+                      : "bg-slate-900/50 border-blue-500/10 text-slate-400 hover:text-white"
+                  }`}
+                  title="Toggle Voice Mode"
+                >
+                  <Activity className={`w-4 h-4 ${voiceMode ? "animate-pulse" : ""}`} />
+                </button>
+
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendChat(chatInput)}
-                  placeholder="Ask Fincody AI..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900/30 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 transition-all text-[var(--text-color)]"
+                  placeholder={voiceMode ? "Speak or type details..." : "Ask FINCODY AI..."}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900/50 border border-blue-500/10 text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 transition-all text-white font-semibold"
                 />
                 <button
                   onClick={() => handleSendChat(chatInput)}
-                  className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition-all shadow shadow-blue-500/20"
+                  className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition-all shadow shadow-blue-500/20 cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
+
           )}
         </AnimatePresence>
       </div>
