@@ -1173,6 +1173,116 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Side Drawer Explainer Panel */}
+          <AnimatePresence>
+            {activeArticle && (
+              <>
+                {/* Backdrop blur overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setActiveArticle(null)}
+                  className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[99998]"
+                />
+
+                {/* Sidebar drawer container */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                  className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/95 border-l border-blue-500/20 shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
+                >
+                  <div className="flex flex-col gap-6">
+                    
+                    {/* Header */}
+                    <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 animate-pulse">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">JARVIS INTEL EXPLAINER</h4>
+                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Fincody Live AI Co-Pilot</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setActiveArticle(null)}
+                        className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* News Details */}
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-[8px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-black uppercase">
+                          {activeArticle.source}
+                        </span>
+                        <h3 className="text-sm font-black text-white mt-2 leading-relaxed">{activeArticle.headline}</h3>
+                      </div>
+
+                      {/* Intel items */}
+                      <div className="space-y-4 pt-2">
+                        
+                        <div>
+                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Why this matters</span>
+                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{activeArticle.whyItMatters}</p>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Who is affected</span>
+                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{activeArticle.whoIsAffected}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">Short-term Impact</span>
+                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">{activeArticle.shortTerm}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-wider block">Long-term Impact</span>
+                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">{activeArticle.longTerm}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-blue-900/[0.04] border border-blue-500/10 space-y-2">
+                          <div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block flex items-center gap-1">
+                              <Zap className="w-3.5 h-3.5" /> Potential Opportunities
+                            </span>
+                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">{activeArticle.opportunities}</p>
+                          </div>
+                          <div className="border-t border-blue-500/5 pt-2">
+                            <span className="text-[10px] font-black text-rose-400 uppercase tracking-wider block flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> Risk Factors
+                            </span>
+                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">{activeArticle.risks}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="border-t border-blue-500/10 pt-4 mt-6">
+                    <button
+                      onClick={() => {
+                        setActiveArticle(null);
+                        window.location.href = '/dashboard';
+                      }}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" /> Discuss Opportunity on Dashboard
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </section>
 
 
