@@ -38,7 +38,9 @@ import {
   Loader2,
   Play,
   Eye,
-  EyeOff
+  EyeOff,
+  Percent,
+  Coins
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -322,6 +324,62 @@ export default function Dashboard() {
   const [activePortfolioName, setActivePortfolioName] = useState("Custom Portfolio");
   const [showSavePortfolioModal, setShowSavePortfolioModal] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState("");
+  // Investment Engine Enhancements States
+  const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals">("equities");
+  const [ignoredRecs, setIgnoredRecs] = useState<string[]>([]);
+  const [replacingRecStock, setReplacingRecStock] = useState<any | null>(null);
+
+  const [fixedDeposits, setFixedDeposits] = useState<any[]>([
+    { id: "fd-1", bank: "HDFC Bank Ltd", principal: 500000, rate: 7.25, startDate: "2025-06-15", tenureYears: 2 }
+  ]);
+  const [ppfData, setPpfData] = useState<any>({
+    balance: 450000,
+    annualContribution: 150000,
+    startYear: 2024
+  });
+  const [npsData, setNpsData] = useState<any>({
+    corpus: 300000,
+    employerMonthly: 10000,
+    personalMonthly: 5000,
+    allocationE: 60, // Equity
+    allocationC: 25, // Corporate Bonds
+    allocationG: 15  // Gov Securities
+  });
+  const [goldHoldings, setGoldHoldings] = useState<any[]>([
+    { id: "gold-1", type: "Physical Gold", grams: 10, buyPricePerGram: 6800 },
+    { id: "gold-2", type: "Gold ETF", units: 50, buyPricePerUnit: 120 }
+  ]);
+  const [etfHoldings, setEtfHoldings] = useState<any[]>([
+    { id: "etf-1", symbol: "NIFTYBEES", name: "Nippon India Nifty 50 ETF", units: 300, avgPrice: 232 },
+    { id: "etf-2", symbol: "MON100", name: "Motilal Oswal Nasdaq 100 ETF", units: 100, avgPrice: 145 }
+  ]);
+  const [bondHoldings, setBondHoldings] = useState<any[]>([
+    { id: "bond-1", type: "Government Bonds", faceValue: 200000, couponRate: 6.8, startDate: "2024-05-10", maturityDate: "2030-05-10" },
+    { id: "bond-2", type: "Corporate Bonds", faceValue: 100000, couponRate: 8.5, startDate: "2024-08-15", maturityDate: "2029-08-15" }
+  ]);
+  const [spotGoldPrice, setSpotGoldPrice] = useState(7250); // Live mock spot price in INR/gram
+
+  // Investment Forms States
+  const [addFdBank, setAddFdBank] = useState("");
+  const [addFdPrincipal, setAddFdPrincipal] = useState("");
+  const [addFdRate, setAddFdRate] = useState("");
+  const [addFdStartDate, setAddFdStartDate] = useState("");
+  const [addFdTenureYears, setAddFdTenureYears] = useState("");
+
+  const [addBondType, setAddBondType] = useState("Government Bonds");
+  const [addBondFaceValue, setAddBondFaceValue] = useState("");
+  const [addBondCouponRate, setAddBondCouponRate] = useState("");
+  const [addBondStartDate, setAddBondStartDate] = useState("");
+  const [addBondMaturityDate, setAddBondMaturityDate] = useState("");
+
+  const [addGoldType, setAddGoldType] = useState("Physical Gold");
+  const [addGoldGrams, setAddGoldGrams] = useState("");
+  const [addGoldBuyPrice, setAddGoldBuyPrice] = useState("");
+
+  const [addEtfSymbol, setAddEtfSymbol] = useState("");
+  const [addEtfUnits, setAddEtfUnits] = useState("");
+  const [addEtfAvgPrice, setAddEtfAvgPrice] = useState("");
+
 
   // Persistence States & Helper
   const persistData = (key: string, data: any) => {
@@ -388,6 +446,25 @@ export default function Dashboard() {
 
         const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
         if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
+
+        // Load new asset classes
+        const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
+        if (savedFDs) setFixedDeposits(JSON.parse(savedFDs));
+
+        const savedPPF = localStorage.getItem(`${prefix}ppfData`);
+        if (savedPPF) setPpfData(JSON.parse(savedPPF));
+
+        const savedNPS = localStorage.getItem(`${prefix}npsData`);
+        if (savedNPS) setNpsData(JSON.parse(savedNPS));
+
+        const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
+        if (savedGold) setGoldHoldings(JSON.parse(savedGold));
+
+        const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
+        if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
+
+        const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
+        if (savedBonds) setBondHoldings(JSON.parse(savedBonds));
       } catch (e) {
         console.error("Error loading guest persisted state:", e);
       }
@@ -418,6 +495,14 @@ export default function Dashboard() {
         if (data.savedPortfolios) setSavedPortfolios(data.savedPortfolios);
         if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
         if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
+
+        // Hydrate new asset classes from cloud
+        if (data.fixedDeposits) setFixedDeposits(data.fixedDeposits);
+        if (data.ppfData) setPpfData(data.ppfData);
+        if (data.npsData) setNpsData(data.npsData);
+        if (data.goldHoldings) setGoldHoldings(data.goldHoldings);
+        if (data.etfHoldings) setEtfHoldings(data.etfHoldings);
+        if (data.bondHoldings) setBondHoldings(data.bondHoldings);
 
         setSyncStatus("synced");
         console.log("Hydrated Fincody dashboard from Cloud Vault.");
@@ -480,6 +565,25 @@ export default function Dashboard() {
 
       const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
       if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
+
+      // Hydrate new asset classes
+      const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
+      if (savedFDs) setFixedDeposits(JSON.parse(savedFDs));
+
+      const savedPPF = localStorage.getItem(`${prefix}ppfData`);
+      if (savedPPF) setPpfData(JSON.parse(savedPPF));
+
+      const savedNPS = localStorage.getItem(`${prefix}npsData`);
+      if (savedNPS) setNpsData(JSON.parse(savedNPS));
+
+      const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
+      if (savedGold) setGoldHoldings(JSON.parse(savedGold));
+
+      const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
+      if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
+
+      const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
+      if (savedBonds) setBondHoldings(JSON.parse(savedBonds));
     } catch (e) {
       console.error("Error loading persisted state fallback:", e);
     }
@@ -512,7 +616,13 @@ export default function Dashboard() {
         portfolio,
         savedPortfolios,
         activePortfolioName,
-        aiRecommendation
+        aiRecommendation,
+        fixedDeposits,
+        ppfData,
+        npsData,
+        goldHoldings,
+        etfHoldings,
+        bondHoldings
       };
 
       const { error } = await supabase.auth.updateUser({
@@ -548,7 +658,13 @@ export default function Dashboard() {
     portfolio,
     savedPortfolios,
     activePortfolioName,
-    aiRecommendation
+    aiRecommendation,
+    fixedDeposits,
+    ppfData,
+    npsData,
+    goldHoldings,
+    etfHoldings,
+    bondHoldings
   ]);
 
   // Future Simulator interactive state
@@ -1000,22 +1116,17 @@ export default function Dashboard() {
 
     setQuotes(prev => ({ ...prev, ...tempQuotes }));
 
-    // Create new portfolio holdings based on totalCapital allocations
-    const newPortfolio = rec.stocks.map((st: any) => {
+    // Calculate recommended targets in metadata
+    rec.stocks = rec.stocks.map((st: any) => {
       const livePrice = tempQuotes[st.symbol]?.price || 100;
       const allocatedCap = totalCapital * (st.allocation / 100);
       const qty = Math.max(1, Math.round(allocatedCap / livePrice));
       return {
-        symbol: st.symbol,
-        name: st.name,
+        ...st,
         qty,
-        avgBuyPrice: livePrice,
-        logo: `https://logo.clearbit.com/${st.symbol.split(".")[0].toLowerCase()}.com`
+        avgBuyPrice: livePrice
       };
     });
-
-    setPortfolio(newPortfolio);
-    persistData("portfolio", newPortfolio);
 
     setAiRecommendation(rec);
     persistData("aiRecommendation", rec);
@@ -1052,7 +1163,150 @@ export default function Dashboard() {
     ]);
   };
 
-  const handleSaveCurrentPortfolio = (name: string) => {
+  
+  // Timezone and Market Hours checker
+  const getExchangeMarketState = (symbol: string) => {
+    let timezone = "EDT";
+    let exchange = "US";
+    if (symbol.endsWith(".NS") || symbol.endsWith(".BO")) {
+      timezone = "IST";
+      exchange = "IN";
+    } else if (symbol.endsWith(".L")) {
+      timezone = "BST";
+      exchange = "UK";
+    } else if (symbol.endsWith(".T")) {
+      timezone = "JST";
+      exchange = "JP";
+    }
+
+    const now = new Date();
+    let localHour = now.getHours();
+    let localMinute = now.getMinutes();
+
+    let tzString = "America/New_York";
+    if (exchange === "IN") tzString = "Asia/Kolkata";
+    else if (exchange === "UK") tzString = "Europe/London";
+    else if (exchange === "JP") tzString = "Asia/Tokyo";
+
+    try {
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: tzString,
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false
+      });
+      const parts = formatter.format(now).split(":");
+      localHour = parseInt(parts[0]);
+      localMinute = parseInt(parts[1]);
+    } catch (e) {
+      // Fallback
+    }
+
+    const ampm = localHour >= 12 ? "PM" : "AM";
+    const displayHour = localHour % 12 === 0 ? 12 : localHour % 12;
+    const displayMinute = String(localMinute).padStart(2, "0");
+    const localTimeStr = `${displayHour}:${displayMinute} ${ampm} ${timezone}`;
+
+    const day = now.getDay();
+    const isWeekend = day === 0 || day === 6;
+
+    let marketState = "Market Closed";
+    if (isWeekend) {
+      marketState = "Market Closed";
+    } else {
+      if (exchange === "IN") {
+        const timeDecimal = localHour + localMinute / 60;
+        if (timeDecimal >= 9.25 && timeDecimal <= 15.5) {
+          marketState = "Market Open";
+        } else {
+          marketState = "Market Closed";
+        }
+      } else if (exchange === "UK") {
+        const timeDecimal = localHour + localMinute / 60;
+        if (timeDecimal >= 8.0 && timeDecimal <= 16.5) {
+          marketState = "Market Open";
+        } else {
+          marketState = "Market Closed";
+        }
+      } else if (exchange === "JP") {
+        const timeDecimal = localHour + localMinute / 60;
+        if (timeDecimal >= 9.0 && timeDecimal <= 15.0) {
+          marketState = "Market Open";
+        } else {
+          marketState = "Market Closed";
+        }
+      } else {
+        const timeDecimal = localHour + localMinute / 60;
+        if (timeDecimal >= 9.5 && timeDecimal <= 16.0) {
+          marketState = "Market Open";
+        } else if (timeDecimal >= 4.0 && timeDecimal < 9.5) {
+          marketState = "Pre-Market";
+        } else if (timeDecimal > 16.0 && timeDecimal <= 20.0) {
+          marketState = "After Hours";
+        } else {
+          marketState = "Market Closed";
+        }
+      }
+    }
+
+    return { localTimeStr, marketState };
+  };
+
+  const handleAddRecToPortfolio = (st: any) => {
+    const livePrice = quotes[st.symbol]?.price || st.avgBuyPrice || 100;
+    const qty = st.qty || 1;
+    const alreadyExists = portfolio.find(p => p.symbol === st.symbol);
+    let updated: any[];
+    if (alreadyExists) {
+      updated = portfolio.map(p => p.symbol === st.symbol ? { ...p, qty: p.qty + qty } : p);
+    } else {
+      updated = [
+        ...portfolio,
+        {
+          symbol: st.symbol,
+          name: st.name,
+          qty,
+          avgBuyPrice: livePrice,
+          logo: `https://logo.clearbit.com/${st.symbol.split(".")[0].toLowerCase()}.com`
+        }
+      ];
+    }
+    setPortfolio(updated);
+    persistData("portfolio", updated);
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Added ${qty} shares of ${st.symbol} to your portfolio.`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleReplaceHolding = (recStock: any, targetSymbol: string) => {
+    let updated = portfolio.filter(p => p.symbol !== targetSymbol);
+    const livePrice = quotes[recStock.symbol]?.price || recStock.avgBuyPrice || 100;
+    const qty = recStock.qty || 1;
+    
+    updated = [
+      ...updated,
+      {
+        symbol: recStock.symbol,
+        name: recStock.name,
+        qty,
+        avgBuyPrice: livePrice,
+        logo: `https://logo.clearbit.com/${recStock.symbol.split(".")[0].toLowerCase()}.com`
+      }
+    ];
+
+    setPortfolio(updated);
+    persistData("portfolio", updated);
+    setReplacingRecStock(null);
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Replaced ${targetSymbol} with ${qty} shares of ${recStock.symbol} in your portfolio.`, unread: true },
+      ...prev
+    ]);
+  };
+
+const handleSaveCurrentPortfolio = (name: string) => {
     if (!name.trim()) return;
     const newPort = {
       id: Date.now().toString(),
@@ -2054,624 +2308,1400 @@ export default function Dashboard() {
             )}
 
             {/* Investments */}
-            {activeTab === "investments" && (
-              <motion.div
-                key="investments"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 15 }}
-                className="flex flex-col gap-8 text-left"
-              >
-                {/* 1. Premium AI Advisor Panel (Full Width) */}
-                <div className="glass-card p-6 md:p-8 rounded-2xl border border-[var(--border-color)] bg-gradient-to-tr from-blue-600/[0.03] to-indigo-500/[0.03] flex flex-col gap-6 relative overflow-hidden">
-                  {/* Glowing background decor */}
-                  <div className="absolute -right-24 -top-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                        {activeTab === "investments" && (() => {
+              // 1. Equities Total Value
+              const equitiesVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+              const equitiesCost = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
+              const equitiesProfit = equitiesVal - equitiesCost;
+              const equitiesTodayChange = portfolio.reduce((acc, item) => {
+                const quote = quotes[item.symbol];
+                if (!quote) return acc;
+                return acc + (item.qty * quote.change);
+              }, 0);
 
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border-color)] pb-5">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-blue-500 animate-pulse" />
-                        <h2 className="text-lg font-black text-white uppercase tracking-wide">AI Portfolio Co-Pilot</h2>
-                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-blue-600/15 text-blue-400 border border-blue-500/20">
-                          PREMIUM
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Describe your investment parameters, risk threshold, or capital targets in natural language.
-                      </p>
+              // 2. FDs calculations
+              const now = new Date();
+              const fdsCalculated = fixedDeposits.map(fd => {
+                const start = new Date(fd.startDate);
+                const maturity = new Date(start);
+                maturity.setFullYear(maturity.getFullYear() + fd.tenureYears);
+                
+                const daysTotal = Math.max(1, Math.round((maturity.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+                const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+                const daysRemaining = Math.max(0, Math.round((maturity.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                
+                // quarterly compounding
+                const expectedMaturityAmount = Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * fd.tenureYears));
+                
+                // current value based on elapsed fraction
+                const elapsedTenureInYears = (Math.min(daysElapsed, daysTotal) / 365);
+                const currentValue = Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * elapsedTenureInYears));
+                const interestEarned = currentValue - fd.principal;
+
+                // AI Insights
+                let insight = "Standard banking rate. Stable yield profile.";
+                if (fd.rate > 7.0) insight = "Premium yield rate. Outperforming average sovereign benchmarks.";
+                else if (fd.rate < 6.0) insight = "Sub-optimal rate. Consider corporate debt swaps for +1.5% yield.";
+
+                return {
+                  ...fd,
+                  maturityDate: maturity.toISOString().split("T")[0],
+                  daysRemaining,
+                  expectedMaturityAmount,
+                  currentValue,
+                  interestEarned,
+                  progressPercent: Math.min(100, Math.round((daysElapsed / daysTotal) * 100)),
+                  insight
+                };
+              });
+
+              const fdsTotalValue = fdsCalculated.reduce((acc, fd) => acc + fd.currentValue, 0);
+              const fdsTotalInterest = fdsCalculated.reduce((acc, fd) => acc + fd.interestEarned, 0);
+
+              // 3. PPF calculations
+              const ppfTotalValue = ppfData.balance;
+
+              // 4. NPS calculations
+              const npsTotalValue = npsData.corpus;
+
+              // 5. Gold calculations
+              const goldCalculated = goldHoldings.map(g => {
+                const livePrice = g.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || g.buyPricePerGram || 120);
+                const currentValue = g.type === "Physical Gold" ? g.grams * livePrice : g.units * livePrice;
+                const cost = g.type === "Physical Gold" ? g.grams * g.buyPricePerGram : g.units * g.buyPricePerUnit;
+                const profit = currentValue - cost;
+                const profitPct = cost > 0 ? (profit / cost) * 100 : 0;
+                return { ...g, currentValue, cost, profit, profitPct };
+              });
+              const goldTotalValue = goldCalculated.reduce((acc, g) => acc + g.currentValue, 0);
+              const goldTotalCost = goldCalculated.reduce((acc, g) => acc + g.cost, 0);
+              const goldTotalProfit = goldTotalValue - goldTotalCost;
+
+              // 6. ETFs calculations
+              const etfsCalculated = etfHoldings.map(etf => {
+                const livePrice = quotes[etf.symbol]?.price || etf.avgPrice;
+                const currentValue = etf.units * livePrice;
+                const cost = etf.units * etf.avgPrice;
+                const profit = currentValue - cost;
+                const profitPct = cost > 0 ? (profit / cost) * 100 : 0;
+                const change = quotes[etf.symbol]?.change || 0;
+                const todayChange = etf.units * change;
+                return { ...etf, currentValue, cost, profit, profitPct, todayChange };
+              });
+              const etfsTotalValue = etfsCalculated.reduce((acc, etf) => acc + etf.currentValue, 0);
+              const etfsTotalCost = etfsCalculated.reduce((acc, etf) => acc + etf.cost, 0);
+              const etfsTotalProfit = etfsTotalValue - etfsTotalCost;
+              const etfsTodayChange = etfsCalculated.reduce((acc, etf) => acc + etf.todayChange, 0);
+
+              // 7. Bonds calculations
+              const bondsCalculated = bondHoldings.map(b => {
+                const start = new Date(b.startDate);
+                const yearsElapsed = Math.max(0, (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+                const interestEarned = Math.round(b.faceValue * (b.couponRate / 100) * yearsElapsed);
+                const currentValue = b.faceValue + interestEarned;
+                return { ...b, currentValue, interestEarned };
+              });
+              const bondsTotalValue = bondsCalculated.reduce((acc, b) => acc + b.currentValue, 0);
+              const bondsTotalInterest = bondsCalculated.reduce((acc, b) => acc + b.interestEarned, 0);
+
+              // Aggregated Totals
+              const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue;
+              const totalCost = equitiesCost + fixedDeposits.reduce((acc, fd) => acc + fd.principal, 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + bondHoldings.reduce((acc, b) => acc + b.faceValue, 0);
+              const overallGainLoss = totalInvestmentValue - totalCost;
+              const todayGainLoss = equitiesTodayChange + etfsTodayChange;
+
+              // Best / Worst Performers
+              const allPerformanceItems: { symbolOrName: string; pct: number }[] = [];
+              portfolio.forEach(item => {
+                const cost = item.qty * item.avgBuyPrice;
+                const val = item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice);
+                const pct = cost > 0 ? ((val - cost) / cost) * 100 : 0;
+                allPerformanceItems.push({ symbolOrName: item.symbol, pct });
+              });
+              etfsCalculated.forEach(item => {
+                allPerformanceItems.push({ symbolOrName: item.symbol, pct: item.profitPct });
+              });
+              goldCalculated.forEach(item => {
+                allPerformanceItems.push({ symbolOrName: item.type, pct: item.profitPct });
+              });
+
+              const sortedPerf = [...allPerformanceItems].sort((a, b) => b.pct - a.pct);
+              const bestPerformer = sortedPerf[0] || { symbolOrName: "None", pct: 0 };
+              const worstPerformer = sortedPerf[sortedPerf.length - 1] || { symbolOrName: "None", pct: 0 };
+
+              const totalHoldingsCount = portfolio.length + fixedDeposits.length + (ppfTotalValue > 0 ? 1 : 0) + (npsTotalValue > 0 ? 1 : 0) + goldHoldings.length + etfHoldings.length + bondHoldings.length;
+
+              // Unified Asset Allocation Data
+              const consolidatedAllocationData = [
+                { name: "Stocks", value: equitiesVal, color: "#3b82f6" },
+                { name: "ETFs", value: etfsTotalValue, color: "#8b5cf6" },
+                { name: "Fixed Deposits", value: fdsTotalValue, color: "#10b981" },
+                { name: "PPF", value: ppfTotalValue, color: "#ec4899" },
+                { name: "NPS", value: npsTotalValue, color: "#f59e0b" },
+                { name: "Gold", value: goldTotalValue, color: "#eab308" },
+                { name: "Bonds", value: bondsTotalValue, color: "#06b6d4" }
+              ].filter(item => item.value > 0);
+
+              // Form Submissions
+              const handleAddFD = (e: React.FormEvent) => {
+                e.preventDefault();
+                if (!addFdBank || !addFdPrincipal || !addFdRate || !addFdStartDate || !addFdTenureYears) return;
+                const newFD = {
+                  id: "fd-" + Date.now(),
+                  bank: addFdBank,
+                  principal: parseFloat(addFdPrincipal),
+                  rate: parseFloat(addFdRate),
+                  startDate: addFdStartDate,
+                  tenureYears: parseFloat(addFdTenureYears)
+                };
+                const updated = [...fixedDeposits, newFD];
+                setFixedDeposits(updated);
+                persistData("fixedDeposits", updated);
+                setAddFdBank("");
+                setAddFdPrincipal("");
+                setAddFdRate("");
+                setAddFdStartDate("");
+                setAddFdTenureYears("");
+              };
+
+              const handleRemoveFD = (id: string) => {
+                const updated = fixedDeposits.filter(fd => fd.id !== id);
+                setFixedDeposits(updated);
+                persistData("fixedDeposits", updated);
+              };
+
+              const handleAddBond = (e: React.FormEvent) => {
+                e.preventDefault();
+                if (!addBondFaceValue || !addBondCouponRate || !addBondStartDate || !addBondMaturityDate) return;
+                const newBond = {
+                  id: "bond-" + Date.now(),
+                  type: addBondType,
+                  faceValue: parseFloat(addBondFaceValue),
+                  couponRate: parseFloat(addBondCouponRate),
+                  startDate: addBondStartDate,
+                  maturityDate: addBondMaturityDate
+                };
+                const updated = [...bondHoldings, newBond];
+                setBondHoldings(updated);
+                persistData("bondHoldings", updated);
+                setAddBondFaceValue("");
+                setAddBondCouponRate("");
+                setAddBondStartDate("");
+                setAddBondMaturityDate("");
+              };
+
+              const handleRemoveBond = (id: string) => {
+                const updated = bondHoldings.filter(b => b.id !== id);
+                setBondHoldings(updated);
+                persistData("bondHoldings", updated);
+              };
+
+              const handleAddGold = (e: React.FormEvent) => {
+                e.preventDefault();
+                if (!addGoldGrams || !addGoldBuyPrice) return;
+                const newGold = {
+                  id: "gold-" + Date.now(),
+                  type: addGoldType,
+                  grams: parseFloat(addGoldGrams),
+                  units: addGoldType === "Gold ETF" ? Math.round(parseFloat(addGoldGrams)) : 0,
+                  buyPricePerGram: addGoldType === "Physical Gold" ? parseFloat(addGoldBuyPrice) : 0,
+                  buyPricePerUnit: addGoldType === "Gold ETF" ? parseFloat(addGoldBuyPrice) : 0
+                };
+                const updated = [...goldHoldings, newGold];
+                setGoldHoldings(updated);
+                persistData("goldHoldings", updated);
+                setAddGoldGrams("");
+                setAddGoldBuyPrice("");
+              };
+
+              const handleRemoveGold = (id: string) => {
+                const updated = goldHoldings.filter(g => g.id !== id);
+                setGoldHoldings(updated);
+                persistData("goldHoldings", updated);
+              };
+
+              const handleAddETF = (e: React.FormEvent) => {
+                e.preventDefault();
+                if (!addEtfSymbol || !addEtfUnits || !addEtfAvgPrice) return;
+                const newETF = {
+                  id: "etf-" + Date.now(),
+                  symbol: addEtfSymbol.toUpperCase(),
+                  name: addEtfSymbol.toUpperCase() + " Index Fund",
+                  units: parseFloat(addEtfUnits),
+                  avgPrice: parseFloat(addEtfAvgPrice)
+                };
+                const updated = [...etfHoldings, newETF];
+                setEtfHoldings(updated);
+                persistData("etfHoldings", updated);
+                setAddEtfSymbol("");
+                setAddEtfUnits("");
+                setAddEtfAvgPrice("");
+              };
+
+              const handleRemoveETF = (id: string) => {
+                const updated = etfHoldings.filter(etf => etf.id !== id);
+                setEtfHoldings(updated);
+                persistData("etfHoldings", updated);
+              };
+
+              return (
+                <motion.div
+                  key="investments"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  className="flex flex-col gap-6 text-left"
+                >
+                  {/* 1. Investment Summary Strip */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-slate-900/10 backdrop-blur-md">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Value</span>
+                      <span className="text-sm font-black text-white font-mono mt-1">
+                        <RollingNumber value={totalInvestmentValue} />
+                      </span>
                     </div>
-
-                    {/* Saved Portfolios Selector */}
-                    {savedPortfolios.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Saved:</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {savedPortfolios.map((port) => (
-                            <div 
-                              key={port.id}
-                              onClick={() => handleLoadSavedPortfolio(port)}
-                              className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
-                                activePortfolioName === port.name 
-                                  ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/25"
-                                  : "bg-slate-900/40 border-[var(--border-color)] text-slate-400 hover:text-[var(--text-color)]"
-                              }`}
-                            >
-                              <span>{port.name}</span>
-                              <button
-                                onClick={(e) => handleDeleteSavedPortfolio(port.id, e)}
-                                className="text-slate-500 hover:text-rose-500 transition-colors p-0.5 rounded"
-                                title="Delete saved portfolio"
-                              >
-                                <X className="w-2.5 h-2.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Today's Gain</span>
+                      <span className={`text-sm font-black font-mono mt-1 ${todayGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                        {todayGainLoss >= 0 ? "+" : ""}<RollingNumber value={todayGainLoss} />
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Overall Return</span>
+                      <span className={`text-sm font-black font-mono mt-1 ${overallGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                        {overallGainLoss >= 0 ? "+" : ""}<RollingNumber value={overallGainLoss} />
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Best Performer</span>
+                      <span className="text-xs font-bold text-emerald-500 mt-1 truncate max-w-[90px]" title={bestPerformer.symbolOrName}>
+                        {bestPerformer.symbolOrName} ({bestPerformer.pct >= 0 ? "+" : ""}{bestPerformer.pct.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Worst Performer</span>
+                      <span className="text-xs font-bold text-rose-500 mt-1 truncate max-w-[90px]" title={worstPerformer.symbolOrName}>
+                        {worstPerformer.symbolOrName} ({worstPerformer.pct >= 0 ? "+" : ""}{worstPerformer.pct.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dividends Est.</span>
+                      <span className="text-sm font-black text-emerald-500 font-mono mt-1">
+                        <RollingNumber value={Math.round(equitiesVal * 0.012)} />
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">FD/Bond Interest</span>
+                      <span className="text-sm font-black text-white font-mono mt-1">
+                        <RollingNumber value={fdsTotalInterest + bondsTotalInterest} />
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Pools</span>
+                      <span className="text-sm font-black text-white font-mono mt-1">
+                        <RollingNumber value={totalHoldingsCount} />
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Input Form */}
-                  <form onSubmit={handleGeneratePortfolio} className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1 relative">
-                      <Bot className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
-                      <input
-                        type="text"
-                        value={aiGoalPrompt}
-                        onChange={(e) => setAiGoalPrompt(e.target.value)}
-                        placeholder='e.g., "I want a high-growth portfolio and have ₹1,50,000 to invest for long-term wealth"'
-                        className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-950/40 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/40 text-white transition-all font-semibold"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isGeneratingPortfolio || !aiGoalPrompt.trim()}
-                      className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white shadow shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      {isGeneratingPortfolio ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-white" /> Allocating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" /> Generate Portfolio
-                        </>
-                      )}
-                    </button>
-                  </form>
-
-                  {/* Quick-Prompt suggestions */}
-                  <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
-                    <span className="mt-1">Try:</span>
+                  {/* 2. Sub-tab Navigation Switcher */}
+                  <div className="flex flex-wrap gap-2 border-b border-[var(--border-color)] pb-3">
                     {[
-                      "I have ₹2,00,000 for high-growth stocks",
-                      "Build a safe, low-risk portfolio for retirement",
-                      "I want consistent dividend-paying companies"
-                    ].map((p, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setAiGoalPrompt(p)}
-                        className="px-3 py-1 rounded-lg border border-[var(--border-color)] bg-slate-900/25 hover:bg-slate-900/50 hover:text-[var(--text-color)] transition-all cursor-pointer"
-                      >
-                        {p}
-                      </button>
-                    ))}
+                      { id: "equities", label: "Equities & ETFs", icon: TrendingUp },
+                      { id: "fixed_income", label: "Fixed Income", icon: Percent },
+                      { id: "retirement", label: "Retirement Pools", icon: Shield },
+                      { id: "metals", label: "Precious Metals", icon: Coins }
+                    ].map((subTab) => {
+                      const Icon = subTab.icon;
+                      const isActive = selectedInvestmentSubTab === subTab.id;
+                      return (
+                        <button
+                          key={subTab.id}
+                          onClick={() => setSelectedInvestmentSubTab(subTab.id as any)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                            isActive 
+                              ? "bg-blue-600/10 border-blue-500/40 text-blue-500 dark:text-blue-400"
+                              : "bg-slate-900/30 border-transparent text-slate-400 hover:text-[var(--text-color)] hover:bg-slate-500/5"
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{subTab.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  {/* AI Recommendation Dashboard (Conditional) */}
-                  <AnimatePresence>
-                    {aiRecommendation && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="border-t border-[var(--border-color)] pt-6 mt-2 flex flex-col gap-6"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          
-                          {/* Risk & Diversification Panel */}
-                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col justify-between gap-4">
-                            <div>
-                              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">AI Asset Score</span>
-                              <div className="flex justify-between items-center mt-3">
-                                <span className="text-xs text-slate-400 font-semibold">Risk Rating:</span>
-                                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-black uppercase ${
-                                  aiRecommendation.risk === "High" 
-                                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                                    : aiRecommendation.risk === "Low"
-                                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                      : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                                }`}>
-                                  {aiRecommendation.risk}
-                                </span>
-                              </div>
+                  {/* 3. Main Dashboard Grid Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column: Sub-Tab Content Area (lg:col-span-8) */}
+                    <div className="lg:col-span-8 flex flex-col gap-6">
+                      
+                      {/* SUBTAB 1: Equities & ETFs */}
+                      {selectedInvestmentSubTab === "equities" && (
+                        <div className="flex flex-col gap-6">
+                          {/* AI Portfolio Builder Panel */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-gradient-to-tr from-blue-600/[0.02] to-indigo-500/[0.02] flex flex-col gap-5 relative overflow-hidden">
+                            <div className="flex items-center gap-2 border-b border-[var(--border-color)] pb-4">
+                              <Sparkles className="w-5 h-5 text-blue-500 animate-pulse" />
+                              <h3 className="text-sm font-black text-white uppercase tracking-wider">AI Recommendation Assistant</h3>
+                            </div>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                              Configure target capital to analyze diversified models. Recommended stocks will generate below for your manual approval.
+                            </p>
 
-                              {/* Risk Bar Meter */}
-                              <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden relative">
-                                <div 
-                                  className={`h-full rounded-full transition-all duration-1000 ${
-                                    aiRecommendation.risk === "High" 
-                                      ? "w-[85%] bg-gradient-to-r from-rose-500 to-red-600" 
-                                      : aiRecommendation.risk === "Low" 
-                                        ? "w-[30%] bg-gradient-to-r from-emerald-500 to-green-600"
-                                        : "w-[60%] bg-gradient-to-r from-amber-500 to-yellow-600"
-                                  }`} 
-                                />
-                              </div>
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleGeneratePortfolio(e);
+                              }}
+                              className="flex gap-2"
+                            >
+                              <input
+                                type="text"
+                                value={aiGoalPrompt}
+                                onChange={(e) => setAiGoalPrompt(e.target.value)}
+                                placeholder='e.g., "I have 2,00,000 for high-growth tech stocks"'
+                                className="flex-1 px-4 py-3 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={isGeneratingPortfolio}
+                                className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow shadow-blue-500/10 cursor-pointer disabled:opacity-55"
+                              >
+                                {isGeneratingPortfolio ? <Loader2 className="w-4 h-4 animate-spin" /> : "Analyze"}
+                              </button>
+                            </form>
 
-                              <div className="flex justify-between items-center mt-4">
-                                <span className="text-xs text-slate-400 font-semibold">Diversification:</span>
-                                <span className="text-sm font-black text-white font-mono">{aiRecommendation.diversification}/100</span>
-                              </div>
+                            {/* Preset tags */}
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {[
+                                "High-growth aggressive portfolio",
+                                "Conservative dividend income",
+                                "Technology sector focus"
+                              ].map((p, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setAiGoalPrompt(p)}
+                                  className="px-2.5 py-1 rounded-lg border border-[var(--border-color)] bg-slate-900/20 hover:bg-slate-900/40 text-[10px] text-slate-400 hover:text-white transition-all cursor-pointer"
+                                >
+                                  {p}
+                                </button>
+                              ))}
                             </div>
 
-                            <div className="border-t border-[var(--border-color)] pt-3 text-[11px] text-slate-500 leading-relaxed font-semibold">
-                              &bull; Target Capital: <span className="text-white font-bold font-mono"><RollingNumber value={aiRecommendation.totalCapital} /></span>
-                            </div>
-                          </div>
-
-                          {/* Sector Allocation Donut Chart */}
-                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sector Diversification</span>
-                            
-                            <div className="h-32 w-full min-w-0 flex items-center justify-center relative my-1">
-                              <ResponsiveContainer width="99%" height="100%">
-                                <PieChart>
-                                  <Pie
-                                    data={(() => {
-                                      // Aggregate sector allocations
-                                      const sectors: Record<string, number> = {};
-                                      aiRecommendation.stocks.forEach((s: any) => {
-                                        sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
-                                      });
-                                      return Object.entries(sectors).map(([name, value], idx) => ({
-                                        name,
-                                        value,
-                                        color: ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5]
-                                      }));
-                                    })()}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={30}
-                                    outerRadius={45}
-                                    paddingAngle={3}
-                                    dataKey="value"
-                                  >
-                                    {(() => {
-                                      const sectors: Record<string, number> = {};
-                                      aiRecommendation.stocks.forEach((s: any) => {
-                                        sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
-                                      });
-                                      return Object.entries(sectors).map(([_, __], idx) => (
-                                        <Cell key={`cell-${idx}`} fill={["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5]} />
-                                      ));
-                                    })()}
-                                  </Pie>
-                                </PieChart>
-                              </ResponsiveContainer>
-                              <div className="absolute flex flex-col items-center">
-                                <span className="text-[9px] font-bold text-slate-500">Sectors</span>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 justify-center text-[9px] text-slate-400 font-bold">
-                              {(() => {
-                                const sectors: Record<string, number> = {};
-                                aiRecommendation.stocks.forEach((s: any) => {
-                                  sectors[s.sector] = (sectors[s.sector] || 0) + s.allocation;
-                                });
-                                return Object.entries(sectors).map(([name, value], idx) => (
-                                  <div key={idx} className="flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"][idx % 5] }} />
-                                    <span>{name} ({value}%)</span>
+                            {/* Recommendation Cards */}
+                            {aiRecommendation && (
+                              <div className="border-t border-[var(--border-color)] pt-5 mt-2 flex flex-col gap-6">
+                                {/* Risk & Info strip */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                  <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">AI Risk Target</span>
+                                    <span className="text-xs font-black text-white block mt-1.5">{aiRecommendation.risk} Profiling</span>
                                   </div>
-                                ));
-                              })()}
+                                  <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Diversification</span>
+                                    <span className="text-xs font-black text-emerald-500 block mt-1.5">{aiRecommendation.diversification}/100 Score</span>
+                                  </div>
+                                  <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Expected Yield</span>
+                                    <span className="text-xs font-black text-blue-400 block mt-1.5">{aiRecommendation.risk === "High" ? "18% CAGR" : "12% CAGR"}</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-xs text-slate-400 p-3.5 rounded-xl border border-blue-500/10 bg-blue-600/[0.01]">
+                                  <span className="font-extrabold text-blue-400 block mb-1">Co-Pilot Rationale:</span>
+                                  {aiRecommendation.rationale}
+                                </div>
+
+                                {/* Your Portfolio vs AI Suggestions Comparative Analytics */}
+                                <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-slate-950/20 flex flex-col gap-4">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Your Portfolio vs AI Suggestions</span>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Sector Allocations */}
+                                    <div className="flex flex-col gap-2">
+                                      <span className="text-[9px] font-bold text-slate-500 uppercase">Sector Exposure Check</span>
+                                      {(() => {
+                                        // User sectors
+                                        const userSects: Record<string, number> = {};
+                                        portfolio.forEach(s => {
+                                          userSects[s.sector || "Technology"] = (userSects[s.sector || "Technology"] || 0) + (s.qty * (quotes[s.symbol]?.price || s.avgBuyPrice || 100));
+                                        });
+                                        const userTotal = Object.values(userSects).reduce((a, b) => a + b, 0);
+
+                                        // Rec sectors
+                                        const recSects: Record<string, number> = {};
+                                        aiRecommendation.stocks.forEach((s: any) => {
+                                          recSects[s.sector] = (recSects[s.sector] || 0) + s.allocation;
+                                        });
+
+                                        const missingSectors = Object.keys(recSects).filter(s => !userSects[s] || userTotal === 0);
+                                        const overweightSectors = Object.keys(userSects).filter(s => {
+                                          if (userTotal === 0) return false;
+                                          const pct = (userSects[s] / userTotal) * 100;
+                                          return pct > (recSects[s] || 0) + 15;
+                                        });
+                                        const underweightSectors = Object.keys(recSects).filter(s => {
+                                          const userPct = userTotal > 0 ? (userSects[s] / userTotal) * 100 : 0;
+                                          return userPct < recSects[s] - 10;
+                                        });
+
+                                        return (
+                                          <div className="flex flex-col gap-2.5 mt-1">
+                                            <div>
+                                              <span className="text-[9px] text-slate-500 font-bold block mb-1">Missing Sectors</span>
+                                              <div className="flex flex-wrap gap-1">
+                                                {missingSectors.length > 0 ? missingSectors.map(s => (
+                                                  <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">{s}</span>
+                                                )) : <span className="text-[10px] text-slate-500 italic">None</span>}
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <span className="text-[9px] text-slate-500 font-bold block mb-1">Overweight Sectors</span>
+                                              <div className="flex flex-wrap gap-1">
+                                                {overweightSectors.length > 0 ? overweightSectors.map(s => (
+                                                  <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">{s}</span>
+                                                )) : <span className="text-[10px] text-slate-500 italic">None</span>}
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <span className="text-[9px] text-slate-500 font-bold block mb-1">Underweight Sectors</span>
+                                              <div className="flex flex-wrap gap-1">
+                                                {underweightSectors.length > 0 ? underweightSectors.map(s => (
+                                                  <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">{s}</span>
+                                                )) : <span className="text-[10px] text-slate-500 italic">None</span>}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+
+                                    {/* Score cards */}
+                                    <div className="flex flex-col gap-3.5">
+                                      <span className="text-[9px] font-bold text-slate-500 uppercase">Impact Indicators</span>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3.5 rounded-xl bg-slate-900/40 border border-[var(--border-color)]">
+                                          <span className="text-[9px] text-slate-500 font-bold block">Expected Return Impact</span>
+                                          <span className="text-xs font-black text-emerald-500 block mt-1">+4.25% Annualized</span>
+                                        </div>
+                                        <div className="p-3.5 rounded-xl bg-slate-900/40 border border-[var(--border-color)]">
+                                          <span className="text-[9px] text-slate-500 font-bold block">Beta Risk Reduction</span>
+                                          <span className="text-xs font-black text-blue-400 block mt-1">-18.4% Variance</span>
+                                        </div>
+                                      </div>
+                                      <div className="p-3.5 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-[10px] text-slate-400 leading-relaxed font-semibold">
+                                        ⚖️ <strong>Diversification Gap</strong>: Your portfolio score is ~45/100. Adopting the recommendations increases exposure to {aiRecommendation.diversification}/100.
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Suggested Tickers Cards */}
+                                <div className="flex flex-col gap-3">
+                                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Asset Proposals</span>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {aiRecommendation.stocks
+                                      .filter((s: any) => !ignoredRecs.includes(s.symbol))
+                                      .map((st: any) => (
+                                        <div key={st.symbol} className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col justify-between gap-3 group relative">
+                                          <div>
+                                            <div className="flex justify-between items-start">
+                                              <div>
+                                                <span className="font-extrabold text-white text-xs block font-mono">{st.symbol}</span>
+                                                <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{st.name}</span>
+                                              </div>
+                                              <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/10">{st.allocation}%</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-2 font-medium leading-relaxed">
+                                              {st.rationale}
+                                            </p>
+                                          </div>
+
+                                          {/* Target Details */}
+                                          <div className="border-t border-[var(--border-color)] pt-2 flex justify-between items-center text-[10px] font-bold">
+                                            <span className="text-slate-500">Target Shares:</span>
+                                            <span className="text-white font-mono">{st.qty} units</span>
+                                          </div>
+
+                                          {/* Action Buttons */}
+                                          <div className="grid grid-cols-3 gap-1.5 border-t border-[var(--border-color)] pt-3">
+                                            <button
+                                              onClick={() => handleAddRecToPortfolio(st)}
+                                              className="py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-[9px] font-black text-white text-center cursor-pointer transition-colors"
+                                            >
+                                              ➕ Add
+                                            </button>
+                                            <button
+                                              onClick={() => setReplacingRecStock(st)}
+                                              className="py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-[var(--border-color)] text-[9px] font-bold text-slate-300 text-center cursor-pointer transition-colors"
+                                            >
+                                              🔄 Swap
+                                            </button>
+                                            <button
+                                              onClick={() => setIgnoredRecs(prev => [...prev, st.symbol])}
+                                              className="py-1.5 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-[9px] font-bold text-rose-400 text-center cursor-pointer transition-colors"
+                                            >
+                                              ❌ Ignore
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Inline Swap Selection Modals */}
+                            {replacingRecStock && (
+                              <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div className="glass-card max-w-sm w-full p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900 flex flex-col gap-4 text-left">
+                                  <div>
+                                    <h4 className="text-sm font-black text-white uppercase tracking-wider">Swap Existing Asset</h4>
+                                    <p className="text-[11px] text-slate-400 mt-1">
+                                      Select which holding in your current portfolio to replace with <strong>{replacingRecStock.symbol}</strong>.
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                                    {portfolio.map(p => (
+                                      <div
+                                        key={p.symbol}
+                                        onClick={() => handleReplaceHolding(replacingRecStock, p.symbol)}
+                                        className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-950/20 hover:bg-blue-600/10 hover:border-blue-500/30 cursor-pointer flex justify-between items-center transition-all"
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="text-xs font-extrabold text-white font-mono">{p.symbol}</span>
+                                          <span className="text-[9px] text-slate-500 font-bold">{p.name}</span>
+                                        </div>
+                                        <span className="text-xs font-mono font-black text-white">{p.qty} shares</span>
+                                      </div>
+                                    ))}
+                                    {portfolio.length === 0 && (
+                                      <span className="text-xs text-slate-500 italic text-center py-4">No holdings to swap out.</span>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => setReplacingRecStock(null)}
+                                    className="w-full py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Smart Stock Tracker Autocomplete Search */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-5 bg-slate-900/5">
+                            <div className="border-b border-[var(--border-color)] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div>
+                                <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Live Equities Monitor</span>
+                                <span className="text-xs text-slate-500 mt-0.5 block">Search, audit, and track active equities</span>
+                              </div>
+                              {portfolio.length > 0 && (
+                                <button
+                                  onClick={handleRebalancePortfolio}
+                                  className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-[11px] font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+                                >
+                                  Rebalance Allocations
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="relative w-full">
+                              <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                <input
+                                  type="text"
+                                  value={stockSearchQuery}
+                                  onChange={(e) => handleStockSearch(e.target.value)}
+                                  placeholder="Search stocks (e.g. AAPL, RELIANCE, TCS)..."
+                                  className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-900/50 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] transition-all font-semibold"
+                                />
+                                {stockSearchLoading && (
+                                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-blue-500" />
+                                )}
+                              </div>
+
+                              <AnimatePresence>
+                                {stockSearchResults.length > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute left-0 right-0 top-[110%] z-[9999] glass-card rounded-2xl border border-[var(--border-color)] bg-slate-900/95 shadow-2xl p-2 max-h-60 overflow-y-auto text-left"
+                                  >
+                                    {stockSearchResults.map((stock) => (
+                                      <div
+                                        key={stock.symbol}
+                                        onClick={() => handleAddStock(stock)}
+                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/40 cursor-pointer transition-all border border-transparent hover:border-[var(--border-color)]"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-8 h-8 rounded-lg bg-white/5 border border-[var(--border-color)] flex items-center justify-center font-bold text-white text-[10px] font-mono">
+                                            {stock.symbol.substring(0, 3)}
+                                          </div>
+                                          <div>
+                                            <span className="font-extrabold text-xs text-white block font-mono">{stock.symbol}</span>
+                                            <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{stock.name}</span>
+                                          </div>
+                                        </div>
+                                        <ChevronDown className="w-3.5 h-3.5 text-slate-500 -rotate-90" />
+                                      </div>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+
+                            {/* Stock Holdings List Grid */}
+                            <div className="flex flex-col gap-4 mt-2">
+                              {portfolio.map((item) => {
+                                const quote = quotes[item.symbol];
+                                const currentPrice = quote?.price || item.avgBuyPrice || 100;
+                                const cost = item.qty * item.avgBuyPrice;
+                                const currentValue = item.qty * currentPrice;
+                                const totalReturn = currentValue - cost;
+
+                                // Exchange specific info
+                                const { localTimeStr, marketState } = getExchangeMarketState(item.symbol);
+
+                                return (
+                                  <motion.div
+                                    key={item.symbol}
+                                    layoutId={`holdings-${item.symbol}`}
+                                    className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/20 hover:bg-slate-950/20 transition-all flex flex-col gap-3 group"
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[var(--border-color)] flex items-center justify-center font-mono text-[9px] font-black text-slate-300">
+                                          {item.symbol.substring(0, 4)}
+                                        </div>
+                                        <div className="text-left">
+                                          <span className="font-black text-xs text-white block font-mono">{item.symbol}</span>
+                                          <span className="text-[9px] text-slate-500 font-extrabold block mt-0.5">{item.name}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="text-right">
+                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">Price / Value</span>
+                                        <span className="font-mono text-xs font-extrabold text-white mt-1 block">
+                                          <RollingNumber value={currentPrice} /> / <RollingNumber value={currentValue} />
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Localized Exchange details */}
+                                    <div className="border-t border-[var(--border-color)] pt-2.5 flex justify-between items-center text-[10px]">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${marketState.includes("Open") ? "bg-emerald-500 animate-pulse" : marketState.includes("Pre") ? "bg-amber-500 animate-pulse" : "bg-slate-500"}`} />
+                                        <span className="text-slate-400 font-bold">{marketState}</span>
+                                        <span className="text-slate-500">• Local Time: {localTimeStr}</span>
+                                      </div>
+                                      <div className="flex items-center gap-4">
+                                        <span className="text-slate-500">Qty: <strong className="text-slate-300 font-mono">{item.qty}</strong></span>
+                                        <span className={`font-mono font-bold ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                          {totalReturn >= 0 ? "▲" : "▼"} <RollingNumber value={Math.abs(totalReturn)} />
+                                        </span>
+                                        <button
+                                          onClick={() => handleRemoveStock(item.symbol)}
+                                          className="text-rose-500 hover:text-rose-400 font-bold p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+
+                              {portfolio.length === 0 && (
+                                <div className="text-center py-8 text-xs text-slate-500 italic">
+                                  No stocks added yet. Search symbols in tracker above.
+                                </div>
+                              )}
                             </div>
                           </div>
 
-                          {/* Scenarios projection chart */}
-                          <div className="p-5 rounded-2xl bg-slate-950/20 border border-[var(--border-color)] flex flex-col gap-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">10-Year Growth Projection</span>
-                            
-                            <div className="h-32 w-full min-w-0 my-1">
+                          {/* ETF Holdings Segment */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3">
+                              <span className="text-sm font-bold uppercase tracking-wider text-white block">ETF Holdings</span>
+                              <span className="text-xs text-slate-500 mt-0.5 block">Audit index exchange-traded pools</span>
+                            </div>
+
+                            {/* ETF List */}
+                            <div className="flex flex-col gap-3">
+                              {etfsCalculated.map(etf => (
+                                <div key={etf.id} className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/20 flex justify-between items-center text-xs">
+                                  <div className="text-left">
+                                    <span className="font-extrabold text-white block font-mono">{etf.symbol}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold mt-0.5 block">{etf.name}</span>
+                                  </div>
+                                  <div className="text-center font-mono">
+                                    <span className="text-[10px] text-slate-500 block">Units / Price</span>
+                                    <span className="text-white font-bold block mt-0.5">{etf.units} @ <RollingNumber value={etf.avgPrice} /></span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[10px] text-slate-500 block">Valuation / Return</span>
+                                    <span className="text-white font-bold block font-mono"><RollingNumber value={etf.currentValue} /></span>
+                                    <span className={`text-[9px] font-bold block mt-0.5 ${etf.profit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                      {etf.profit >= 0 ? "+" : ""}{etf.profitPct.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveETF(etf.id)}
+                                    className="text-rose-500 hover:text-rose-400 font-bold ml-2 p-1"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {etfHoldings.length === 0 && (
+                                <span className="text-xs text-slate-500 italic text-center py-4">No ETF holdings.</span>
+                              )}
+                            </div>
+
+                            {/* Add ETF form */}
+                            <form onSubmit={handleAddETF} className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 border-t border-[var(--border-color)]">
+                              <input
+                                type="text"
+                                value={addEtfSymbol}
+                                onChange={(e) => setAddEtfSymbol(e.target.value)}
+                                placeholder="Symbol (e.g. SPY)"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addEtfUnits}
+                                onChange={(e) => setAddEtfUnits(e.target.value)}
+                                placeholder="Units"
+                                min="1"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addEtfAvgPrice}
+                                onChange={(e) => setAddEtfAvgPrice(e.target.value)}
+                                placeholder="Avg Cost"
+                                min="0.01"
+                                step="any"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <button
+                                type="submit"
+                                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Add ETF
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 2: Fixed Income */}
+                      {selectedInvestmentSubTab === "fixed_income" && (
+                        <div className="flex flex-col gap-6">
+                          
+                          {/* Fixed Deposits list */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3">
+                              <span className="text-sm font-bold uppercase tracking-wider text-white block">Fixed Deposits (FD)</span>
+                              <span className="text-xs text-slate-500 mt-0.5 block">Audit safe bank deposits and countdown maturities</span>
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                              {fdsCalculated.map(fd => (
+                                <div key={fd.id} className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col gap-3">
+                                  <div className="flex justify-between items-start">
+                                    <div className="text-left">
+                                      <span className="font-extrabold text-white text-xs block">{fd.bank}</span>
+                                      <span className="text-[9px] text-slate-500 font-bold mt-0.5 block">Rate: {fd.rate}% • Matures: {fd.maturityDate}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[10px] text-slate-500 block font-semibold">FD Principal / Value</span>
+                                      <span className="text-xs font-bold text-white font-mono block">
+                                        <RollingNumber value={fd.principal} /> / <RollingNumber value={fd.currentValue} />
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Progress bar */}
+                                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
+                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${fd.progressPercent}%` }} />
+                                  </div>
+
+                                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold pt-1 border-t border-[var(--border-color)]/30">
+                                    <span>⌛ {fd.daysRemaining} days remaining until maturity</span>
+                                    <span className="text-emerald-500 font-mono">+{format(fd.interestEarned)} earned</span>
+                                    <button
+                                      onClick={() => handleRemoveFD(fd.id)}
+                                      className="text-rose-500 hover:text-rose-400 font-bold"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+
+                                  <div className="text-[9px] text-slate-500 leading-normal italic px-2 py-1 rounded bg-slate-950/20 border border-[var(--border-color)]/30">
+                                    💡 <strong>AI Insight</strong>: {fd.insight}
+                                  </div>
+                                </div>
+                              ))}
+
+                              {fixedDeposits.length === 0 && (
+                                <span className="text-xs text-slate-500 italic text-center py-4">No Fixed Deposits tracking.</span>
+                              )}
+                            </div>
+
+                            {/* Add FD form */}
+                            <form onSubmit={handleAddFD} className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-3 border-t border-[var(--border-color)]">
+                              <input
+                                type="text"
+                                value={addFdBank}
+                                onChange={(e) => setAddFdBank(e.target.value)}
+                                placeholder="Bank (e.g. HDFC)"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addFdPrincipal}
+                                onChange={(e) => setAddFdPrincipal(e.target.value)}
+                                placeholder="Principal"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addFdRate}
+                                onChange={(e) => setAddFdRate(e.target.value)}
+                                placeholder="Rate (%)"
+                                step="any"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="date"
+                                value={addFdStartDate}
+                                onChange={(e) => setAddFdStartDate(e.target.value)}
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-[10px] focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addFdTenureYears}
+                                onChange={(e) => setAddFdTenureYears(e.target.value)}
+                                placeholder="Tenure (Y)"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <button
+                                type="submit"
+                                className="sm:col-span-5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Track Fixed Deposit
+                              </button>
+                            </form>
+                          </div>
+
+                          {/* Bonds tracking */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3">
+                              <span className="text-sm font-bold uppercase tracking-wider text-white block">Government & Corporate Bonds</span>
+                              <span className="text-xs text-slate-500 mt-0.5 block">Audit debt face values and coupon yields</span>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              {bondsCalculated.map(b => (
+                                <div key={b.id} className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex justify-between items-center text-xs">
+                                  <div className="text-left">
+                                    <span className="font-extrabold text-white block">{b.type}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold mt-0.5 block">Coupon: {b.couponRate}% • Matures: {b.maturityDate}</span>
+                                  </div>
+                                  <div className="text-center font-mono">
+                                    <span className="text-[10px] text-slate-500 block">Face Value</span>
+                                    <span className="text-white font-bold block mt-0.5"><RollingNumber value={b.faceValue} /></span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[10px] text-slate-500 block">Current Value</span>
+                                    <span className="text-white font-bold block font-mono"><RollingNumber value={b.currentValue} /></span>
+                                    <span className="text-[9px] font-bold text-emerald-500 block mt-0.5">+{format(b.interestEarned)} accrued</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveBond(b.id)}
+                                    className="text-rose-500 hover:text-rose-400 font-bold ml-2 p-1"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {bondHoldings.length === 0 && (
+                                <span className="text-xs text-slate-500 italic text-center py-4">No Bond holdings tracked.</span>
+                              )}
+                            </div>
+
+                            {/* Add Bond form */}
+                            <form onSubmit={handleAddBond} className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 border-t border-[var(--border-color)]">
+                              <select
+                                value={addBondType}
+                                onChange={(e) => setAddBondType(e.target.value)}
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              >
+                                <option value="Government Bonds">Government Bonds</option>
+                                <option value="Corporate Bonds">Corporate Bonds</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={addBondFaceValue}
+                                onChange={(e) => setAddBondFaceValue(e.target.value)}
+                                placeholder="Face Value"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addBondCouponRate}
+                                onChange={(e) => setAddBondCouponRate(e.target.value)}
+                                placeholder="Coupon (%)"
+                                step="any"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="date"
+                                value={addBondStartDate}
+                                onChange={(e) => setAddBondStartDate(e.target.value)}
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-[10px] focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="date"
+                                value={addBondMaturityDate}
+                                onChange={(e) => setAddBondMaturityDate(e.target.value)}
+                                required
+                                className="sm:col-span-4 px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-[10px] focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <button
+                                type="submit"
+                                className="sm:col-span-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Track Bond
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 3: Retirement Pools */}
+                      {selectedInvestmentSubTab === "retirement" && (
+                        <div className="flex flex-col gap-6">
+                          
+                          {/* PPF Section */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
+                              <div>
+                                <span className="text-sm font-bold uppercase tracking-wider text-white block">Public Provident Fund (PPF)</span>
+                                <span className="text-xs text-slate-500 mt-0.5 block">Standard compounding target (7.1% CAGR interest)</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] text-slate-500 block">Balance</span>
+                                <span className="text-base font-black text-white font-mono"><RollingNumber value={ppfData.balance} /></span>
+                              </div>
+                            </div>
+
+                            {/* PPF projections chart */}
+                            <div className="h-44 w-full min-w-0 my-1">
                               <ResponsiveContainer width="99%" height="100%">
                                 <AreaChart data={(() => {
                                   const data = [];
-                                  const cap = aiRecommendation.totalCapital;
-                                  for (let year = 0; year <= 10; year += 2) {
+                                  let currentBal = ppfData.balance;
+                                  const annualDep = ppfData.annualContribution;
+                                  const rate = 0.071;
+                                  for (let year = 0; year <= 15; year++) {
                                     data.push({
-                                      year: `${year}Y`,
-                                      Conservative: Math.round(cap * Math.pow(1.06, year)),
-                                      Moderate: Math.round(cap * Math.pow(1.12, year)),
-                                      Optimistic: Math.round(cap * Math.pow(1.18, year))
+                                      year: `Year ${year}`,
+                                      PPF: Math.round(currentBal)
                                     });
+                                    currentBal = (currentBal + annualDep) * (1 + rate);
                                   }
                                   return data;
                                 })()}>
                                   <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
-                                  <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} formatter={(value) => [format(Number(value)), "Value"]} />
-                                  <Area type="monotone" dataKey="Optimistic" stroke="#10b981" fillOpacity={0.03} strokeWidth={1} fill="#10b981" />
-                                  <Area type="monotone" dataKey="Moderate" stroke="#3b82f6" fillOpacity={0.05} strokeWidth={1.5} fill="#3b82f6" />
-                                  <Area type="monotone" dataKey="Conservative" stroke="#64748b" fillOpacity={0} strokeWidth={1} fill="transparent" />
+                                  <YAxis stroke="#475569" fontSize={8} tickLine={false} axisLine={false} tickFormatter={(val) => format(val, true)} />
+                                  <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} formatter={(value) => [format(Number(value)), "PPF Balance"]} />
+                                  <Area type="monotone" dataKey="PPF" stroke="#ec4899" fillOpacity={0.06} strokeWidth={1.5} fill="#ec4899" />
                                 </AreaChart>
                               </ResponsiveContainer>
                             </div>
 
-                            <div className="flex gap-4 text-[9px] justify-center text-slate-500 font-bold mt-1">
-                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> Cons (6%)</span>
-                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Mod (12%)</span>
-                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Opt (18%)</span>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* Rationale and Strategy */}
-                        <div className="p-4 rounded-xl bg-blue-500/[0.02] border border-blue-500/10 text-xs leading-relaxed text-[var(--text-subtitle)]">
-                          <span className="font-extrabold text-blue-400 block mb-1">Co-Pilot Strategy Description:</span>
-                          {aiRecommendation.rationale}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                </div>
-
-                {/* 2. Holdings and Core Engine Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                  {/* Left Column: Asset Allocation & Summary */}
-                  <div className="lg:col-span-5 flex flex-col gap-6">
-                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between bg-slate-950/10">
-                      <div>
-                        <div className="border-b border-[var(--border-color)] pb-3">
-                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Asset Allocation</span>
-                          <span className="text-xs text-slate-500 mt-0.5 block">Portfolio consolidation</span>
-                        </div>
-
-                        <div className="h-64 w-full min-w-0 flex items-center justify-center relative my-4">
-                          <ResponsiveContainer width="99%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={assetAllocationData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={70}
-                                outerRadius={100}
-                                paddingAngle={3}
-                                dataKey="value"
-                              >
-                                {assetAllocationData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                            </PieChart>
-                          </ResponsiveContainer>
-                          <div className="absolute flex flex-col items-center justify-center">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Portfolio</span>
-                            <span className="text-xl font-black text-[var(--text-color)] font-mono">
-                              <RollingNumber value={portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0)} />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3 font-semibold text-xs border-t border-[var(--border-color)] pt-4 max-h-[220px] overflow-y-auto pr-1">
-                        {assetAllocationData.map((asset, idx) => (
-                          <div key={idx} className="flex justify-between items-center">
-                            <div className="flex items-center gap-2.5 text-slate-400">
-                              <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: asset.color }} />
-                              <span className="truncate max-w-[140px]">{asset.name}</span>
-                            </div>
-                            <span className="text-[var(--text-color)] font-mono"><RollingNumber value={asset.value} /></span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Portfolio Returns Metrics Card */}
-                    {portfolio.length > 0 && (() => {
-                      const totalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
-                      const totalInvested = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
-                      const totalReturn = totalVal - totalInvested;
-                      const returnPct = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
-
-                      // Today's gains
-                      const todaysGains = portfolio.reduce((acc, item) => {
-                        const quote = quotes[item.symbol];
-                        return acc + (item.qty * (quote?.change || 0));
-                      }, 0);
-
-                      return (
-                        <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
-                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-[var(--border-color)] pb-2 block">
-                            Portfolio Metrics
-                          </span>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Invested</span>
-                              <span className="text-base font-bold text-white font-mono"><RollingNumber value={totalInvested} /></span>
-                            </div>
-                            <div>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Current Value</span>
-                              <span className="text-base font-bold text-white font-mono"><RollingNumber value={totalVal} /></span>
-                            </div>
-                            <div>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Total Returns</span>
-                              <span className={`text-base font-black font-mono ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                <RollingNumber value={totalReturn} /> ({totalReturn >= 0 ? "+" : ""}{returnPct.toFixed(2)}%)
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Today's Gain/Loss</span>
-                              <span className={`text-base font-black font-mono ${todaysGains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                {todaysGains >= 0 ? "▲" : "▼"} <RollingNumber value={Math.abs(todaysGains)} />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Right Column: Holdings Grid & Smart Search */}
-                  <div className="lg:col-span-7 flex flex-col gap-6">
-                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-5 bg-slate-900/5">
-                      
-                      {/* Search and Autocomplete Header */}
-                      <div className="border-b border-[var(--border-color)] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Live Market Tracker</span>
-                          <span className="text-xs text-slate-500 mt-0.5 block">Quotes updated automatically every 20s</span>
-                        </div>
-
-                        {/* Action buttons */}
-                        {portfolio.length > 0 && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={handleRebalancePortfolio}
-                              className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-[11px] font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
-                              title="Rebalance allocations evenly based on current market rates"
-                            >
-                              Rebalance
-                            </button>
-                            <button
-                              onClick={() => setShowSavePortfolioModal(true)}
-                              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-[11px] font-bold text-white transition-all cursor-pointer shadow shadow-blue-500/10"
-                            >
-                              Save Portfolio
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Smart Search Bar */}
-                      <div className="relative w-full">
-                        <div className="relative">
-                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                          <input
-                            type="text"
-                            value={stockSearchQuery}
-                            onChange={(e) => handleStockSearch(e.target.value)}
-                            placeholder="Search by company name or stock symbol (e.g. AAPL, RELIANCE)..."
-                            className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-slate-900/50 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] transition-all font-semibold"
-                          />
-                          {stockSearchLoading && (
-                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-blue-500" />
-                          )}
-                        </div>
-
-                        {/* Search Autocomplete Results List */}
-                        <AnimatePresence>
-                          {stockSearchResults.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className="absolute left-0 right-0 top-[110%] z-[9999] glass-card rounded-2xl border border-[var(--border-color)] bg-slate-900/95 shadow-2xl p-2 max-h-60 overflow-y-auto text-left"
-                            >
-                              {stockSearchResults.map((stock) => (
-                                <button
-                                  key={stock.symbol}
-                                  onClick={() => handleAddStock(stock)}
-                                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-500/10 transition-all text-left cursor-pointer group"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    {stock.logo ? (
-                                      <img 
-                                        src={stock.logo} 
-                                        alt={stock.symbol} 
-                                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                                        className="w-7 h-7 rounded-full bg-slate-800 object-contain p-0.5 border border-slate-700/50" 
-                                      />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded-full bg-blue-600/10 border border-blue-500/25 flex items-center justify-center font-bold text-[10px] text-blue-400">
-                                        {stock.symbol.slice(0, 2).toUpperCase()}
-                                      </div>
-                                    )}
-                                    <div className="flex flex-col text-left">
-                                      <span className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">{stock.symbol}</span>
-                                      <span className="text-[10px] text-slate-400 truncate max-w-[220px]">{stock.name}</span>
-                                    </div>
-                                  </div>
-                                  <span className="text-[9px] font-black uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-500 border border-slate-700/50">
-                                    {stock.exchange}
-                                  </span>
-                                </button>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-
-                    {/* Holdings list */}
-                    <div className="flex flex-col gap-3">
-                      {portfolio.length === 0 ? (
-                        // Empty State view
-                        <div className="py-12 px-6 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in duration-300">
-                          <div className="w-16 h-16 rounded-full bg-blue-600/5 border border-blue-500/10 flex items-center justify-center text-3xl">
-                            📈
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-white">Start building your investment portfolio</h4>
-                            <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">
-                              Search any stock symbol (NSE or global US tickers) in the input above to begin tracking live market performance.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        portfolio.map((item) => {
-                          const quote = quotes[item.symbol];
-                          const flashStatus = priceUpdateStatus[item.symbol];
-                          const isPositive = quote ? quote.change >= 0 : true;
-
-                          // Compute return stats
-                          const livePrice = quote?.price || 0;
-                          const currentVal = item.qty * livePrice;
-                          const totalCost = item.qty * item.avgBuyPrice;
-                          const totalReturn = currentVal - totalCost;
-                          const returnPct = item.avgBuyPrice > 0 ? (totalReturn / totalCost) * 100 : 0;
-
-                          return (
-                            <motion.div
-                              key={item.symbol}
-                              layout
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ duration: 0.25 }}
-                              onClick={() => handleOpenChart(item.symbol)}
-                              className={`p-4 rounded-xl border flex flex-col gap-4 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/5 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
-                                flashStatus === "up" 
-                                  ? "bg-emerald-500/10 border-emerald-500/40" 
-                                  : flashStatus === "down" 
-                                    ? "bg-rose-500/10 border-rose-500/40" 
-                                    : "bg-slate-900/10 border-[var(--border-color)] hover:border-blue-500/25"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                  {item.logo ? (
-                                    <img 
-                                      src={item.logo} 
-                                      alt={item.symbol} 
-                                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                                      className="w-8.5 h-8.5 rounded-full bg-slate-800 object-contain p-0.5 border border-slate-700/50 group-hover:scale-105 transition-transform" 
-                                    />
-                                  ) : (
-                                    <div className="w-8.5 h-8.5 rounded-full bg-blue-600/10 border border-blue-500/20 text-blue-500 flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                                      {item.symbol.slice(0, 2)}
-                                    </div>
-                                  )}
-                                  <div className="flex flex-col text-left">
-                                    <span className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors">{item.symbol}</span>
-                                    <span className="text-[10px] text-slate-500 truncate max-w-[150px]">{item.name}</span>
-                                  </div>
-                                </div>
-
-                                {/* Sparkline & Price Stats */}
-                                <div className="flex items-center gap-4 shrink-0">
-                                  {/* Sparkline chart */}
-                                  {quote && quote.sparkline && (
-                                    <div className="w-20 h-8 shrink-0 min-w-0">
-                                      <ResponsiveContainer width="99%" height="100%">
-                                        <AreaChart data={quote.sparkline.map((price: number, i: number) => ({ idx: i, price }))}>
-                                          <defs>
-                                            <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                                              <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.15}/>
-                                              <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0}/>
-                                            </linearGradient>
-                                          </defs>
-                                          <Area
-                                            type="monotone"
-                                            dataKey="price"
-                                            stroke={isPositive ? "#10b981" : "#ef4444"}
-                                            strokeWidth={1.5}
-                                            fillOpacity={1}
-                                            fill={`url(#grad-${item.symbol})`}
-                                            dot={false}
-                                          />
-                                        </AreaChart>
-                                      </ResponsiveContainer>
-                                    </div>
-                                  )}
-
-                                  <div className="text-right">
-                                    <span className="font-bold text-white text-sm block font-mono">
-                                      {quote ? <RollingNumber value={quote.price} /> : "Loading..."}
-                                    </span>
-                                    {quote && (
-                                      <span className={`text-[10px] font-bold mt-0.5 flex items-center gap-0.5 justify-end ${isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                                        {isPositive ? "▲" : "▼"} {quote.changePercent.toFixed(2)}%
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Form Inputs (Stop Propagation to prevent triggering chart modal) */}
-                              <div 
-                                onClick={(e) => e.stopPropagation()} 
-                                className="grid grid-cols-3 gap-3 pt-3 border-t border-[var(--border-color)] items-end"
-                              >
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Shares</span>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={item.qty}
-                                    onChange={(e) => handleUpdateHolding(item.symbol, parseInt(e.target.value) || 1, item.avgBuyPrice)}
-                                    className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1 text-xs text-white font-mono text-center focus:outline-none focus:border-blue-500/30"
-                                  />
-                                </div>
-
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost ({activeCurrency.symbol})</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    value={item.avgBuyPrice}
-                                    onChange={(e) => handleUpdateHolding(item.symbol, item.qty, parseFloat(e.target.value) || 0)}
-                                    className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1 text-xs text-white font-mono text-left focus:outline-none focus:border-blue-500/30"
-                                  />
-                                </div>
-
-                                <div className="flex flex-col text-right">
-                                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
-                                  <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                    {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} />
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Status Footer */}
-                              <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mt-1">
-                                <span>
-                                  {quote ? `${quote.marketState} Market • Updated ${quote.lastUpdated}` : "Connecting to exchange..."}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveStock(item.symbol);
+                            {/* Form to update PPF */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--border-color)]/30 pt-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Current PPF Balance</label>
+                                <input
+                                  type="number"
+                                  value={ppfData.balance}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    const updated = { ...ppfData, balance: val };
+                                    setPpfData(updated);
+                                    persistData("ppfData", updated);
                                   }}
-                                  className="text-rose-500 hover:text-rose-400 p-0.5 rounded flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  Remove
-                                </button>
+                                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-mono"
+                                />
                               </div>
-                            </motion.div>
-                          );
-                        })
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Annual Contribution Limit</label>
+                                <input
+                                  type="number"
+                                  value={ppfData.annualContribution}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    const updated = { ...ppfData, annualContribution: val };
+                                    setPpfData(updated);
+                                    persistData("ppfData", updated);
+                                  }}
+                                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-mono"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* NPS Section */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
+                              <div>
+                                <span className="text-sm font-bold uppercase tracking-wider text-white block">National Pension System (NPS)</span>
+                                <span className="text-xs text-slate-500 mt-0.5 block">Retirement corpus compounding calculator</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] text-slate-500 block">Current Corpus</span>
+                                <span className="text-base font-black text-white font-mono"><RollingNumber value={npsData.corpus} /></span>
+                              </div>
+                            </div>
+
+                            {/* NPS Projections details */}
+                            {(() => {
+                              // compound monthly deposits at 10.5% CAGR until age 60 (assume current age 30, so 30 years)
+                              const yearsToRetire = 30;
+                              const monthlyRate = 0.105 / 12;
+                              const months = yearsToRetire * 12;
+                              const monthlyDeposit = npsData.employerMonthly + npsData.personalMonthly;
+                              
+                              let projectedCorpus = npsData.corpus * Math.pow(1 + monthlyRate, months);
+                              for (let m = 1; m <= months; m++) {
+                                projectedCorpus += monthlyDeposit * Math.pow(1 + monthlyRate, months - m);
+                              }
+
+                              return (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-2">
+                                  <div className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-center">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Years Compounding</span>
+                                    <span className="text-sm font-bold text-white block mt-1">30 Years (Age 60 Target)</span>
+                                  </div>
+                                  <div className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-center">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Monthly Saving</span>
+                                    <span className="text-sm font-bold text-emerald-500 block mt-1"><RollingNumber value={monthlyDeposit} /></span>
+                                  </div>
+                                  <div className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-center">
+                                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Projected Retirement Corpus</span>
+                                    <span className="text-sm font-black text-blue-400 block mt-1"><RollingNumber value={Math.round(projectedCorpus)} /></span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Allocation split */}
+                            <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20 text-xs text-slate-400">
+                              <span className="font-bold">NPS Asset Allocation Split:</span>
+                              <div className="flex gap-4">
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-500" /> Equity (E): {npsData.allocationE}%</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-indigo-500" /> Corp Bonds (C): {npsData.allocationC}%</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> Government (G): {npsData.allocationG}%</span>
+                              </div>
+                            </div>
+
+                            {/* Inputs form */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-[var(--border-color)]/30">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[9px] text-slate-500 font-bold uppercase">Employer Co-Pay</label>
+                                <input
+                                  type="number"
+                                  value={npsData.employerMonthly}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    const updated = { ...npsData, employerMonthly: val };
+                                    setNpsData(updated);
+                                    persistData("npsData", updated);
+                                  }}
+                                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-mono"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[9px] text-slate-500 font-bold uppercase">Personal Co-Pay</label>
+                                <input
+                                  type="number"
+                                  value={npsData.personalMonthly}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    const updated = { ...npsData, personalMonthly: val };
+                                    setNpsData(updated);
+                                    persistData("npsData", updated);
+                                  }}
+                                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-mono"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[9px] text-slate-500 font-bold uppercase">Corpus Balance</label>
+                                <input
+                                  type="number"
+                                  value={npsData.corpus}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    const updated = { ...npsData, corpus: val };
+                                    setNpsData(updated);
+                                    persistData("npsData", updated);
+                                  }}
+                                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-mono"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       )}
+
+                      {/* SUBTAB 4: Precious Metals */}
+                      {selectedInvestmentSubTab === "metals" && (
+                        <div className="flex flex-col gap-6">
+                          
+                          {/* Gold Holdings Card */}
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
+                              <div>
+                                <span className="text-sm font-bold uppercase tracking-wider text-white block">Precious Metals & Gold Vault</span>
+                                <span className="text-xs text-slate-500 mt-0.5 block">Track digital gold, gold ETFs, and physical assets</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] text-slate-500 block">Spot Gold Price</span>
+                                <span className="text-base font-black text-amber-500 font-mono">
+                                  {format(spotGoldPrice)} <span className="text-[9px] text-slate-500">/gram</span>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Gold holdings lists */}
+                            <div className="flex flex-col gap-3">
+                              {goldCalculated.map(g => (
+                                <div key={g.id} className="p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex justify-between items-center text-xs">
+                                  <div className="text-left">
+                                    <span className="font-extrabold text-white block">{g.type}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold mt-0.5 block">
+                                      {g.type === "Physical Gold" ? `${g.grams} grams` : `${g.units} units`}
+                                    </span>
+                                  </div>
+                                  <div className="text-center font-mono">
+                                    <span className="text-[10px] text-slate-500 block">Buy Price</span>
+                                    <span className="text-white font-bold block mt-0.5">
+                                      {g.type === "Physical Gold" ? format(g.buyPricePerGram) : format(g.buyPricePerUnit)}
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[10px] text-slate-500 block">Current Valuation</span>
+                                    <span className="text-white font-bold block font-mono"><RollingNumber value={g.currentValue} /></span>
+                                    <span className={`text-[9px] font-bold block mt-0.5 ${g.profit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                      {g.profit >= 0 ? "+" : ""}{g.profitPct.toFixed(1)}% Return
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveGold(g.id)}
+                                    className="text-rose-500 hover:text-rose-400 font-bold ml-2 p-1"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {goldHoldings.length === 0 && (
+                                <span className="text-xs text-slate-500 italic text-center py-4">No metals portfolio tracking.</span>
+                              )}
+                            </div>
+
+                            {/* Add gold form */}
+                            <form onSubmit={handleAddGold} className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 border-t border-[var(--border-color)]">
+                              <select
+                                value={addGoldType}
+                                onChange={(e) => setAddGoldType(e.target.value)}
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              >
+                                <option value="Physical Gold">Physical Gold (grams)</option>
+                                <option value="Digital Gold">Digital Gold (grams)</option>
+                                <option value="Gold ETF">Gold ETF (units)</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={addGoldGrams}
+                                onChange={(e) => setAddGoldGrams(e.target.value)}
+                                placeholder={addGoldType === "Gold ETF" ? "Units" : "Grams"}
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <input
+                                type="number"
+                                value={addGoldBuyPrice}
+                                onChange={(e) => setAddGoldBuyPrice(e.target.value)}
+                                placeholder="Buy Price"
+                                required
+                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                              />
+                              <button
+                                type="submit"
+                                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Track Gold
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
 
+                    <div className="lg:col-span-4 flex flex-col gap-6">
+                      
+                      {/* Consolidated Asset Allocation Pie Chart */}
+                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col justify-between">
+                        <div>
+                          <div className="border-b border-[var(--border-color)] pb-3">
+                            <span className="text-sm font-bold uppercase tracking-wider text-white block">Asset Allocation</span>
+                            <span className="text-xs text-slate-500 mt-0.5 block">Unified portfolio distribution</span>
+                          </div>
+
+                          <div className="h-56 w-full min-w-0 flex items-center justify-center relative my-4">
+                            {consolidatedAllocationData.length > 0 ? (
+                              <>
+                                <ResponsiveContainer width="99%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={consolidatedAllocationData}
+                                      cx="50%"
+                                      cy="50%"
+                                      innerRadius={60}
+                                      outerRadius={80}
+                                      paddingAngle={3}
+                                      dataKey="value"
+                                    >
+                                      {consolidatedAllocationData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                      ))}
+                                    </Pie>
+                                  </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute flex flex-col items-center justify-center">
+                                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Value</span>
+                                  <span className="text-base font-black text-white font-mono">
+                                    <RollingNumber value={totalInvestmentValue} />
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-xs text-slate-500 italic">No assets tracked yet.</span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-2 mt-2">
+                            {consolidatedAllocationData.map((entry, index) => {
+                              const pct = totalInvestmentValue > 0 ? (entry.value / totalInvestmentValue) * 100 : 0;
+                              return (
+                                <div key={index} className="flex justify-between items-center text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                    <span className="text-slate-400 font-bold">{entry.name}</span>
+                                  </div>
+                                  <span className="text-white font-bold font-mono">
+                                    <RollingNumber value={entry.value} /> ({pct.toFixed(1)}%)
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Upcoming Investment Events Widget Card */}
+                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+                        <div className="border-b border-[var(--border-color)] pb-3">
+                          <span className="text-sm font-bold uppercase tracking-wider text-white block">Upcoming Milestones</span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">Accrual dates and maturity deadlines</span>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                          
+                          {/* Loop over FDs */}
+                          {fdsCalculated.slice(0, 2).map(fd => (
+                            <div key={fd.id} className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">FD Maturity Deadline</span>
+                              <span className="font-extrabold text-white block mt-0.5">{fd.bank} Deposit</span>
+                              <span className="text-xs text-blue-400 block mt-1 font-semibold">⏰ Maturing in {fd.daysRemaining} days</span>
+                            </div>
+                          ))}
+
+                          {/* Loop over bonds */}
+                          {bondHoldings.slice(0, 1).map(b => (
+                            <div key={b.id} className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">Accrued Coupon Date</span>
+                              <span className="font-extrabold text-white block mt-0.5">{b.type} Interest</span>
+                              <span className="text-xs text-indigo-400 block mt-1 font-semibold">📅 Coupon interest due</span>
+                            </div>
+                          ))}
+
+                          {/* PPF cap reminder */}
+                          {ppfTotalValue > 0 && (
+                            <div className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">PPF Account Lock</span>
+                              <span className="font-extrabold text-white block mt-0.5">Annual PPF Deposit Cap</span>
+                              <span className="text-xs text-rose-400 block mt-1 font-semibold">⚠️ Deposit {format(ppfData.annualContribution)} before March 31</span>
+                            </div>
+                          )}
+
+                          {/* NPS cap reminder */}
+                          {npsTotalValue > 0 && (
+                            <div className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">NPS Tax Shield Reminder</span>
+                              <span className="font-extrabold text-white block mt-0.5">NPS Monthly Contribution</span>
+                              <span className="text-xs text-amber-500 block mt-1 font-semibold">💡 Personal co-pay is active</span>
+                            </div>
+                          )}
+
+                          {/* Mock IPO announcements */}
+                          <div className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">Hot Upcoming IPO Releases</span>
+                            <div className="flex flex-col gap-1.5 mt-1.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300 font-bold">Hyundai India IPO</span>
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Sept 2026</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300 font-bold">Swiggy Delivery IPO</span>
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Oct 2026</span>
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+
+                </motion.div>
+              );
+            })()}
 
             {/* Subscriptions */}
             {activeTab === "subscriptions" && (
