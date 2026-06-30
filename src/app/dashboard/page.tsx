@@ -324,6 +324,7 @@ export default function Dashboard() {
   const [activePortfolioName, setActivePortfolioName] = useState("Custom Portfolio");
   const [showSavePortfolioModal, setShowSavePortfolioModal] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState("");
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string>("");
   // Investment Engine Enhancements States
   const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals">("equities");
   const [ignoredRecs, setIgnoredRecs] = useState<string[]>([]);
@@ -634,7 +635,9 @@ export default function Dashboard() {
       if (error) {
         console.error("Failed to sync dashboard to Supabase Cloud:", error);
         setSyncStatus("error");
+        setSyncErrorMessage(error.message || "Unknown error");
       } else {
+        setSyncErrorMessage("");
         setSyncStatus("synced");
       }
     }, 2500);
@@ -1834,8 +1837,8 @@ const handleSaveCurrentPortfolio = (name: string) => {
               </div>
             )}
             {syncStatus === "error" && (
-              <div className="hidden sm:flex items-center gap-1 bg-rose-500/10 text-rose-500 dark:text-rose-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-rose-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" /> Sync Error
+              <div className="hidden sm:flex items-center gap-1 bg-rose-500/10 text-rose-500 dark:text-rose-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-rose-500/20" title={syncErrorMessage}>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" /> Sync Error: {syncErrorMessage}
               </div>
             )}
             {syncStatus === "guest" && (
