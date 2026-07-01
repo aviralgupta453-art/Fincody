@@ -544,6 +544,10 @@ export default function Home() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
+            <Link href="/live" className="text-blue-400 hover:text-blue-300 font-extrabold flex items-center gap-1 transition-colors">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" /> FinCody Live
+            </Link>
+
             <a href="#features" className="hover:text-[var(--text-color)] transition-colors">Features</a>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</a>
@@ -616,6 +620,10 @@ export default function Home() {
             className="absolute top-20 left-0 w-full bg-[var(--bg-color)] border-b border-[var(--border-color)] p-6 flex flex-col gap-6 z-40 backdrop-blur-lg md:hidden"
           >
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
+              <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="text-blue-400 font-extrabold flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" /> FinCody Live
+              </Link>
+
               <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Features</a>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
               <a href="#simulator" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Simulator</a>
@@ -656,74 +664,91 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-        {/* Fincody Live Financial Intelligence Feed v3.0 */}
-        <section id="fincody-live" className="pt-6 pb-12 px-6 max-w-7xl mx-auto border-b border-blue-500/10 relative text-left">
+      {/* Hero Section */}
+      <section className="relative pt-12 md:pt-24 pb-20 px-6 max-w-7xl mx-auto text-left">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          <style>{`
-            @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .animate-marquee-loop {
-              display: flex;
-              width: max-content;
-              animation: marquee 45s linear infinite;
-            }
-            .scrollbar-none::-webkit-scrollbar {
-              display: none;
-            }
-            .scrollbar-none {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-            @keyframes pulse-red {
-              0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
-              50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.8); }
-            }
-            .critical-glow {
-              animation: pulse-red 2s infinite;
-            }
-          `}</style>
-
-          {/* 10. Live AI Commentary Ticker */}
-          <div className="h-12 border border-blue-500/20 bg-slate-950/80 overflow-hidden flex items-center relative rounded-t-2xl z-20 backdrop-blur-md">
-            <div className="absolute left-0 top-0 bottom-0 px-4 bg-blue-600 text-white text-xs font-black tracking-widest flex items-center gap-1.5 z-30 uppercase shadow-lg shadow-blue-500/20 animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE COMMENTARY
+          {/* Left Column: Hero Copy */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="lg:col-span-7 flex flex-col items-start gap-6"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-xs font-semibold text-blue-400 tracking-wide uppercase shadow-inner">
+              <Sparkles className="w-3.5 h-3.5" /> Introducing Next-Gen Life AI
             </div>
-            <div className="pl-36 w-full overflow-hidden">
-              <div className="animate-marquee-loop flex gap-12 py-1 text-sm font-bold text-slate-300 select-none">
-                {[...Array(2)].map((_, loopIdx) => (
-                  <div key={loopIdx} className="flex gap-12 items-center">
-                    <span>"Indian markets remain optimistic after today's RBI announcement. Technology continues outperforming Banking."</span>
-                    <span className="text-blue-500">•</span>
-                    <span>"Global sentiment remains cautiously positive as US CPI drops to 2.4%."</span>
-                    <span className="text-blue-500">•</span>
-                    <span>"Yen carry-trade shifts carry short-term leverage volatility across regional emerging blocks."</span>
-                    <span className="text-blue-500">•</span>
+
+            <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight max-w-2xl bg-gradient-to-b from-[var(--text-color)] via-[var(--text-color)] to-slate-400 bg-clip-text text-transparent leading-[1.1] pt-2">
+              Your Entire Life.<br /> Organized.
+            </h1>
+
+            <p className="text-lg md:text-xl text-[var(--text-subtitle)] max-w-xl leading-relaxed">
+              An AI Operating System for your finances, goals, decisions, and future. Track assets, run simulations, and navigate major life turns with absolute clarity.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-2 w-full">
+              <Link 
+                href="/dashboard"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                {user ? "Go to Dashboard" : "Enter Dashboard"} <ArrowRight className="w-5 h-5" />
+              </Link>
+              <a 
+                href="#demo"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                Launch Demo
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Right Column: Premium Compact Breaking News Widget */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="lg:col-span-5 w-full glass-card p-6 border border-blue-500/10 bg-slate-950/30 rounded-2xl flex flex-col gap-4 text-left relative overflow-hidden"
+          >
+            <div className="flex justify-between items-center border-b border-blue-500/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  Breaking Market Events
+                </h3>
+              </div>
+              <Link 
+                href="/live" 
+                className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
+              >
+                Go Live <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Scrolling micro breaking news cards */}
+            <div className="flex flex-col gap-3.5 max-h-[300px] overflow-y-auto scrollbar-none">
+              {LIVE_NEWS_DATA.slice(0, 4).map((news) => (
+                <div key={news.id} className="p-3.5 rounded-xl border border-blue-500/5 bg-slate-900/10 hover:bg-slate-900/20 transition-all flex flex-col gap-2 relative overflow-hidden">
+                  {news.breaking && (
+                    <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-red-600 animate-pulse" />
+                  )}
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase">
+                    <span>{news.source}</span>
+                    <span className="text-emerald-400">{news.impact}</span>
                   </div>
-                ))}
-              </div>
+                  <h4 className="text-xs font-bold text-white leading-normal line-clamp-2">
+                    {news.headline}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 line-clamp-2">
+                    {news.summary}
+                  </p>
+                </div>
+              ))}
             </div>
-          </div>
 
-          <div className="p-6 md:p-8 border-x border-b border-blue-500/10 bg-slate-950/40 rounded-b-2xl shadow-[0_0_50px_rgba(59,130,246,0.05)]">
-            
-            {/* Header / Intro section with enlarged texts */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 border-b border-blue-500/10 pb-4">
-              <div>
-                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-extrabold text-blue-400 uppercase tracking-widest mb-3">
-                  <Sparkles className="w-3.5 h-3.5" /> Flagship Intelligence
-                </span>
-                <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight leading-none">
-                  FINCODY LIVE
-                </h2>
-                <p className="text-base text-slate-400 font-medium mt-2">
-                   Futurized Bloomberg Terminal combined with Apple VisionOS. Immersive market tracking.
-                </p>
-              </div>
-
-              {/* 13. Voice Summary Controls */}
-              <div className="flex items-center gap-3">
+            {/* Quick Actions Footer inside widget */}
+            <div className="flex justify-between items-center border-t border-blue-500/5 pt-3 mt-1">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     const next = !isPlayingVoice;
@@ -731,9 +756,7 @@ export default function Home() {
                     if (next) {
                       try {
                         window.speechSynthesis.cancel();
-                        const utterance = new SpeechSynthesisUtterance(
-                          "Welcome to today's financial intelligence brief. The Indian Sensex has crossed a historic milestone of 90,000 mark. Meanwhile, Apple has beaten quarterly earnings expectations, and US inflation cooling points to a potential Federal Reserve rate cut. Your portfolios remain highly resilient."
-                        );
+                        const utterance = new SpeechSynthesisUtterance("Tata Consultancy files listing Tata Group neuromorphic cloud. US CPI index drops core inflation expectations. Indian Sensex hits historic milestone crosses 90000.");
                         utterance.onend = () => setIsPlayingVoice(false);
                         window.speechSynthesis.speak(utterance);
                       } catch (e) {}
@@ -741,606 +764,27 @@ export default function Home() {
                       try { window.speechSynthesis.cancel(); } catch (e) {}
                     }
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 cursor-pointer animate-pulse"
+                  className="p-2 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white transition-colors cursor-pointer"
+                  title="Play 60s summary audio recap"
                 >
                   {isPlayingVoice ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  {isPlayingVoice ? "Stop Summary" : "Listen to 60s Recap"}
                 </button>
-
                 {isPlayingVoice && (
-                  <div className="flex items-end gap-0.5 h-6">
-                    {[...Array(6)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ height: [4, 16, 4] }}
-                        transition={{ repeat: Infinity, duration: 0.5 + i * 0.08, ease: "easeInOut" }}
-                        className="w-1 bg-blue-400 rounded-full"
-                        style={{ height: "4px" }}
-                      />
-                    ))}
-                  </div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider animate-pulse">Speaking summary...</span>
                 )}
               </div>
+              <Link
+                href="/live"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Full Live Command
+              </Link>
             </div>
-
-            {/* Country and Category selectors placed IMMEDIATELY upper to remove gaps */}
-            <div className="flex flex-col gap-4 mb-6 border-b border-blue-500/10 pb-4">
-              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                {["Global", "India", "USA", "Europe", "Japan", "Asia"].map((c) => {
-                  const isActive = selectedCountry === c;
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedCountry(c)}
-                      className={`px-4 py-2 rounded-xl border text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                        isActive 
-                          ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
-                          : "bg-slate-900/30 border-blue-500/5 text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      {c === "Global" && <span>🌍 Global</span>}
-                      {c === "India" && (
-                        <>
-                          <img src="https://flagcdn.com/w20/in.png" className="w-5 h-3.5 object-cover rounded-sm" alt="India" />
-                          <span>India</span>
-                        </>
-                      )}
-                      {c === "USA" && (
-                        <>
-                          <img src="https://flagcdn.com/w20/us.png" className="w-5 h-3.5 object-cover rounded-sm" alt="USA" />
-                          <span>USA</span>
-                        </>
-                      )}
-                      {c === "Europe" && (
-                        <>
-                          <img src="https://flagcdn.com/w20/eu.png" className="w-5 h-3.5 object-cover rounded-sm" alt="Europe" />
-                          <span>Europe</span>
-                        </>
-                      )}
-                      {c === "Japan" && (
-                        <>
-                          <img src="https://flagcdn.com/w20/jp.png" className="w-5 h-3.5 object-cover rounded-sm" alt="Japan" />
-                          <span>Japan</span>
-                        </>
-                      )}
-                      {c === "Asia" && <span>🌏 Asia</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
-                {["Markets", "Stocks", "Economy", "IPO", "Crypto", "Banking", "Policy", "Technology"].map((cat) => {
-                  const isActive = selectedCategory === cat;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-3 py-2 text-xs font-bold transition-all relative cursor-pointer ${
-                        isActive ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
-                      }`}
-                    >
-                      {cat}
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeTabIndicatorLandingV3"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Layout Grid for Feed Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              {/* Left Column: News Feed Stream */}
-              <div className="lg:col-span-8 flex flex-col gap-6">
-                
-                {/* News Cards Feed */}
-                <div className="flex flex-col gap-6">
-                  {filteredNews.map((news) => {
-                    const isCritical = news.breaking || news.id === "news-1";
-                    const hasExposure = news.id === "news-1" || news.id === "news-2";
-                    const isMattersExpanded = expandedMattersId === news.id;
-
-                    return (
-                      <motion.div
-                        key={news.id}
-                        layout
-                        className={`p-6 rounded-2xl border transition-all duration-300 bg-slate-900/20 relative group overflow-hidden flex flex-col gap-4.5 ${
-                          isCritical 
-                            ? "border-red-500/30 hover:border-red-500/50 critical-glow" 
-                            : "border-blue-500/10 hover:border-blue-500/25"
-                        }`}
-                      >
-                        {isCritical && (
-                          <div className="absolute top-0 bottom-0 left-0 w-1 bg-red-600 animate-pulse" />
-                        )}
-
-                        {/* Top Line Info: Source, Badges, Sentiment, Importance */}
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-slate-950/60 border border-blue-500/10 px-2.5 py-1 rounded text-slate-400 font-extrabold uppercase">
-                              {news.source}
-                            </span>
-                            <span className="text-xs text-slate-500 font-semibold">{news.timestamp}</span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {/* AI Importance Score */}
-                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
-                              isCritical 
-                                ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                : "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                            }`}>
-                              {isCritical ? "★★★★★ Critical" : "★★★★☆ High"}
-                            </span>
-
-                            {/* Sentiment Meter */}
-                            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase">
-                              🟢 {news.impact}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Headline with larger text */}
-                        <h4 className="text-base md:text-lg font-black text-white leading-snug group-hover:text-blue-400 transition-colors">
-                          {news.headline}
-                        </h4>
-
-                        {/* Summary */}
-                        <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                          {news.summary}
-                        </p>
-
-                        {/* 5. Portfolio Impact Indicator integration */}
-                        {hasExposure && (
-                          <div className="p-3.5 rounded-xl bg-emerald-500/[0.02] border border-emerald-500/10 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-mono font-bold text-xs">
-                                {news.id === "news-1" ? "R" : "A"}
-                              </div>
-                              <div>
-                                <span className="text-xs font-black text-white block">Portfolio Exposure: {news.id === "news-1" ? "Reliance Industries" : "Apple Inc."}</span>
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Current Weight: {news.id === "news-1" ? "18%" : "8%"}</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-emerald-400 font-bold uppercase block">Moderately Positive</span>
-                              <span className="text-[9px] text-slate-500 font-semibold uppercase block">Expected Volatility: Medium</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 2. "Affects You" Personalization Panel */}
-                        <div className="p-3.5 rounded-xl bg-blue-600/[0.02] border border-blue-500/10 flex flex-col gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xs font-black text-white uppercase tracking-wider">🟢 Affects You</span>
-                          </div>
-                          <ul className="text-xs font-semibold text-slate-400 space-y-1 pl-1 leading-normal list-disc list-inside">
-                            {news.id === "news-1" ? (
-                              <>
-                                <li>Reliance weight (18%) may drive short-term portfolio momentum.</li>
-                                <li>FD interest rates could gradually shift.</li>
-                                <li>Provides net-worth appreciation opportunities.</li>
-                              </>
-                            ) : news.id === "news-2" ? (
-                              <>
-                                <li>Apple weight (8%) directly benefits from services revenue expansion.</li>
-                                <li>IT sector valuation sentiment improves.</li>
-                              </>
-                            ) : (
-                              <li>No immediate negative impact on your current holdings.</li>
-                            )}
-                          </ul>
-                        </div>
-
-                        {/* Affected Targets List */}
-                        <div className="flex flex-wrap items-center gap-2 border-t border-blue-500/5 pt-3">
-                          <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mr-1">Affected Targets</span>
-                          {news.affected.map((item, idx) => (
-                            <div 
-                              key={idx} 
-                              className="flex items-center gap-1 bg-slate-950/60 border border-blue-500/5 px-2.5 py-1 rounded text-xs font-mono font-bold"
-                            >
-                              <span className="text-slate-400">{item.name}</span>
-                              <span className={item.change >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                                {item.change >= 0 ? `+${item.change}%` : `${item.change}%`}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* 3. Why This Matters Expandable Panel */}
-                        {isMattersExpanded && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="p-4 rounded-xl bg-slate-950/50 border border-blue-500/10 flex flex-col gap-3.5 mt-2"
-                          >
-                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block">💡 why this matters</span>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold leading-relaxed">
-                              <div>
-                                <span className="text-slate-500 uppercase tracking-wider text-[9px] block">What happened</span>
-                                <p className="text-slate-300">{news.whyItMatters}</p>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 uppercase tracking-wider text-[9px] block">Who is affected</span>
-                                <p className="text-slate-300">{news.whoIsAffected}</p>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 uppercase tracking-wider text-[9px] block">Short-term Impact</span>
-                                <p className="text-slate-300">{news.shortTerm}</p>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 uppercase tracking-wider text-[9px] block">Long-term Impact</span>
-                                <p className="text-slate-300">{news.longTerm}</p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* 4. Action Recommendation Chips */}
-                        <div className="flex flex-wrap items-center gap-2 border-t border-blue-500/5 pt-3">
-                          <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mr-1">Possible Actions</span>
-                          {[
-                            news.id === "news-1" ? "Review FD Strategy" : "Watch Tech Sector",
-                            "Rebalance Portfolio",
-                            "Open Investment Engine"
-                          ].map((action, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => window.location.href = '/dashboard'}
-                              className="px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-600 border border-blue-500/25 text-[10px] font-black text-blue-400 hover:text-white uppercase tracking-wider transition-colors cursor-pointer"
-                            >
-                              {action}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* News Footer Actions */}
-                        <div className="flex justify-between items-center border-t border-blue-500/5 mt-3 pt-3">
-                          {/* 8. AI Confidence Meter */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">AI Confidence: <span className="text-blue-400 font-mono">{news.confidence}%</span></span>
-                            <div className="w-16 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-blue-500/5">
-                              <div className="h-full bg-blue-500 shadow-[0_0_8px_#3b82f6]" style={{ width: `${news.confidence}%` }} />
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setExpandedMattersId(isMattersExpanded ? null : news.id)}
-                              className="px-3 py-1.5 rounded-lg border border-blue-500/10 bg-slate-950/40 hover:bg-slate-950 text-slate-400 hover:text-white font-bold text-xs transition-colors cursor-pointer"
-                            >
-                              {isMattersExpanded ? "Hide Details" : "Why This Matters"}
-                            </button>
-                            <button 
-                              onClick={() => setActiveArticle(news)}
-                              className="text-xs font-bold text-blue-400 hover:text-white flex items-center gap-1.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 px-3.5 py-1.5 rounded-xl transition-all cursor-pointer"
-                            >
-                              <BookOpen className="w-4 h-4" /> Explain
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-
-                {/* 9. Related News Cluster flow diagram */}
-                <div className="p-6 rounded-2xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
-                  <div>
-                    <h4 className="text-sm font-black text-white uppercase tracking-wider">Related News Cluster Flow</h4>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Visualizing connected macroeconomic triggers</p>
-                  </div>
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-4 relative">
-                    {[
-                      { title: "Fed Rate Cut Decision", desc: "FOMC Policy Shift" },
-                      { title: "Inflation Rate Cooling", desc: "CPI Drops to 2.4%" },
-                      { title: "US Dollar Index Slides", desc: "Capital Flow Shift" },
-                      { title: "IT/NASDAQ Resurgence", desc: "Apple Service Record" }
-                    ].map((step, idx) => (
-                      <React.Fragment key={idx}>
-                        <div className="p-3 rounded-xl bg-slate-950/60 border border-blue-500/10 text-center w-full md:w-36 z-10 animate-pulse">
-                          <span className="text-[10px] font-black text-white block leading-normal">{step.title}</span>
-                          <span className="text-[8px] text-slate-500 font-bold block uppercase tracking-wider mt-1">{step.desc}</span>
-                        </div>
-                        {idx < 3 && (
-                          <div className="w-6 h-6 flex items-center justify-center text-blue-500 rotate-90 md:rotate-0">
-                            ➔
-                          </div>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Graphs, Calendars, Recaps */}
-              <div className="lg:col-span-4 flex flex-col gap-6">
-                
-                {/* 12. AI Daily Intelligence Digest Panel - moved to sidebar */}
-                <div className="glass-card p-5 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4 text-slate-300">
-                  <div className="flex justify-between items-center border-b border-blue-500/5 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-blue-400" />
-                      <div>
-                        <h4 className="text-xs font-black text-white uppercase tracking-wider">AI Daily Digest</h4>
-                      </div>
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono font-bold text-[10px]">
-                      72
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">🎯 Opportunities</span>
-                      <ul className="space-y-1 text-xs font-semibold text-slate-300">
-                        <li>• Lock yields in 7.25% fixed deposits</li>
-                        <li>• Accumulate IT device makers</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest block mb-1">⚠️ Risks</span>
-                      <ul className="space-y-1 text-xs font-semibold text-slate-300">
-                        <li>• High multiples stretch in mega-caps</li>
-                        <li>• Yen carry-trade liquidity cycles</li>
-                      </ul>
-                    </div>
-                    <div className="p-3 rounded-lg bg-blue-600/[0.03] border border-blue-500/10 text-left">
-                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-0.5">🧠 AI Insight</span>
-                      <p className="text-xs font-semibold text-slate-300 leading-normal">
-                        Your Reliance (18% weight) holding suggests a potential +₹14,200 net-worth bump.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 11. News Intelligence Graph */}
-                <div className="glass-card p-5 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">News Intelligence Graph</h4>
-                    <p className="text-[9px] text-slate-500">Macro relationship analyzer</p>
-                  </div>
-
-                  <div className="relative h-48 w-full border border-blue-500/5 rounded-lg bg-slate-950/50 overflow-hidden flex items-center justify-center">
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                      <line x1="50%" y1="50%" x2="20%" y2="25%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="80%" y2="25%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="20%" y2="75%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="80%" y2="75%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                    </svg>
-
-                    <div className="absolute w-20 h-20 rounded-full bg-blue-600/10 border-2 border-blue-500 flex items-center justify-center text-center p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10">
-                      <span className="text-[9px] font-black text-white leading-normal uppercase">Sensex 90K Landmark</span>
-                    </div>
-
-                    <div className="absolute top-4 left-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">Reliance (18%)</span>
-                    </div>
-                    <div className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">Nifty Target</span>
-                    </div>
-                    <div className="absolute bottom-4 left-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">India Inflows</span>
-                    </div>
-                    <div className="absolute bottom-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">IT Resurgence</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 7. Financial Timeline past events calendar widget */}
-                <div className="glass-card p-4 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">Historical Similarity Timelines</h4>
-                    <p className="text-[9px] text-slate-500">Comparing current cycles to past events</p>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { title: "2024 RBI Rate Cut", recovery: "4 Months", reaction: "+12% Index surge" },
-                      { title: "2020 COVID Market Crash", recovery: "9 Months", reaction: "V-Shape recovery bounce" },
-                      { title: "2008 Lehman Liquidity Crisis", recovery: "22 Months", reaction: "Structural consolidation" }
-                    ].map((item, idx) => (
-                      <div 
-                        key={idx}
-                        className="p-2.5 rounded-lg bg-slate-950/40 border border-blue-500/5 text-left text-xs font-semibold leading-normal"
-                      >
-                        <span className="text-white font-black block text-[10px]">{item.title}</span>
-                        <span className="text-slate-400 block text-[9px]">Market Reaction: {item.reaction}</span>
-                        <span className="text-blue-400 block text-[9px]">Recovery Time: {item.recovery}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 14. End-of-Day AI Recap Widget */}
-                <div className="glass-card p-4 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">End-of-Day AI Recap</h4>
-                    <p className="text-[9px] text-slate-500">Daily market close synopsis</p>
-                  </div>
-                  <div className="space-y-2.5 text-xs font-semibold leading-normal">
-                    <div className="flex justify-between border-b border-blue-500/5 pb-1">
-                      <span className="text-slate-500">Biggest Winner</span>
-                      <span className="text-emerald-400 font-bold">Reliance Industries (+2.34%)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-blue-500/5 pb-1">
-                      <span className="text-slate-500">Biggest Loser</span>
-                      <span className="text-rose-400 font-bold">ITCs Ltd (-1.12%)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-blue-500/5 pb-1">
-                      <span className="text-slate-500">Best Performing Sector</span>
-                      <span className="text-emerald-400 font-bold">Energy & Solar (+3.82%)</span>
-                    </div>
-                    <div className="flex justify-between border-b border-blue-500/5 pb-1">
-                      <span className="text-slate-500">Worst Performing Sector</span>
-                      <span className="text-rose-400 font-bold">FMCG Goods (-0.85%)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Side Drawer Explainer Panel */}
-          <AnimatePresence>
-            {activeArticle && (
-              <>
-                {/* Backdrop blur overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setActiveArticle(null)}
-                  className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[99998]"
-                />
-
-                {/* Sidebar drawer container */}
-                <motion.div
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 220 }}
-                  className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/95 border-l border-blue-500/20 shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
-                >
-                  <div className="flex flex-col gap-6">
-                    
-                    {/* Header */}
-                    <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 animate-pulse">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black text-white uppercase tracking-wider">JARVIS INTEL EXPLAINER</h4>
-                          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Fincody Live AI Co-Pilot</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setActiveArticle(null)}
-                        className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* News Details */}
-                    <div className="space-y-4">
-                      <div>
-                        <span className="text-[8px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-black uppercase">
-                          {activeArticle.source}
-                        </span>
-                        <h3 className="text-sm font-black text-white mt-2 leading-relaxed">{activeArticle.headline}</h3>
-                      </div>
-
-                      {/* Intel items */}
-                      <div className="space-y-4 pt-2">
-                        
-                        <div>
-                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Why this matters</span>
-                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{activeArticle.whyItMatters}</p>
-                        </div>
-
-                        <div>
-                          <span className="text-[10px] font-black text-blue-400 uppercase tracking-wider block">Who is affected</span>
-                          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{activeArticle.whoIsAffected}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">Short-term Impact</span>
-                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">{activeArticle.shortTerm}</p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-wider block">Long-term Impact</span>
-                            <p className="text-[10px] text-slate-300 mt-1 leading-normal">{activeArticle.longTerm}</p>
-                          </div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-blue-900/[0.04] border border-blue-500/10 space-y-2">
-                          <div>
-                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block flex items-center gap-1">
-                              <Zap className="w-3.5 h-3.5" /> Potential Opportunities
-                            </span>
-                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">{activeArticle.opportunities}</p>
-                          </div>
-                          <div className="border-t border-blue-500/5 pt-2">
-                            <span className="text-[10px] font-black text-rose-400 uppercase tracking-wider block flex items-center gap-1">
-                              <AlertTriangle className="w-3.5 h-3.5" /> Risk Factors
-                            </span>
-                            <p className="text-[10px] text-slate-300 mt-0.5 leading-normal">{activeArticle.risks}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="border-t border-blue-500/10 pt-4 mt-6">
-                    <button
-                      onClick={() => {
-                        setActiveArticle(null);
-                        window.location.href = '/dashboard';
-                      }}
-                      className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4" /> Discuss Opportunity on Dashboard
-                    </button>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </section>
+          </motion.div>
+        </div>
+      </section>
 
 
-      {/* Hero Section */}
-      <section className="relative pt-12 md:pt-24 pb-20 px-6 max-w-7xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center gap-6"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-xs font-semibold text-blue-400 tracking-wide uppercase shadow-inner">
-            <Sparkles className="w-3.5 h-3.5" /> Introducing Next-Gen Life AI
-          </div>
-
-          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight max-w-4xl bg-gradient-to-b from-[var(--text-color)] via-[var(--text-color)] to-slate-400 bg-clip-text text-transparent leading-[1.1] pt-2">
-            Your Entire Life.<br className="hidden md:inline" /> Organized.
-          </h1>
-
-          <p className="text-lg md:text-xl text-[var(--text-subtitle)] max-w-2xl leading-relaxed">
-            An AI Operating System for your finances, goals, decisions, and future. Track assets, run simulations, and navigate major life turns with absolute clarity.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 mt-6">
-            <Link 
-              href="/dashboard"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              {user ? "Go to Dashboard" : "Enter Dashboard"} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <a 
-              href="#demo"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              Launch Demo
-            </a>
-          </div>
-        </motion.div>
-
-        
-
-</section>
 
       {/* Interactive AI Demo Section */}
       <section id="demo" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
