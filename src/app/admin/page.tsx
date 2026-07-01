@@ -470,6 +470,15 @@ export default function AdminPortal() {
           </div>
 
           <div className="flex items-center gap-4">
+            {adminUser && (
+              <Link 
+                href="/admin/deployments"
+                className="px-4 py-2.5 rounded-xl border border-blue-500/20 hover:border-blue-500/40 bg-blue-600/5 hover:bg-blue-600/10 text-blue-400 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Activity className="w-4 h-4 animate-pulse" /> Deployments Gateway
+              </Link>
+            )}
+
             <button 
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all cursor-pointer"
