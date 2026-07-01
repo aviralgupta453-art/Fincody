@@ -71,7 +71,7 @@ interface Subscription {
   id: string;
   name: string;
   price: number;
-  interval: "monthly" | "yearly";
+  interval: string;
   status: "active" | "canceled";
   category: string;
 }
@@ -302,6 +302,91 @@ export default function Dashboard() {
   const [editGoalTarget, setEditGoalTarget] = useState("");
   const [editGoalDeadline, setEditGoalDeadline] = useState("");
   const [customContributions, setCustomContributions] = useState<Record<string, string>>({});
+  // Subscription editing & creation states
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [editSubName, setEditSubName] = useState("");
+  const [editSubPrice, setEditSubPrice] = useState("");
+  const [editSubInterval, setEditSubInterval] = useState("monthly");
+
+  const [newSubName, setNewSubName] = useState("");
+  const [newSubPrice, setNewSubPrice] = useState("");
+  const [newSubInterval, setNewSubInterval] = useState("monthly");
+  const [newSubCategory, setNewSubCategory] = useState("Entertainment");
+
+  const handleStartEditSub = (sub: Subscription) => {
+    setEditingSubId(sub.id);
+    setEditSubName(sub.name);
+    setEditSubPrice(sub.price.toString());
+    setEditSubInterval(sub.interval);
+  };
+
+  const handleSaveEditSub = (id: string) => {
+    if (!editSubName || !editSubPrice) return;
+    const updated = subscriptions.map(s => {
+      if (s.id === id) {
+        return {
+          ...s,
+          name: editSubName,
+          price: parseFloat(editSubPrice),
+          interval: editSubInterval
+        };
+      }
+      return s;
+    });
+    setSubscriptions(updated);
+    persistData("subscriptions", updated);
+    setEditingSubId(null);
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Subscription Engine: "${editSubName}" has been updated successfully.`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleCancelEditSub = () => {
+    setEditingSubId(null);
+  };
+
+  const handleDeleteSub = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this subscription?")) {
+      const updated = subscriptions.filter(s => s.id !== id);
+      setSubscriptions(updated);
+      persistData("subscriptions", updated);
+      setNotifications(prev => [
+        { id: Date.now(), text: "Subscription Engine: Recurring bill deleted.", unread: true },
+        ...prev
+      ]);
+    }
+  };
+
+  const handleAddSubscription = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubName || !newSubPrice) return;
+
+    const newSub: Subscription = {
+      id: Date.now().toString(),
+      name: newSubName,
+      price: parseFloat(newSubPrice),
+      interval: newSubInterval,
+      status: "active",
+      category: newSubCategory
+    };
+
+    const updated = [...subscriptions, newSub];
+    setSubscriptions(updated);
+    persistData("subscriptions", updated);
+
+    setNewSubName("");
+    setNewSubPrice("");
+    setNewSubInterval("monthly");
+    setNewSubCategory("Entertainment");
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Subscription Engine: "${newSubName}" has been added as a recurring bill.`, unread: true },
+      ...prev
+    ]);
+  };
+
 
   const recordGoalHistory = () => {
     setGoalHistory((prev) => [...prev, goals]);
@@ -871,6 +956,7 @@ export default function Dashboard() {
   // Goal adding/updating
   const handleAddGoal = (e: React.FormEvent) => {
     recordGoalHistory();
+    recordGoalHistory();
     e.preventDefault();
     if (!newGoalName || !newGoalTarget) return;
 
@@ -897,6 +983,7 @@ export default function Dashboard() {
   };
 
   const handleContributeToGoal = (id: string, amount: number) => {
+    recordGoalHistory();
     recordGoalHistory();
     const updatedGoals = goals.map(g => {
       if (g.id === id) {
@@ -982,6 +1069,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteGoal = (id: string) => {
+    recordGoalHistory();
     recordGoalHistory();
     if (window.confirm("Are you sure you want to delete this goal?")) {
       const updated = goals.filter(g => g.id !== id);
@@ -4130,69 +4218,217 @@ const handlePredefinedQuestion = (q: string) => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
-                className="flex flex-col gap-6 text-left"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
               >
-                <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-950/10">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider font-semibold">Total Monthly Subscription Spend</span>
-                    <span className="text-3xl font-black text-[var(--text-color)] font-mono"><RollingNumber value={monthlySubscriptionSpend} /> <span className="text-sm text-slate-500 font-medium">/month</span></span>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
-                      <span className="text-slate-500 block">Active services</span>
-                      <span className="text-[var(--text-color)] font-bold mt-0.5 block">{activeSubscriptions.length} / {subscriptions.length}</span>
+                {/* Left Column: Subscriptions List */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-950/10">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-slate-500 font-bold uppercase tracking-wider font-semibold">Total Monthly Subscription Spend</span>
+                      <span className="text-3xl font-black text-[var(--text-color)] font-mono"><RollingNumber value={monthlySubscriptionSpend} /> <span className="text-sm text-slate-500 font-medium">/month</span></span>
                     </div>
-                    <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
-                      <span className="text-slate-500 block">AI savings found</span>
-                      <span className="text-emerald-500 font-bold mt-0.5 block"><RollingNumber value={4220} />/mo projected</span>
+                    <div className="flex gap-4">
+                      <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
+                        <span className="text-slate-500 block">Active services</span>
+                        <span className="text-[var(--text-color)] font-bold mt-0.5 block">{activeSubscriptions.length} / {subscriptions.length}</span>
+                      </div>
+                      <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
+                        <span className="text-slate-500 block">AI savings found</span>
+                        <span className="text-emerald-500 font-bold mt-0.5 block"><RollingNumber value={4220} />/mo projected</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-900/5">
+                    <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">Configured recurring bills</span>
+                    
+                    <div className="flex flex-col gap-3">
+                      {subscriptions.map((sub) => (
+                        <div 
+                          key={sub.id} 
+                          className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                            sub.status === "canceled" 
+                              ? "bg-slate-950/10 border-dashed border-[var(--border-color)] opacity-50" 
+                              : "bg-[#11172a]/20 border-[var(--border-color)] hover:border-blue-500/20"
+                          }`}
+                        >
+                          {editingSubId === sub.id ? (
+                            // EDITING SUBSCRIPTION
+                            <div className="w-full flex flex-col gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Service Name</label>
+                                  <input
+                                    type="text"
+                                    value={editSubName}
+                                    onChange={(e) => setEditSubName(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Recurring Cost</label>
+                                  <input
+                                    type="number"
+                                    value={editSubPrice}
+                                    onChange={(e) => setEditSubPrice(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Interval</label>
+                                  <select
+                                    value={editSubInterval}
+                                    onChange={(e) => setEditSubInterval(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  >
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Annually</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 justify-end mt-1">
+                                <button
+                                  onClick={handleCancelEditSub}
+                                  className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] font-bold text-[var(--text-subtitle)] hover:bg-slate-500/5 transition-colors cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSaveEditSub(sub.id)}
+                                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[10px] font-bold text-white shadow shadow-blue-500/10 transition-colors cursor-pointer"
+                                >
+                                  Save Bill
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // VIEWING SUBSCRIPTION
+                            <>
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800/25 flex items-center justify-center font-bold text-xs text-slate-400">
+                                  {sub.name[0]}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className={`font-bold text-sm ${sub.status === "canceled" ? "line-through text-slate-500" : "text-[var(--text-color)]"}`}>
+                                    {sub.name}
+                                  </span>
+                                  <span className="text-xs text-slate-500 mt-0.5">{sub.category} &bull; Bill recurring {sub.interval}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-3.5">
+                                <div className="text-right mr-2">
+                                  <span className="font-bold text-[var(--text-color)] text-sm block font-mono"><RollingNumber value={sub.price} /></span>
+                                  <span className="text-[10px] text-slate-500 mt-0.5 block uppercase tracking-wider font-bold">{sub.interval}</span>
+                                </div>
+
+                                <button
+                                  onClick={() => handleStartEditSub(sub)}
+                                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+                                  title="Edit bill"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteSub(sub.id)}
+                                  className="text-rose-500 hover:text-rose-400 p-2 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer mr-2"
+                                  title="Delete subscription"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleToggleSub(sub.id)}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                                    sub.status === "canceled"
+                                      ? "bg-blue-600/10 border-blue-500/25 text-blue-500 dark:text-blue-400 hover:bg-blue-600/20"
+                                      : "bg-rose-500/5 border-rose-500/10 text-rose-500 hover:bg-rose-500/10"
+                                  }`}
+                                >
+                                  {sub.status === "active" ? "Cancel" : "Activate"}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-900/5">
-                  <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">Configured recurring bills</span>
-                  
-                  <div className="flex flex-col gap-3">
-                    {subscriptions.map((sub) => (
-                      <div 
-                        key={sub.id} 
-                        className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                          sub.status === "canceled" 
-                            ? "bg-slate-950/10 border-dashed border-[var(--border-color)] opacity-50" 
-                            : "bg-[#11172a]/20 border-[var(--border-color)] hover:border-blue-500/20"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-slate-800/25 flex items-center justify-center font-bold text-xs text-slate-400">
-                            {sub.name[0]}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className={`font-bold text-sm ${sub.status === "canceled" ? "line-through text-slate-500" : "text-[var(--text-color)]"}`}>
-                              {sub.name}
-                            </span>
-                            <span className="text-xs text-slate-500 mt-0.5">{sub.category} &bull; Bill recurring {sub.interval}</span>
-                          </div>
+                {/* Right Column: Add Subscription Form */}
+                <div className="lg:col-span-4 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-950/10">
+                    <div className="border-b border-[var(--border-color)] pb-3">
+                      <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Add Subscription</span>
+                      <span className="text-xs text-slate-500 mt-0.5 block">Configure new recurring bills</span>
+                    </div>
+
+                    <form onSubmit={handleAddSubscription} className="flex flex-col gap-3.5">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Service Name</label>
+                        <input
+                          type="text"
+                          value={newSubName}
+                          onChange={(e) => setNewSubName(e.target.value)}
+                          placeholder="e.g. YouTube Premium"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Cost</label>
+                        <input
+                          type="number"
+                          value={newSubPrice}
+                          onChange={(e) => setNewSubPrice(e.target.value)}
+                          placeholder="e.g. 129"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Cycle</label>
+                          <select
+                            value={newSubInterval}
+                            onChange={(e) => setNewSubInterval(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Annually</option>
+                          </select>
                         </div>
 
-                        <div className="flex items-center justify-between sm:justify-end gap-6">
-                          <div className="text-right">
-                            <span className="font-bold text-[var(--text-color)] text-sm block font-mono"><RollingNumber value={sub.price} /></span>
-                            <span className="text-[10px] text-slate-500 mt-0.5 block uppercase tracking-wider font-bold">{sub.interval}</span>
-                          </div>
-
-                          <button
-                            onClick={() => handleToggleSub(sub.id)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                              sub.status === "canceled"
-                                ? "bg-blue-600/10 border-blue-500/25 text-blue-500 dark:text-blue-400 hover:bg-blue-600/20"
-                                : "bg-rose-500/5 border-rose-500/10 text-rose-500 hover:bg-rose-500/10"
-                            }`}
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Category</label>
+                          <select
+                            value={newSubCategory}
+                            onChange={(e) => setNewSubCategory(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
                           >
-                            {sub.status === "active" ? "Cancel Service" : "Re-activate"}
-                          </button>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Music">Music</option>
+                            <option value="Development">Development</option>
+                            <option value="Design">Design</option>
+                            <option value="AI Tools">AI Tools</option>
+                            <option value="Other">Other</option>
+                          </select>
                         </div>
                       </div>
-                    ))}
+
+                      <button
+                        type="submit"
+                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                      >
+                        <Plus className="w-4 h-4" /> Add Service
+                      </button>
+                    </form>
                   </div>
                 </div>
               </motion.div>
