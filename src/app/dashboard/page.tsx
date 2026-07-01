@@ -741,6 +741,80 @@ export default function Dashboard() {
   ]);
   
   // Document Vault State
+
+  // Insurance Edit States
+  const [editingInsuranceId, setEditingInsuranceId] = useState<string | null>(null);
+  const [editInsType, setEditInsType] = useState("");
+  const [editInsProvider, setEditInsProvider] = useState("");
+  const [editInsPremium, setEditInsPremium] = useState("");
+  const [editInsCoverage, setEditInsCoverage] = useState("");
+  const [editInsRenewalDate, setEditInsRenewalDate] = useState("");
+
+  // Insurance Add States
+  const [addInsType, setAddInsType] = useState("Health Insurance");
+  const [addInsProvider, setAddInsProvider] = useState("");
+  const [addInsPremium, setAddInsPremium] = useState("");
+  const [addInsCoverage, setAddInsCoverage] = useState("");
+  const [addInsRenewalDate, setAddInsRenewalDate] = useState("");
+
+  const handleStartEditInsurance = (policy: Insurance) => {
+    setEditingInsuranceId(policy.id);
+    setEditInsType(policy.type);
+    setEditInsProvider(policy.provider);
+    setEditInsPremium(policy.premium.toString());
+    setEditInsCoverage(policy.coverage.toString());
+    setEditInsRenewalDate(policy.renewalDate);
+  };
+
+  const handleSaveEditInsurance = (e: React.FormEvent, id: string) => {
+    e.preventDefault();
+    if (!editInsProvider || !editInsPremium || !editInsCoverage) return;
+    const updated = insurancePolicies.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          type: editInsType,
+          provider: editInsProvider,
+          premium: parseFloat(editInsPremium),
+          coverage: parseFloat(editInsCoverage),
+          renewalDate: editInsRenewalDate
+        };
+      }
+      return p;
+    });
+    setInsurancePolicies(updated);
+    persistData("insurancePolicies", updated);
+    setEditingInsuranceId(null);
+  };
+
+  const handleAddInsurance = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addInsProvider || !addInsPremium || !addInsCoverage) return;
+    const newPolicy: Insurance = {
+      id: "ins-" + Date.now(),
+      type: addInsType,
+      provider: addInsProvider,
+      premium: parseFloat(addInsPremium),
+      coverage: parseFloat(addInsCoverage),
+      renewalDate: addInsRenewalDate || new Date().toISOString().split("T")[0]
+    };
+    const updated = [...insurancePolicies, newPolicy];
+    setInsurancePolicies(updated);
+    persistData("insurancePolicies", updated);
+    setAddInsProvider("");
+    setAddInsPremium("");
+    setAddInsCoverage("");
+    setAddInsRenewalDate("");
+  };
+
+  const handleRemoveInsurance = (id: string) => {
+    if (window.confirm("Are you sure you want to remove this insurance policy?")) {
+      const updated = insurancePolicies.filter(p => p.id !== id);
+      setInsurancePolicies(updated);
+      persistData("insurancePolicies", updated);
+    }
+  };
+
   const [documents, setDocuments] = useState<DocumentFile[]>([
     { id: "1", name: "Tax_Assessment_FY25.pdf", size: "2.4 MB", uploadedAt: "May 10, 2026", type: "PDF" },
     { id: "2", name: "Health_Policy_Document.pdf", size: "4.8 MB", uploadedAt: "Jun 02, 2026", type: "PDF" },
@@ -4961,76 +5035,381 @@ const handlePredefinedQuestion = (q: string) => {
             )}
 
             {/* Insurance Vault */}
-            {activeTab === "insurance" && (
-              <motion.div
-                key="insurance"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 15 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
-              >
-                <div className="lg:col-span-8 flex flex-col gap-6">
-                  {insurancePolicies.map((policy) => (
-                    <div 
-                      key={policy.id} 
-                      className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-[#11172b]/10 flex flex-col gap-4"
-                    >
-                      <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                            <Shield className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-[var(--text-color)] text-sm">{policy.type}</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">{policy.provider}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Renewal Date</span>
-                          <span className="text-xs font-bold text-amber-500 mt-0.5 block">{policy.renewalDate}</span>
-                        </div>
-                      </div>
+            {activeTab === "insurance" && (() => {
+              // Real-Time Audit Calculations
+              const lifePolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("life"));
+              const totalLifeCover = lifePolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const monthlySalaryVal = manualSalary ? parseFloat(manualSalary) : 200000;
+              const targetLifeCover = monthlySalaryVal * 12 * 10; // 10x Annual Salary
 
-                      <div className="grid grid-cols-2 gap-4 my-1">
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Coverage Sum</span>
-                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono"><RollingNumber value={policy.coverage} /></span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Premium</span>
-                          <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono"><RollingNumber value={policy.premium} /> <span className="text-[10px] text-slate-500 font-semibold">/month</span></span>
-                        </div>
+              const healthPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("health") || p.type.toLowerCase().includes("medical"));
+              const totalHealthCover = healthPolicies.reduce((acc, p) => acc + p.coverage, 0);
+
+              const totalPremiums = insurancePolicies.reduce((acc, p) => acc + p.premium, 0);
+              const premiumPercent = monthlySalaryVal > 0 ? (totalPremiums / monthlySalaryVal) * 100 : 0;
+
+              // Calculate overall AI audit score
+              let score = 30;
+              if (totalLifeCover >= targetLifeCover) score += 35;
+              else if (totalLifeCover > 0) score += 15;
+              if (totalHealthCover >= 1000000) score += 35;
+              else if (totalHealthCover > 0) score += 15;
+              if (premiumPercent > 8) score -= 15;
+              const finalScore = Math.max(10, Math.min(100, score));
+
+              return (
+                <motion.div
+                  key="insurance"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
+                >
+                  {/* Left Column: Active Policies list */}
+                  <div className="lg:col-span-8 flex flex-col gap-6">
+                    <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                      <div>
+                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Insurance Cover Vault</span>
+                        <span className="text-xs text-slate-500 mt-0.5 block">Audit and edit active security policies</span>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
-                    <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">AI Vault Audit</span>
-                    
-                    <div className="flex flex-col gap-3 text-xs leading-relaxed">
-                      <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-[var(--text-color)] block mb-0.5">Auto Policy Redundancy</span>
-                          <p className="text-[var(--text-subtitle)]">Your ICICI Auto Policy duplicates emergency roadside recovery features. Eliminating this saves <RollingNumber value={400} />/mo.</p>
+                    <div className="flex flex-col gap-4">
+                      {insurancePolicies.map((policy) => {
+                        const isEditing = editingInsuranceId === policy.id;
+                        return (
+                          <div 
+                            key={policy.id} 
+                            className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-[#11172b]/5 flex flex-col gap-4 relative"
+                          >
+                            {isEditing ? (
+                              <form onSubmit={(e) => handleSaveEditInsurance(e, policy.id)} className="flex flex-col gap-3.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Policy Type</label>
+                                    <select
+                                      value={editInsType}
+                                      onChange={(e) => setEditInsType(e.target.value)}
+                                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                    >
+                                      <option value="Health Insurance">Health Insurance</option>
+                                      <option value="Term Life Insurance">Term Life Insurance</option>
+                                      <option value="Auto Insurance">Auto Insurance</option>
+                                      <option value="Home Insurance">Home Insurance</option>
+                                      <option value="Critical Illness Insurance">Critical Illness Insurance</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Provider Name</label>
+                                    <input
+                                      type="text"
+                                      value={editInsProvider}
+                                      onChange={(e) => setEditInsProvider(e.target.value)}
+                                      placeholder="e.g. HDFC Ergo"
+                                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Coverage Sum</label>
+                                    <input
+                                      type="number"
+                                      value={editInsCoverage}
+                                      onChange={(e) => setEditInsCoverage(e.target.value)}
+                                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Monthly Premium</label>
+                                    <input
+                                      type="number"
+                                      value={editInsPremium}
+                                      onChange={(e) => setEditInsPremium(e.target.value)}
+                                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Renewal Date</label>
+                                    <input
+                                      type="text"
+                                      value={editInsRenewalDate}
+                                      onChange={(e) => setEditInsRenewalDate(e.target.value)}
+                                      placeholder="e.g. 15 Oct 2026"
+                                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2 justify-end mt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingInsuranceId(null)}
+                                    className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer"
+                                  >
+                                    Save Policy
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <>
+                                <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
+                                  <div className="flex items-center gap-3 text-left">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                      <Shield className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                      <h3 className="font-bold text-[var(--text-color)] text-sm">{policy.type}</h3>
+                                      <p className="text-xs text-slate-500 mt-0.5">{policy.provider}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleStartEditInsurance(policy)}
+                                      className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+                                      title="Edit policy details"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleRemoveInsurance(policy.id)}
+                                      className="text-rose-500 hover:text-rose-400 p-2 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer"
+                                      title="Delete policy"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4 my-1">
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Coverage Sum</span>
+                                    <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">
+                                      <RollingNumber value={policy.coverage} />
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Premium</span>
+                                    <span className="text-base font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">
+                                      <RollingNumber value={policy.premium} /> <span className="text-[10px] text-slate-500 font-semibold">/month</span>
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Renewal Date</span>
+                                    <span className="text-xs font-bold text-amber-500 mt-1 block">{policy.renewalDate}</span>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {insurancePolicies.length === 0 && (
+                        <div className="text-center py-8 text-xs text-slate-500 italic">
+                          No active insurance policies. Add a policy in the form on the right.
                         </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Add Form & AI Vault Audit */}
+                  <div className="lg:col-span-4 flex flex-col gap-6">
+                    {/* Add Policy Card */}
+                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+                      <div className="border-b border-[var(--border-color)] pb-3">
+                        <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Add Policy</span>
+                        <span className="text-xs text-slate-500 mt-0.5 block">Manually register new insurance policy</span>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <form onSubmit={handleAddInsurance} className="flex flex-col gap-3.5 text-left">
                         <div>
-                          <span className="font-bold text-[var(--text-color)] block mb-0.5">Critical Health Buffer Met</span>
-                          <p className="text-[var(--text-subtitle)]">Health insurance cover of <RollingNumber value={1500000} /> matches optimal threshold recommendations.</p>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Policy Type</label>
+                          <select
+                            value={addInsType}
+                            onChange={(e) => setAddInsType(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="Health Insurance">Health Insurance</option>
+                            <option value="Term Life Insurance">Term Life Insurance</option>
+                            <option value="Auto Insurance">Auto Insurance</option>
+                            <option value="Home Insurance">Home Insurance</option>
+                            <option value="Critical Illness Insurance">Critical Illness Insurance</option>
+                          </select>
                         </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Provider Name</label>
+                          <input
+                            type="text"
+                            value={addInsProvider}
+                            onChange={(e) => setAddInsProvider(e.target.value)}
+                            placeholder="e.g. HDFC Ergo"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Coverage Sum</label>
+                            <input
+                              type="number"
+                              value={addInsCoverage}
+                              onChange={(e) => setAddInsCoverage(e.target.value)}
+                              placeholder="e.g. 1000000"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Premium</label>
+                            <input
+                              type="number"
+                              value={addInsPremium}
+                              onChange={(e) => setAddInsPremium(e.target.value)}
+                              placeholder="e.g. 1500"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Renewal Date</label>
+                          <input
+                            type="text"
+                            value={addInsRenewalDate}
+                            onChange={(e) => setAddInsRenewalDate(e.target.value)}
+                            placeholder="e.g. 15 Oct 2026"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                        >
+                          <Plus className="w-4 h-4" /> Add Policy
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* AI Vault Audit Card */}
+                    <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+                      <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">AI Vault Audit</span>
+
+                      {/* Dynamic Audit Score Meter */}
+                      <div className="flex items-center gap-4 border-b border-[var(--border-color)] pb-4 mb-1">
+                        <div className="w-14 h-14 rounded-full border-[3px] border-blue-500/20 flex items-center justify-center relative">
+                          {/* Radial border overlay for score representation */}
+                          <div 
+                            className="absolute inset-0 rounded-full border-[3px] border-blue-500" 
+                            style={{ clipPath: `polygon(0 0, 100% 0, 100% ${finalScore}%, 0 ${finalScore}%)` }}
+                          />
+                          <span className="text-sm font-black text-white font-mono">{finalScore}%</span>
+                        </div>
+                        <div className="text-left">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Protection Index</span>
+                          <span className="text-xs font-black text-white block mt-0.5">
+                            {finalScore >= 80 ? "Optimal Protection" : finalScore >= 50 ? "Moderate Protection" : "Critical Exposure"}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-3 text-xs leading-relaxed text-left">
+                        {/* 1. Life cover audit checks */}
+                        {totalLifeCover === 0 ? (
+                          <div className="p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">No Life Insurance Cover</span>
+                              <p className="text-[var(--text-subtitle)]">Your family represents ₹0 safety buffer. Recommended target: ₹{format(targetLifeCover)} (10x annual income).</p>
+                            </div>
+                          </div>
+                        ) : totalLifeCover < targetLifeCover ? (
+                          <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">Under-insured Life Cover</span>
+                              <p className="text-[var(--text-subtitle)]">Current life cover of ₹{format(totalLifeCover)} is below the 10x safety target of ₹{format(targetLifeCover)}.</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">Optimal Life Cover Buffer</span>
+                              <p className="text-[var(--text-subtitle)]">Life insurance cover of ₹{format(totalLifeCover)} matches the 10x multiplier benchmark.</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 2. Health cover audit checks */}
+                        {totalHealthCover === 0 ? (
+                          <div className="p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">No Health Cover detected</span>
+                              <p className="text-[var(--text-subtitle)]">You are exposed to direct medical outlays. Recommended medical buffer: ₹10L.</p>
+                            </div>
+                          </div>
+                        ) : totalHealthCover < 1000000 ? (
+                          <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">Sub-optimal Health Shield</span>
+                              <p className="text-[var(--text-subtitle)]">Medical cover of ₹{format(totalHealthCover)} is below recommended ₹10L critical care threshold.</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">Optimal Medical Shield</span>
+                              <p className="text-[var(--text-subtitle)]">Health cover of ₹{format(totalHealthCover)} matches safety standards for critical care.</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. Premium cashflow drag */}
+                        {premiumPercent > 8 ? (
+                          <div className="p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">High Premium Cash Flow Drag</span>
+                              <p className="text-[var(--text-subtitle)]">Premiums consume {premiumPercent.toFixed(1)}% of monthly salary. Recommended limit is under 5%.</p>
+                            </div>
+                          </div>
+                        ) : premiumPercent > 0 ? (
+                          <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-[var(--text-color)] block mb-0.5">Premium Flow Shielded</span>
+                              <p className="text-[var(--text-subtitle)]">Premiums take up a healthy {premiumPercent.toFixed(1)}% of your monthly cash flow.</p>
+                            </div>
+                          </div>
+                        ) : null}
+
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-
+                </motion.div>
+              );
+            })()}
             {/* Document Vault */}
             {activeTab === "vault" && (
               <motion.div
