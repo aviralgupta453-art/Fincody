@@ -40,7 +40,9 @@ import {
   Eye,
   EyeOff,
   Percent,
-  Coins
+  Coins,
+  Edit2,
+  RotateCcw
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -293,6 +295,97 @@ export default function Dashboard() {
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState("");
   const [newGoalDeadline, setNewGoalDeadline] = useState("");
+  // Goal edit, custom contribution, and undo history states
+  const [goalHistory, setGoalHistory] = useState<Goal[][]>([]);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editGoalName, setEditGoalName] = useState("");
+  const [editGoalTarget, setEditGoalTarget] = useState("");
+  const [editGoalDeadline, setEditGoalDeadline] = useState("");
+  const [customContributions, setCustomContributions] = useState<Record<string, string>>({});
+
+  const recordGoalHistory = () => {
+    setGoalHistory((prev) => [...prev, goals]);
+  };
+
+  const handleUndoGoalAction = () => {
+    if (goalHistory.length === 0) return;
+    const previousState = goalHistory[goalHistory.length - 1];
+    setGoals(previousState);
+    persistData("goals", previousState);
+    setGoalHistory((prev) => prev.slice(0, prev.length - 1));
+    setNotifications(prev => [
+      { id: Date.now(), text: "Goal Engine: Last action successfully undone.", unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleStartEditGoal = (goal: Goal) => {
+    setEditingGoalId(goal.id);
+    setEditGoalName(goal.name);
+    setEditGoalTarget(goal.target.toString());
+    setEditGoalDeadline(goal.deadline);
+  };
+
+  const handleSaveEditGoal = (id: string) => {
+    if (!editGoalName || !editGoalTarget) return;
+    recordGoalHistory();
+
+    const dateObj = new Date(editGoalDeadline);
+    const formattedDeadline = isNaN(dateObj.getTime()) 
+      ? (editGoalDeadline || "No Date") 
+      : dateObj.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+    const updatedGoals = goals.map(g => {
+      if (g.id === id) {
+        return {
+          ...g,
+          name: editGoalName,
+          target: parseFloat(editGoalTarget),
+          deadline: formattedDeadline
+        };
+      }
+      return g;
+    });
+
+    setGoals(updatedGoals);
+    persistData("goals", updatedGoals);
+    setEditingGoalId(null);
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Goal Engine: Goal "${editGoalName}" details updated successfully.`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleCancelEditGoal = () => {
+    setEditingGoalId(null);
+  };
+
+  const handleCustomContribute = (id: string) => {
+    const amountStr = customContributions[id];
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) return;
+
+    recordGoalHistory();
+    handleContributeToGoalDirectly(id, amount);
+
+    // Clear input
+    setCustomContributions(prev => ({ ...prev, [id]: "" }));
+  };
+
+  const handleContributeToGoalDirectly = (id: string, amount: number) => {
+    const updatedGoals = goals.map(g => {
+      if (g.id === id) {
+        const nextVal = g.current + amount;
+        return { ...g, current: nextVal > g.target ? g.target : nextVal };
+      }
+      return g;
+    });
+    setGoals(updatedGoals);
+    persistData("goals", updatedGoals);
+  };
+
 
   // Insurance State
   const [insurancePolicies, setInsurancePolicies] = useState<Insurance[]>([
@@ -777,6 +870,7 @@ export default function Dashboard() {
 
   // Goal adding/updating
   const handleAddGoal = (e: React.FormEvent) => {
+    recordGoalHistory();
     e.preventDefault();
     if (!newGoalName || !newGoalTarget) return;
 
@@ -803,6 +897,7 @@ export default function Dashboard() {
   };
 
   const handleContributeToGoal = (id: string, amount: number) => {
+    recordGoalHistory();
     const updatedGoals = goals.map(g => {
       if (g.id === id) {
         const nextVal = g.current + amount;
@@ -887,6 +982,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteGoal = (id: string) => {
+    recordGoalHistory();
     if (window.confirm("Are you sure you want to delete this goal?")) {
       const updated = goals.filter(g => g.id !== id);
       setGoals(updated);
@@ -2408,6 +2504,26 @@ const handlePredefinedQuestion = (q: string) => {
                 className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
               >
                 <div className="lg:col-span-8 flex flex-col gap-6">
+                  {/* Floating Undo notification bar */}
+                  {goalHistory.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 backdrop-blur flex justify-between items-center"
+                    >
+                      <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
+                        <span>Goal parameters updated. Did you make a mistake?</span>
+                      </div>
+                      <button
+                        onClick={handleUndoGoalAction}
+                        className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Undo last change
+                      </button>
+                    </motion.div>
+                  )}
+
                   {goals.map((goal) => {
                     const percent = Math.round((goal.current / goal.target) * 100);
                     return (
@@ -2415,63 +2531,141 @@ const handlePredefinedQuestion = (q: string) => {
                         key={goal.id}
                         className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-900/5"
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-bold text-[var(--text-color)]">{goal.name}</h3>
+                        {editingGoalId === goal.id ? (
+                          // EDITING MODE
+                          <div className="flex flex-col gap-3">
+                            <div>
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Goal Name</label>
+                              <input
+                                type="text"
+                                value={editGoalName}
+                                onChange={(e) => setEditGoalName(e.target.value)}
+                                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Target Amount</label>
+                                <input
+                                  type="number"
+                                  value={editGoalTarget}
+                                  onChange={(e) => setEditGoalTarget(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500 font-mono"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Deadline Date</label>
+                                <input
+                                  type="text"
+                                  value={editGoalDeadline}
+                                  onChange={(e) => setEditGoalDeadline(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500"
+                                  placeholder="e.g. Dec 2028"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2 justify-end mt-2">
                               <button
-                                onClick={() => handleDeleteGoal(goal.id)}
-                                className="text-rose-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer"
-                                title="Delete Goal"
+                                onClick={handleCancelEditGoal}
+                                className="px-3.5 py-1.5 rounded-lg border border-[var(--border-color)] text-xs font-bold text-[var(--text-subtitle)] hover:bg-slate-500/5 transition-colors cursor-pointer"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleSaveEditGoal(goal.id)}
+                                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 transition-colors cursor-pointer"
+                              >
+                                Save Changes
                               </button>
                             </div>
-                            <p className="text-xs text-[var(--text-subtitle)] mt-0.5">Target deadline: {goal.deadline}</p>
                           </div>
-                          <div className="text-right">
-                            <span className="text-xs text-slate-500 block uppercase font-bold tracking-wider">Current / Target</span>
-                            <span className="text-lg font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">
-                              <RollingNumber value={goal.current} /> / <RollingNumber value={goal.target} />
-                            </span>
-                          </div>
-                        </div>
+                        ) : (
+                          // VIEWING MODE
+                          <>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <h3 className="text-lg font-bold text-[var(--text-color)]">{goal.name}</h3>
+                                  <button
+                                    onClick={() => handleStartEditGoal(goal)}
+                                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+                                    title="Edit Goal"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteGoal(goal.id)}
+                                    className="text-rose-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer"
+                                    title="Delete Goal"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <p className="text-xs text-[var(--text-subtitle)] mt-0.5">Target deadline: {goal.deadline}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs text-slate-500 block uppercase font-bold tracking-wider">Current / Target</span>
+                                <span className="text-lg font-extrabold text-[var(--text-color)] mt-0.5 block font-mono">
+                                  <RollingNumber value={goal.current} /> / <RollingNumber value={goal.target} />
+                                </span>
+                              </div>
+                            </div>
 
-                        {/* Progress Bar */}
-                        <div className="flex flex-col gap-1.5 mt-2">
-                          <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-500" 
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between text-[11px] text-slate-500 font-bold">
-                            <span>0% Started</span>
-                            <span className="text-blue-500 dark:text-blue-400">{percent}% Completed</span>
-                          </div>
-                        </div>
+                            {/* Progress Bar */}
+                            <div className="flex flex-col gap-1.5 mt-2">
+                              <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-500" 
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-[11px] text-slate-500 font-bold">
+                                <span>0% Started</span>
+                                <span className="text-blue-500 dark:text-blue-400">{percent}% Completed</span>
+                              </div>
+                            </div>
 
-                        {/* Contribution Buttons */}
-                        <div className="flex flex-wrap gap-2 mt-2 border-t border-[var(--border-color)] pt-4">
-                          <button
-                            onClick={() => handleContributeToGoal(goal.id, 10000)}
-                            className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all"
-                          >
-                            + {format(10000)} Contribution
-                          </button>
-                          <button
-                            onClick={() => handleContributeToGoal(goal.id, 50000)}
-                            className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all"
-                          >
-                            + {format(50000)} Contribution
-                          </button>
-                          <button
-                            onClick={() => handleContributeToGoal(goal.id, 100000)}
-                            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all"
-                          >
-                            + {format(100000)} Contribution
-                          </button>
-                        </div>
+                            {/* Contribution Buttons */}
+                            <div className="flex flex-wrap gap-2 mt-2 border-t border-[var(--border-color)] pt-4 items-center">
+                              <button
+                                onClick={() => handleContributeToGoal(goal.id, 10000)}
+                                className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all cursor-pointer"
+                              >
+                                + {format(10000)} Contribution
+                              </button>
+                              <button
+                                onClick={() => handleContributeToGoal(goal.id, 50000)}
+                                className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/20 text-xs font-semibold text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all cursor-pointer"
+                              >
+                                + {format(50000)} Contribution
+                              </button>
+                              <button
+                                onClick={() => handleContributeToGoal(goal.id, 100000)}
+                                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/10 hover:shadow-blue-500/20 transition-all cursor-pointer"
+                              >
+                                + {format(100000)} Contribution
+                              </button>
+
+                              {/* Custom Contribution Field */}
+                              <div className="flex items-center gap-2 border border-[var(--border-color)] bg-slate-900/40 rounded-xl px-3 py-1 bg-slate-950/20 ml-auto w-full sm:w-auto mt-2 sm:mt-0">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Custom</span>
+                                <input
+                                  type="number"
+                                  value={customContributions[goal.id] || ""}
+                                  onChange={(e) => setCustomContributions(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                  placeholder="Enter amount"
+                                  className="w-24 bg-transparent text-xs font-mono font-bold text-[var(--text-color)] focus:outline-none placeholder-slate-600 text-right"
+                                />
+                                <button
+                                  onClick={() => handleCustomContribute(goal.id)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[10px] font-black text-white uppercase tracking-wider transition-colors cursor-pointer"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     );
                   })}
