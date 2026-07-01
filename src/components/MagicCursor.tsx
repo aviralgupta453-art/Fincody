@@ -31,6 +31,14 @@ export default function MagicCursor() {
     const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (isTouchDevice) return;
 
+    // 3. Iframe context bypass: Restore standard cursor when page is loaded inside preview iframe
+    const isIframe = typeof window !== "undefined" && window.self !== window.top;
+    if (isIframe) return;
+
+    // 4. Admin Deployments Gateway context bypass: Restore standard cursor for audit tasks
+    const isDeploymentsGateway = typeof window !== "undefined" && window.location.pathname.startsWith("/admin/deployments");
+    if (isDeploymentsGateway) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
