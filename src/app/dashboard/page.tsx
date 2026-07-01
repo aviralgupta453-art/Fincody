@@ -3556,54 +3556,45 @@ const handlePredefinedQuestion = (q: string) => {
                   className="flex flex-col gap-6 text-left"
                 >
                   {/* 1. Investment Summary Strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-slate-900/10 backdrop-blur-md">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Value</span>
-                      <span className="text-sm font-black text-white font-mono mt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Value</div>
+                      <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                         <RollingNumber value={totalInvestmentValue} />
-                      </span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-2 font-semibold">
+                        Pool count: <span className="text-[var(--text-color)] font-bold">{totalHoldingsCount} active</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Today's Gain</span>
-                      <span className={`text-sm font-black font-mono mt-1 ${todayGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                        {todayGainLoss >= 0 ? "+" : ""}<RollingNumber value={todayGainLoss} />
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Overall Return</span>
-                      <span className={`text-sm font-black font-mono mt-1 ${overallGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    
+                    <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Return</div>
+                      <div className={`text-3xl font-black mt-1 font-mono ${overallGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                         {overallGainLoss >= 0 ? "+" : ""}<RollingNumber value={overallGainLoss} />
-                      </span>
+                      </div>
+                      <div className={`text-xs mt-2 font-bold flex items-center gap-1 ${todayGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                        {todayGainLoss >= 0 ? "▲" : "▼"} {todayGainLoss >= 0 ? "+" : ""}<RollingNumber value={todayGainLoss} /> <span className="text-slate-500 font-semibold">today</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Best Performer</span>
-                      <span className="text-xs font-bold text-emerald-500 mt-1 truncate max-w-[90px]" title={bestPerformer.symbolOrName}>
-                        {bestPerformer.symbolOrName} ({bestPerformer.pct >= 0 ? "+" : ""}{bestPerformer.pct.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Worst Performer</span>
-                      <span className="text-xs font-bold text-rose-500 mt-1 truncate max-w-[90px]" title={worstPerformer.symbolOrName}>
-                        {worstPerformer.symbolOrName} ({worstPerformer.pct >= 0 ? "+" : ""}{worstPerformer.pct.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dividends Est.</span>
-                      <span className="text-sm font-black text-emerald-500 font-mono mt-1">
-                        <RollingNumber value={Math.round(equitiesVal * 0.012)} />
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">FD/Bond Interest</span>
-                      <span className="text-sm font-black text-white font-mono mt-1">
+
+                    <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Interest Earned</div>
+                      <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                         <RollingNumber value={fdsTotalInterest + bondsTotalInterest} />
-                      </span>
+                      </div>
+                      <div className="text-xs text-emerald-500 mt-2 font-bold">
+                        Est. Dividends: <span className="text-slate-500 font-semibold">{format(Math.round(equitiesVal * 0.012))}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Pools</span>
-                      <span className="text-sm font-black text-white font-mono mt-1">
-                        <RollingNumber value={totalHoldingsCount} />
-                      </span>
+
+                    <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Performer Audit</div>
+                      <div className="text-lg font-black mt-1.5 text-emerald-500 truncate" title={bestPerformer.symbolOrName}>
+                        ▲ {bestPerformer.symbolOrName} ({bestPerformer.pct >= 0 ? "+" : ""}{bestPerformer.pct.toFixed(1)}%)
+                      </div>
+                      <div className="text-[10px] text-rose-500 mt-1 font-bold truncate" title={worstPerformer.symbolOrName}>
+                        ▼ {worstPerformer.symbolOrName} ({worstPerformer.pct >= 0 ? "+" : ""}{worstPerformer.pct.toFixed(1)}%)
+                      </div>
                     </div>
                   </div>
 
@@ -3969,12 +3960,19 @@ const handlePredefinedQuestion = (q: string) => {
 
                                 // Exchange specific info
                                 const { localTimeStr, marketState } = getExchangeMarketState(item.symbol);
+                                
+                                const flashStatus = priceUpdateStatus[item.symbol];
+                                const flashClass = flashStatus === "up" 
+                                  ? "bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]" 
+                                  : flashStatus === "down"
+                                  ? "bg-rose-500/10 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)]"
+                                  : "bg-slate-900/20 border-[var(--border-color)]";
 
                                 return (
                                   <motion.div
                                     key={item.symbol}
                                     layoutId={`holdings-${item.symbol}`}
-                                    className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/20 hover:bg-slate-950/20 transition-all flex flex-col gap-3 group"
+                                    className={`p-4 rounded-xl border transition-all flex flex-col gap-3 group ${flashClass}`}
                                   >
                                     <div className="flex justify-between items-start">
                                       <div className="flex items-center gap-3">
@@ -4002,17 +4000,50 @@ const handlePredefinedQuestion = (q: string) => {
                                         <span className="text-slate-400 font-bold">{marketState}</span>
                                         <span className="text-slate-500">• Local Time: {localTimeStr}</span>
                                       </div>
-                                      <div className="flex items-center gap-4">
-                                        <span className="text-slate-500">Qty: <strong className="text-slate-300 font-mono">{item.qty}</strong></span>
-                                        <span className={`font-mono font-bold ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                          {totalReturn >= 0 ? "▲" : "▼"} <RollingNumber value={Math.abs(totalReturn)} />
+                                      
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveStock(item.symbol);
+                                        }}
+                                        className="text-rose-500 hover:text-rose-400 font-bold p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[9px]"
+                                      >
+                                        Remove Ticker
+                                      </button>
+                                    </div>
+
+                                    {/* Form Inputs (Stop Propagation to prevent triggering chart modal) */}
+                                    <div 
+                                      onClick={(e) => e.stopPropagation()} 
+                                      className="grid grid-cols-3 gap-3 pt-3 border-t border-[var(--border-color)] items-end"
+                                    >
+                                      <div className="flex flex-col gap-1 text-left">
+                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Shares</span>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={item.qty}
+                                          onChange={(e) => handleUpdateHolding(item.symbol, parseInt(e.target.value) || 1, item.avgBuyPrice)}
+                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-mono text-center focus:outline-none focus:border-blue-500/30"
+                                        />
+                                      </div>
+
+                                      <div className="flex flex-col gap-1 text-left">
+                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost ({activeCurrency.symbol})</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={item.avgBuyPrice}
+                                          onChange={(e) => handleUpdateHolding(item.symbol, item.qty, parseFloat(e.target.value) || 0)}
+                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-mono text-left focus:outline-none focus:border-blue-500/30"
+                                        />
+                                      </div>
+
+                                      <div className="flex flex-col text-right">
+                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
+                                        <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                          {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} />
                                         </span>
-                                        <button
-                                          onClick={() => handleRemoveStock(item.symbol)}
-                                          className="text-rose-500 hover:text-rose-400 font-bold p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                          Remove
-                                        </button>
                                       </div>
                                     </div>
                                   </motion.div>
