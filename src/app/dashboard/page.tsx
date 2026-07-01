@@ -41,6 +41,7 @@ import {
   EyeOff,
   Percent,
   Coins,
+  User,
   ChevronRight,
   Edit2,
   RotateCcw
@@ -59,7 +60,7 @@ import {
 import FincodyLogo from "@/components/FincodyLogo";
 import CurrencyRibbon from "@/components/CurrencyRibbon";
 import RollingNumber from "@/components/RollingNumber";
-import { useCurrency } from "@/context/CurrencyContext";
+import { useCurrency, SUPPORTED_CURRENCIES } from "@/context/CurrencyContext";
 
 // TypeScript Interfaces
 interface Message {
@@ -104,7 +105,7 @@ interface DocumentFile {
 
 export default function Dashboard() {
   // Global Currency Context
-  const { activeCurrency, format, convert } = useCurrency();
+  const { activeCurrency, setActiveCurrency, format, convert } = useCurrency();
 
   // Supabase Auth State
   const [user, setUser] = useState<any>(null);
@@ -303,6 +304,40 @@ export default function Dashboard() {
   const [editGoalTarget, setEditGoalTarget] = useState("");
   const [editGoalDeadline, setEditGoalDeadline] = useState("");
   const [customContributions, setCustomContributions] = useState<Record<string, string>>({});
+  // Profile edit modal states
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileEditName, setProfileEditName] = useState(user?.user_metadata?.full_name ?? "");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileEditName) return;
+    setIsSavingProfile(true);
+    setProfileError("");
+    setProfileSuccess("");
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: profileEditName }
+      });
+      if (error) throw error;
+      setProfileSuccess("Profile updated successfully!");
+      setNotifications(prev => [
+        { id: Date.now(), text: "Profile: Name updated successfully.", unread: true },
+        ...prev
+      ]);
+      setTimeout(() => {
+        setProfileSuccess("");
+        setShowProfileModal(false);
+      }, 1000);
+    } catch (err: any) {
+      setProfileError(err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   // Premium Financial Alert Center interfaces and states
   interface FinancialNotification {
     id: string;
@@ -2475,6 +2510,20 @@ const handlePredefinedQuestion = (q: string) => {
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            </button>
+
+            {/* Circular Profile Avatar (Always Visible in Header) */}
+            <button
+              onClick={() => {
+                setProfileEditName(user?.user_metadata?.full_name ?? "");
+                setShowProfileModal(true);
+              }}
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              title="View & Edit Profile"
+            >
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
             </button>
 
             {/* Smart Notifications Button */}
@@ -5807,6 +5856,87 @@ const handlePredefinedQuestion = (q: string) => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Profile Details & Edit Popover Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                setShowProfileModal(false);
+                setProfileError("");
+                setProfileSuccess("");
+              }}
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Brand Logo Identity */}
+            <div className="flex justify-center mb-3">
+              <FincodyLogo variant="compact" />
+            </div>
+
+            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+            </div>
+
+            <h3 className="text-sm font-black text-white mb-0.5">
+              {user ? "Your Profile" : "Profile Settings"}
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+              {user ? user.email : "no-email@fincody.com"}
+            </p>
+
+            {profileError && (
+              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
+                {profileError}
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
+                {profileSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={profileEditName}
+                  onChange={(e) => setProfileEditName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                >
+                  Log Out
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

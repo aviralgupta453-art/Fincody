@@ -1400,6 +1400,11 @@ export default function Home() {
               <X className="w-4 h-4" />
             </button>
 
+            {/* Brand Logo Identity */}
+            <div className="flex justify-center mb-4">
+              <FincodyLogo variant="compact" />
+            </div>
+
             <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
               {user?.user_metadata?.full_name 
                 ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 

@@ -14,6 +14,22 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
   const [blink, setBlink] = useState(false);
   const [shineKey, setShineKey] = useState(0);
   const [particles, setParticles] = useState<any[]>([]);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isLight = document.documentElement.classList.contains("light");
+      setThemeMode(isLight ? "light" : "dark");
+
+      const observer = new MutationObserver(() => {
+        const isL = document.documentElement.classList.contains("light");
+        setThemeMode(isL ? "light" : "dark");
+      });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+      return () => observer.disconnect();
+    }
+  }, []);
+
 
   // Magnetic Spring Offsets
   const springConfig = { stiffness: 120, damping: 15 };
@@ -367,7 +383,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x="5"
             y={isCompact ? "25" : "32"}
-            className="finco-letter"
+            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -387,7 +403,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "20" : "24"}
             y={isCompact ? "25" : "32"}
-            className="finco-letter"
+            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -407,7 +423,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "29" : "35"}
             y={isCompact ? "25" : "32"}
-            className="finco-letter"
+            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -427,7 +443,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "48" : "60"}
             y={isCompact ? "25" : "32"}
-            className="finco-letter"
+            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -447,7 +463,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "66" : "82"}
             y={isCompact ? "25" : "32"}
-            className="finco-letter"
+            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
