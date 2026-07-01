@@ -9,6 +9,7 @@ import {
   Clock, BookOpen, Zap, AlertTriangle, Volume2, VolumeX, Play, Pause
 } from "lucide-react";
 import FincodyLogo from "@/components/FincodyLogo";
+import { supabase } from "@/lib/supabase";
 import CurrencyRibbon from "@/components/CurrencyRibbon";
 
 const LIVE_NEWS_DATABASE = [
@@ -273,6 +274,64 @@ const LIVE_NEWS_DATABASE = [
 
 export default function LivePage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [user, setUser] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = showProfileModal ? "hidden" : "unset";
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "unset";
+      }
+    };
+  }, [showProfileModal]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName) return;
+    setIsSavingProfile(true);
+    setProfileError("");
+    setProfileSuccess("");
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: editName }
+      });
+      if (error) throw error;
+      setProfileSuccess("Profile updated successfully!");
+      setTimeout(() => {
+        setProfileSuccess("");
+        setShowProfileModal(false);
+      }, 1000);
+    } catch (err: any) {
+      setProfileError(err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Live Feed states
@@ -394,7 +453,7 @@ export default function LivePage() {
 
       {/* Main Header navigation (matching homepage navbar exactly) */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[var(--border-color)] backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-none w-[97%] mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <FincodyLogo variant="desktop" />
           </Link>
@@ -429,7 +488,7 @@ export default function LivePage() {
       <CurrencyRibbon />
 
       {/* dedicated full screen live block */}
-      <main className="py-6 px-6 max-w-7xl mx-auto text-left">
+      <main className="py-6 px-6 max-w-none w-[97%] mx-auto text-left">
         
         <div className="w-full rounded-2xl overflow-hidden glass-card shadow-2xl relative border border-blue-500/10 p-1.5 bg-slate-950/40 text-left">
           
@@ -1055,6 +1114,87 @@ export default function LivePage() {
       <footer className="py-12 border-t border-[var(--border-color)] bg-slate-950/20 text-center text-xs text-slate-500">
         <p>© 2026 FinCody Finance. All rights reserved.</p>
       </footer>
-    </div>
+      {/* Profile Details & Edit Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                setShowProfileModal(false);
+                setProfileError("");
+                setProfileSuccess("");
+              }}
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Brand Logo Identity */}
+            <div className="flex justify-center mb-3">
+              <FincodyLogo variant="compact" />
+            </div>
+
+            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+            </div>
+
+            <h3 className="text-sm font-black text-white mb-0.5">
+              Your Profile
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+              {user?.email ?? "no-email@fincody.com"}
+            </p>
+
+            {profileError && (
+              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
+                {profileError}
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
+                {profileSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
+
+                {user && (
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                  >
+                    Log Out
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}    </div>
   );
 }

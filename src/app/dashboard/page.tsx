@@ -545,6 +545,17 @@ export default function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = showProfileModal ? "hidden" : "unset";
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "unset";
+      }
+    };
+  }, [showProfileModal]);
+
   // Subscription editing & creation states
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
   const [editSubName, setEditSubName] = useState("");

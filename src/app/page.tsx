@@ -362,6 +362,17 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [tempName, setTempName] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = showProfileModal ? "hidden" : "unset";
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "unset";
+      }
+    };
+  }, [showProfileModal]);
+
   const [editName, setEditName] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -539,7 +550,7 @@ export default function Home() {
 
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[var(--border-color)] backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-none w-[97%] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <FincodyLogo variant="desktop" />
@@ -687,7 +698,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="relative pt-12 md:pt-24 pb-20 px-6 max-w-7xl mx-auto text-left">
+      <section className="relative pt-12 md:pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column: Hero Copy */}
@@ -843,7 +854,7 @@ export default function Home() {
 
       {/* Interactive AI Demo Section */}
       <section id="demo" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-none w-[97%] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
               Instant AI Life Command
@@ -972,7 +983,7 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-20 px-6 max-w-7xl mx-auto">
+      <section id="features" className="py-20 px-6 max-w-none w-[97%] mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
             Everything you need. Integrated.
@@ -1009,7 +1020,7 @@ export default function Home() {
 
       {/* Future Simulator Section */}
       <section id="simulator" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-none w-[97%] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
               Quantify Your Tomorrow
@@ -1185,7 +1196,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
+      <section className="py-20 px-6 max-w-none w-[97%] mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
             Loved by builders and thinkers
@@ -1236,7 +1247,7 @@ export default function Home() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-none w-[97%] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
               Transparent, premium plans
@@ -1344,7 +1355,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="pt-10 pb-6 px-6 border-t border-[var(--border-color)] bg-slate-950/20 text-slate-500 text-sm">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="max-w-none w-[97%] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="flex flex-col gap-4 text-left">
             <Link href="/" className="flex items-center gap-2">
               <FincodyLogo variant="desktop" />
@@ -1380,76 +1391,89 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto flex justify-center items-center border-t border-[var(--border-color)] pt-6">
+        <div className="max-w-none w-[97%] mx-auto flex justify-center items-center border-t border-[var(--border-color)] pt-6">
           <span>&copy; {new Date().getFullYear()} Fincody Inc. All rights reserved.</span>
         </div>
       </footer>
 
       {/* Profile Details & Edit Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/95 text-center animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
             <button
+              type="button"
               onClick={() => {
                 setShowProfileModal(false);
                 setProfileError("");
                 setProfileSuccess("");
               }}
-              className="absolute right-4 top-4 text-[var(--text-subtitle)] hover:text-[var(--text-color)] p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Brand Logo Identity */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3">
               <FincodyLogo variant="compact" />
             </div>
 
-            <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-4 font-black text-xl">
+            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
               {user?.user_metadata?.full_name 
                 ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                : (tempName ? tempName.slice(0, 1).toUpperCase() : "U")}
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
             </div>
 
-            <h3 className="text-xl font-bold text-[var(--text-color)] mb-1">
-              {user ? "Your Profile" : "Profile Settings"}
+            <h3 className="text-sm font-black text-white mb-0.5">
+              Your Profile
             </h3>
-            <p className="text-xs text-[var(--text-subtitle)] mb-6">
-              {user ? user.email : "Pending email confirmation. Please check your inbox."}
+            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+              {user?.email ?? "no-email@fincody.com"}
             </p>
 
             {profileError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 text-left">
+              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
                 {profileError}
               </div>
             )}
 
             {profileSuccess && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 text-left">
+              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
                 {profileSuccess}
               </div>
             )}
 
-            <form onSubmit={handleUpdateProfile} className="space-y-4 text-left">
+            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Full Name</label>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full bg-[var(--nav-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-color)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-600"
+                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={isSavingProfile}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
-              >
-                {isSavingProfile ? "Saving..." : "Save Changes"}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
+
+                {user && (
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                  >
+                    Log Out
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
