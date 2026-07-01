@@ -308,6 +308,32 @@ export default function Home() {
   const [countdownString, setCountdownString] = useState("02:14:45");
   const [expandedMattersId, setExpandedMattersId] = useState<string | null>(null);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [liveStocks, setLiveStocks] = useState([
+    { name: "SENSEX", price: 90140.25, change: 1.15, up: true },
+    { name: "NIFTY 50", price: 27325.80, change: 1.08, up: true },
+    { name: "NASDAQ", price: 19845.50, change: -0.42, up: false },
+    { name: "BTC-USD", price: 96420.00, change: 5.42, up: true }
+  ]);
+
+  useEffect(() => {
+    const stockInterval = setInterval(() => {
+      setLiveStocks((prev) => 
+        prev.map((s) => {
+          const delta = (Math.random() - 0.48) * (s.price * 0.0005);
+          const newPrice = s.price + delta;
+          const pct = ((delta / s.price) * 100);
+          return {
+            ...s,
+            price: newPrice,
+            change: s.change + pct,
+            up: delta >= 0
+          };
+        })
+      );
+    }, 4000);
+    return () => clearInterval(stockInterval);
+  }, []);
+
 
 
   // Countdown timer simulation for economic calendar
@@ -544,10 +570,8 @@ export default function Home() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
-            <Link href="/live" className="text-blue-400 hover:text-blue-300 font-extrabold flex items-center gap-1 transition-colors">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" /> FinCody Live
-            </Link>
-
+            <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
+            <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
             <a href="#features" className="hover:text-[var(--text-color)] transition-colors">Features</a>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</a>
@@ -620,10 +644,8 @@ export default function Home() {
             className="absolute top-20 left-0 w-full bg-[var(--bg-color)] border-b border-[var(--border-color)] p-6 flex flex-col gap-6 z-40 backdrop-blur-lg md:hidden"
           >
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
-              <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="text-blue-400 font-extrabold flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> FinCody Live
-              </Link>
-
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-white font-extrabold">Home</Link>
+              <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">FinCody Live</Link>
               <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Features</a>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
               <a href="#simulator" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Simulator</a>
@@ -725,25 +747,58 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Scrolling micro breaking news cards */}
-            <div className="flex flex-col gap-3.5 max-h-[300px] overflow-y-auto scrollbar-none">
-              {LIVE_NEWS_DATA.slice(0, 4).map((news) => (
-                <div key={news.id} className="p-3.5 rounded-xl border border-blue-500/5 bg-slate-900/10 hover:bg-slate-900/20 transition-all flex flex-col gap-2 relative overflow-hidden">
-                  {news.breaking && (
-                    <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-red-600 animate-pulse" />
-                  )}
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase">
-                    <span>{news.source}</span>
-                    <span className="text-emerald-400">{news.impact}</span>
+            {/* Stocks Status Row */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              {liveStocks.map((stock) => (
+                <div key={stock.name} className="p-2.5 rounded-xl border border-blue-500/5 bg-slate-900/10 flex flex-col gap-0.5 relative overflow-hidden">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{stock.name}</span>
+                  <div className="flex justify-between items-baseline gap-1 mt-0.5">
+                    <span className="text-xs font-mono font-bold text-white">
+                      {stock.name === "BTC-USD" ? `$${stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : stock.name === "SENSEX" || stock.name === "NIFTY 50" ? `${stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${stock.price.toFixed(2)}`}
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold ${stock.up ? "text-emerald-500" : "text-rose-500"}`}>
+                      {stock.up ? "▲" : "▼"} {stock.change >= 0 ? `+${stock.change.toFixed(2)}%` : `${stock.change.toFixed(2)}%`}
+                    </span>
                   </div>
-                  <h4 className="text-xs font-bold text-white leading-normal line-clamp-2">
-                    {news.headline}
-                  </h4>
-                  <p className="text-[10px] text-slate-400 line-clamp-2">
-                    {news.summary}
-                  </p>
                 </div>
               ))}
+            </div>
+
+            {/* Vertical Marquee for World News */}
+            <div className="relative h-[220px] overflow-hidden border border-blue-500/5 bg-slate-950/20 rounded-xl">
+              <style>{`
+                @keyframes marquee-vertical {
+                  0% { transform: translateY(0%); }
+                  100% { transform: translateY(-50%); }
+                }
+                .animate-marquee-vertical {
+                  animation: marquee-vertical 25s linear infinite;
+                }
+              `}</style>
+              
+              <div className="animate-marquee-vertical hover:[animation-play-state:paused] flex flex-col gap-3 py-3 cursor-pointer">
+                {[...LIVE_NEWS_DATA, ...LIVE_NEWS_DATA].map((news, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => window.location.href = '/live'}
+                    className="mx-3 p-3.5 rounded-xl border border-blue-500/5 bg-slate-900/10 hover:bg-slate-900/30 transition-all flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    {news.breaking && (
+                      <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-red-600 animate-pulse" />
+                    )}
+                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase">
+                      <span>{news.source}</span>
+                      <span className={news.impact === "Bearish" ? "text-rose-400" : "text-emerald-400"}>{news.impact}</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-white leading-normal line-clamp-1">
+                      {news.headline}
+                    </h4>
+                    <p className="text-[10px] text-slate-400 line-clamp-2">
+                      {news.summary}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Quick Actions Footer inside widget */}
@@ -777,7 +832,7 @@ export default function Home() {
                 href="/live"
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center gap-1.5"
               >
-                <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Full Live Command
+                Full Live Command
               </Link>
             </div>
           </motion.div>

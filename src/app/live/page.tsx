@@ -188,6 +188,86 @@ const LIVE_NEWS_DATABASE = [
     longTerm: "Strengthens Tata's competitive capability against global cloud hyperscalers.",
     opportunities: "IPO bid subscription allocation.",
     risks: "High pricing valuations might cause minor post-listing cooling."
+  },
+  {
+    id: "news-9",
+    country: "USA",
+    category: "Stocks",
+    headline: "Microsoft launches specialized Quantum Hybrid cloud servers for corporate AI networks",
+    summary: "The corporation introduced quantum-safe computing fabrics in select US Eastern cloud sectors to handle next-generation corporate cryptography standards.",
+    source: "Reuters Technology",
+    timestamp: "5 hours ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "Medium Impact",
+    confidence: 91,
+    affected: [{ symbol: "MSFT", name: "Microsoft Corp", change: 1.85 }],
+    whyItMatters: "Secures Microsoft's cybersecurity capability ahead of commercial quantum encryption breaches.",
+    whoIsAffected: "Enterprise cloud corporations, cybersecurity agencies.",
+    shortTerm: "Share prices climb to standard averages.",
+    longTerm: "Establishes Quantum Hybrid as a requirement for military and bank cloud networks.",
+    opportunities: "Accumulate MSFT positions.",
+    risks: "Initial hardware maintenance costs."
+  },
+  {
+    id: "news-10",
+    country: "Global",
+    category: "Economy",
+    headline: "IMF upgrades Global GDP expansion forecasts to 3.2% citing resilient consumer spending",
+    summary: "The international monetary fund increased global economic forecasts as deflation cools and consumer demand remains robust across major markets.",
+    source: "Bloomberg International",
+    timestamp: "6 hours ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "High Impact",
+    confidence: 89,
+    affected: [{ symbol: "SPX", name: "S&P 500", change: 0.95 }],
+    whyItMatters: "Lowers corporate default risk models and supports global index valuations.",
+    whoIsAffected: "Emerging market equities, global conglomerates.",
+    shortTerm: "Positive indices rally across EU and Asian blocks.",
+    longTerm: "Improves global trade supply chain financing conditions.",
+    opportunities: "Increase international asset equity weights.",
+    risks: "Potential regional trade policy friction."
+  },
+  {
+    id: "news-11",
+    country: "India",
+    category: "Banking",
+    headline: "RBI leaves baseline repo rates unchanged at 6.5% during quarterly policy session",
+    summary: "The Reserve Bank of India keeps rates unchanged, focusing on long-term inflation cooling and agricultural yield stability metrics.",
+    source: "Economic Times",
+    timestamp: "7 hours ago",
+    breaking: false,
+    impact: "Neutral",
+    severity: "Medium Impact",
+    confidence: 94,
+    affected: [{ symbol: "HDFCBANK.NS", name: "HDFC Bank Ltd", change: 0.12 }],
+    whyItMatters: "Signals RBI remains highly committed to inflation targets before starting rate cuts.",
+    whoIsAffected: "Home loan borrowers, domestic bond managers.",
+    shortTerm: "Equities hold horizontal averages; banking indexes remain steady.",
+    longTerm: "Prepares baseline safety metrics against international liquidity hikes.",
+    opportunities: "Lock yields in long-term fixed deposit portfolios.",
+    risks: "Slight weight pressure on retail leverage loans."
+  },
+  {
+    id: "news-12",
+    country: "USA",
+    category: "Stocks",
+    headline: "Tesla announces regulatory permission for Full Self-Driving rollout in China",
+    summary: "The electric vehicle manufacturer secured testing approvals for FSD algorithms in Shanghai technology zones, opening massive new target markets.",
+    source: "CNBC",
+    timestamp: "8 hours ago",
+    breaking: false,
+    impact: "Bullish",
+    severity: "High Impact",
+    confidence: 92,
+    affected: [{ symbol: "TSLA", name: "Tesla Inc.", change: 6.24 }],
+    whyItMatters: "Unlocks recurring software licensing pipelines in the world's largest electric vehicle segment.",
+    whoIsAffected: "EV competitors, local technology suppliers.",
+    shortTerm: "TSLA stock spikes 6% on strong retail and hedge volume.",
+    longTerm: "Establishes Tesla's software pricing strategy in regional segments.",
+    opportunities: "Defensive growth baseline addition.",
+    risks: "Localized data residency compliance regulations."
   }
 ];
 
@@ -309,10 +389,10 @@ export default function LivePage() {
     <div className="min-h-screen w-full bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden relative selection:bg-blue-500/30 selection:text-white transition-colors duration-300">
       
       {/* Background decoration blur bubbles */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none animate-pulse" />
-      <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none animate-pulse" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none" />
 
-      {/* Main Header navigation */}
+      {/* Main Header navigation (matching homepage navbar exactly) */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[var(--border-color)] backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
@@ -321,10 +401,11 @@ export default function LivePage() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="hover:text-[var(--text-color)] transition-colors">Home</Link>
-            <Link href="/live" className="text-blue-400 font-extrabold flex items-center gap-1 transition-colors">
-              <Sparkles className="w-3.5 h-3.5" /> FinCody Live
-            </Link>
-            <Link href="/dashboard" className="hover:text-[var(--text-color)] transition-colors">Dashboard</Link>
+            <Link href="/live" className="text-blue-400 font-extrabold transition-colors">FinCody Live</Link>
+            <Link href="/#features" className="hover:text-[var(--text-color)] transition-colors">Features</Link>
+            <Link href="/#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</Link>
+            <Link href="/#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</Link>
+            <Link href="/#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</Link>
           </nav>
 
           <div className="flex items-center gap-4">
