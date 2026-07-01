@@ -41,6 +41,7 @@ import {
   EyeOff,
   Percent,
   Coins,
+  ChevronRight,
   Edit2,
   RotateCcw
 } from "lucide-react";
@@ -302,6 +303,213 @@ export default function Dashboard() {
   const [editGoalTarget, setEditGoalTarget] = useState("");
   const [editGoalDeadline, setEditGoalDeadline] = useState("");
   const [customContributions, setCustomContributions] = useState<Record<string, string>>({});
+  // Premium Financial Alert Center interfaces and states
+  interface FinancialNotification {
+    id: string;
+    category: "Bills" | "Investments" | "Subscriptions" | "Insurance" | "Loans" | "Taxes" | "Income" | "Portfolio" | "Markets";
+    priority: "Critical" | "High" | "Medium" | "Low";
+    title: string;
+    description: string;
+    scheduledTime: string;
+    timeRemaining: string;
+    timeRemainingSecs: number;
+    status: "unread" | "read" | "completed";
+    section: "Critical" | "Today" | "Upcoming" | "Completed";
+    timeGroup: "Today" | "Tomorrow" | "This Week" | "Next Month" | "Completed";
+    logo?: string;
+  }
+
+  const [financialNotificationsOpen, setFinancialNotificationsOpen] = useState(false);
+  const [selectedNotifFilter, setSelectedNotifFilter] = useState<string | null>(null);
+  const [notifSearchQuery, setNotifSearchQuery] = useState("");
+  const [collapsedNotifGroups, setCollapsedNotifGroups] = useState<Record<string, boolean>>({});
+
+  const [financialNotifications, setFinancialNotifications] = useState<FinancialNotification[]>([
+    {
+      id: "notif-1",
+      category: "Bills",
+      priority: "Critical",
+      title: "Credit Card Bill Due Tomorrow",
+      description: "HDFC Bank Regalia card outstanding payment of ₹45,210 is due to avoid interest charges.",
+      scheduledTime: "Tomorrow • 10:00 AM",
+      timeRemaining: "Due in 18 Hours",
+      timeRemainingSecs: 18 * 3600,
+      status: "unread",
+      section: "Critical",
+      timeGroup: "Tomorrow",
+      logo: "HDFC Bank"
+    },
+    {
+      id: "notif-2",
+      category: "Subscriptions",
+      priority: "Medium",
+      title: "Netflix Renewal Today",
+      description: "Premium monthly renewal of ₹649 will auto-debit from your primary credit card.",
+      scheduledTime: "Today • 8:00 PM",
+      timeRemaining: "Due in 2 Hours",
+      timeRemainingSecs: 2 * 3600,
+      status: "unread",
+      section: "Today",
+      timeGroup: "Today",
+      logo: "Netflix"
+    },
+    {
+      id: "notif-3",
+      category: "Loans",
+      priority: "High",
+      title: "Home Loan EMI Due in 3 Days",
+      description: "ICICI Home Loan EMI debit of ₹32,500 scheduled on auto-pay.",
+      scheduledTime: "3 Days Remaining",
+      timeRemaining: "3 Days Remaining",
+      timeRemainingSecs: 3 * 24 * 3600,
+      status: "unread",
+      section: "Upcoming",
+      timeGroup: "This Week",
+      logo: "ICICI"
+    },
+    {
+      id: "notif-4",
+      category: "Taxes",
+      priority: "Critical",
+      title: "Income Tax Filing Deadline",
+      description: "FY 2025-26 final income tax submission deadline. Submit all asset disclosures.",
+      scheduledTime: "July 31 • 11:59 PM",
+      timeRemaining: "12 Days Remaining",
+      timeRemainingSecs: 12 * 24 * 3600,
+      status: "unread",
+      section: "Critical",
+      timeGroup: "Next Month",
+      logo: "IT Dept"
+    },
+    {
+      id: "notif-5",
+      category: "Investments",
+      priority: "Low",
+      title: "SIP Scheduled Tomorrow",
+      description: "SIP contribution of ₹10,000 for Parag Parikh Flexi Cap Fund will be triggered.",
+      scheduledTime: "Tomorrow • 9:00 AM",
+      timeRemaining: "Due in 15 Hours",
+      timeRemainingSecs: 15 * 3600,
+      status: "unread",
+      section: "Upcoming",
+      timeGroup: "Tomorrow",
+      logo: "Zerodha"
+    },
+    {
+      id: "notif-6",
+      category: "Markets",
+      priority: "Medium",
+      title: "Market Closing in 20 Minutes",
+      description: "NSE/BSE equities markets entering standard post-close sessions in 20 minutes.",
+      scheduledTime: "Today • 3:10 PM",
+      timeRemaining: "20 Minutes Remaining",
+      timeRemainingSecs: 20 * 60,
+      status: "unread",
+      section: "Today",
+      timeGroup: "Today",
+      logo: "NSE"
+    },
+    {
+      id: "notif-7",
+      category: "Income",
+      priority: "Low",
+      title: "Salary Credited",
+      description: "Monthly baseline corporate salary payout of ₹1,85,000 credited to savings account.",
+      scheduledTime: "Completed • Yesterday",
+      timeRemaining: "Processed",
+      timeRemainingSecs: -1,
+      status: "completed",
+      section: "Completed",
+      timeGroup: "Completed",
+      logo: "Fincody Corp"
+    }
+  ]);
+
+  const toggleNotifGroup = (group: string) => {
+    setCollapsedNotifGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  const handleMarkReadNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, status: "read" } : n))
+    );
+  };
+
+  const handleSnoozeNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, timeRemaining: "Snoozed for 1 hour", scheduledTime: "Snoozed" } : n))
+    );
+  };
+
+  const handleDismissNotif = (id: string) => {
+    setFinancialNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleCompleteNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, status: "completed", section: "Completed", timeGroup: "Completed", timeRemaining: "Processed" } : n))
+    );
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Bills": return CreditCard;
+      case "Investments": return TrendingUp;
+      case "Subscriptions": return Coins;
+      case "Insurance": return Shield;
+      case "Loans": return Building;
+      case "Taxes": return FileText;
+      case "Income": return DollarSign;
+      case "Portfolio": return Activity;
+      case "Markets": return Compass;
+      default: return Bell;
+    }
+  };
+
+  // Simulate live alerts
+  useEffect(() => {
+    const dividendTimeout = setTimeout(() => {
+      const newNotif: FinancialNotification = {
+        id: "live-notif-1",
+        category: "Investments",
+        priority: "Low",
+        title: "TCS Dividend Credited",
+        description: "Dividend payout of ₹1,200 for 40 shares of Tata Consultancy Services credited directly.",
+        scheduledTime: "Today • 4:30 PM",
+        timeRemaining: "Just Credited",
+        timeRemainingSecs: 0,
+        status: "unread",
+        section: "Today",
+        timeGroup: "Today",
+        logo: "Zerodha"
+      };
+      setFinancialNotifications((prev) => [newNotif, ...prev]);
+    }, 15000);
+
+    const rbiTimeout = setTimeout(() => {
+      const newNotif: FinancialNotification = {
+        id: "live-notif-2",
+        category: "Markets",
+        priority: "High",
+        title: "RBI Policy Announcement Today",
+        description: "Reserve Bank of India retains interest rates at 6.5%, highlighting focus on inflation target margins.",
+        scheduledTime: "Today • 5:10 PM",
+        timeRemaining: "Just Announced",
+        timeRemainingSecs: 0,
+        status: "unread",
+        section: "Today",
+        timeGroup: "Today",
+        logo: "RBI"
+      };
+      setFinancialNotifications((prev) => [newNotif, ...prev]);
+    }, 35000);
+
+    return () => {
+      clearTimeout(dividendTimeout);
+      clearTimeout(rbiTimeout);
+    };
+  }, []);
+
   // Subscription editing & creation states
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
   const [editSubName, setEditSubName] = useState("");
@@ -957,6 +1165,7 @@ export default function Dashboard() {
   const handleAddGoal = (e: React.FormEvent) => {
     recordGoalHistory();
     recordGoalHistory();
+    recordGoalHistory();
     e.preventDefault();
     if (!newGoalName || !newGoalTarget) return;
 
@@ -983,6 +1192,7 @@ export default function Dashboard() {
   };
 
   const handleContributeToGoal = (id: string, amount: number) => {
+    recordGoalHistory();
     recordGoalHistory();
     recordGoalHistory();
     const updatedGoals = goals.map(g => {
@@ -1069,6 +1279,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteGoal = (id: string) => {
+    recordGoalHistory();
     recordGoalHistory();
     recordGoalHistory();
     if (window.confirm("Are you sure you want to delete this goal?")) {
@@ -2269,48 +2480,265 @@ const handlePredefinedQuestion = (q: string) => {
             {/* Smart Notifications Button */}
             <div className="relative">
               <button 
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all relative"
+                onClick={() => setFinancialNotificationsOpen(true)}
+                className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all relative cursor-pointer"
               >
                 <Bell className="w-4.5 h-4.5" />
-                {notifications.some(n => n.unread) && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 shadow shadow-blue-500/50" />
+                {financialNotifications.some(n => n.status === "unread") && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 shadow shadow-red-500/50 animate-pulse" />
                 )}
               </button>
 
               <AnimatePresence>
-                {notificationsOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-3 z-50 text-left"
-                  >
-                    <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-                      <span className="text-xs font-bold text-[var(--text-subtitle)] uppercase tracking-wider">Alert Center</span>
-                      <button 
-                        onClick={() => setNotifications(notifications.map(n => ({...n, unread: false})))}
-                        className="text-[10px] text-blue-500 dark:text-blue-400 hover:underline font-bold"
-                      >
-                        Mark all read
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                      {notifications.map(n => (
-                        <div 
-                          key={n.id} 
-                          className={`p-2.5 rounded-xl border text-xs leading-relaxed ${
-                            n.unread ? "bg-blue-500/5 border-blue-500/10 text-[var(--text-color)] font-medium" : "bg-slate-900/10 border-[var(--border-color)] text-[var(--text-subtitle)]"
-                          }`}
-                        >
-                          {n.text.replace(/₹([0-9,]+)/g, (match, p1) => {
-                            const rawNum = parseInt(p1.replace(/,/g, ''));
-                            return isNaN(rawNum) ? match : format(rawNum);
+                {financialNotificationsOpen && (
+                  <>
+                    {/* Backdrop Overlay */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setFinancialNotificationsOpen(false)}
+                      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[99998]"
+                    />
+
+                    {/* Drawer Panel */}
+                    <motion.div
+                      initial={{ x: "100%" }}
+                      animate={{ x: 0 }}
+                      exit={{ x: "100%" }}
+                      transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                      className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/90 border-l border-blue-500/15 backdrop-blur-xl shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
+                    >
+                      <div className="flex flex-col gap-5">
+                        
+                        {/* Header Title & Summary */}
+                        <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                              <Bell className="w-4.5 h-4.5" />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-black text-white uppercase tracking-wider">Alert Center</h3>
+                              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Real-time Financial Events</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => setFinancialNotificationsOpen(false)}
+                            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Top Summary Bar */}
+                        <div className="grid grid-cols-3 gap-2 text-center p-2 rounded-xl bg-slate-900/30 border border-blue-500/5 text-[10px] font-bold">
+                          <div className="py-1">
+                            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Critical</span>
+                            <span className="text-red-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.priority === "Critical" && n.status !== "completed").length} pending</span>
+                          </div>
+                          <div className="py-1 border-x border-blue-500/5">
+                            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Upcoming</span>
+                            <span className="text-blue-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.section === "Upcoming" && n.status !== "completed").length} pending</span>
+                          </div>
+                          <div className="py-1">
+                            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Completed</span>
+                            <span className="text-emerald-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.status === "completed").length} processed</span>
+                          </div>
+                        </div>
+
+                        {/* Filters Category Chips */}
+                        <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                          {["All", "Bills", "Investments", "Subscriptions", "Insurance", "Loans", "Taxes", "Income", "Portfolio", "Markets"].map((cat) => {
+                            const isSelected = selectedNotifFilter === cat || (cat === "All" && !selectedNotifFilter);
+                            return (
+                              <button
+                                key={cat}
+                                onClick={() => setSelectedNotifFilter(cat === "All" ? null : cat)}
+                                className={`px-2.5 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                                  isSelected 
+                                    ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/10" 
+                                    : "bg-slate-900/40 border-blue-500/5 text-slate-400 hover:text-slate-200"
+                                }`}
+                              >
+                                {cat}
+                              </button>
+                            );
                           })}
                         </div>
-                      ))}
-                    </div>
-                  </motion.div>
+
+                        {/* Search Input */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+                          <input
+                            type="text"
+                            value={notifSearchQuery}
+                            onChange={(e) => setNotifSearchQuery(e.target.value)}
+                            placeholder="Search alerts, bills, or dates..."
+                            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900/40 border border-blue-500/5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                          />
+                          {notifSearchQuery && (
+                            <button onClick={() => setNotifSearchQuery("")} className="absolute right-3 top-2.5 text-slate-500 hover:text-white">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Notifications Lists */}
+                        <div className="flex-1 overflow-y-auto max-h-[58vh] scrollbar-none flex flex-col gap-4">
+                          {(() => {
+                            // Filter logic
+                            const filtered = financialNotifications.filter(n => {
+                              const matchCat = !selectedNotifFilter || n.category === selectedNotifFilter;
+                              const matchSearch = !notifSearchQuery || n.title.toLowerCase().includes(notifSearchQuery.toLowerCase()) || n.description.toLowerCase().includes(notifSearchQuery.toLowerCase());
+                              return matchCat && matchSearch;
+                            });
+
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="flex flex-col items-center justify-center text-center py-12 text-slate-500">
+                                  <span className="text-4xl animate-bounce mb-3">🎉</span>
+                                  <span className="text-sm font-black text-white uppercase tracking-wider block">You're all caught up!</span>
+                                  <p className="text-xs text-slate-500 mt-1 max-w-xs leading-normal">
+                                    No financial alerts at the moment. Everything looks up to date.
+                                  </p>
+                                </div>
+                              );
+                            }
+
+                            // Grouping logic
+                            const groups: Record<string, FinancialNotification[]> = {
+                              "Today": [],
+                              "Tomorrow": [],
+                              "This Week": [],
+                              "Next Month": [],
+                              "Completed": []
+                            };
+
+                            filtered.forEach(n => {
+                              if (n.status === "completed") {
+                                groups["Completed"].push(n);
+                              } else {
+                                groups[n.timeGroup].push(n);
+                              }
+                            });
+
+                            return Object.keys(groups).map(grp => {
+                              const list = groups[grp];
+                              if (list.length === 0) return null;
+                              const isCollapsed = collapsedNotifGroups[grp];
+
+                              return (
+                                <div key={grp} className="flex flex-col gap-2">
+                                  <button
+                                    onClick={() => toggleNotifGroup(grp)}
+                                    className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-blue-500/5 pb-1 cursor-pointer"
+                                  >
+                                    <span>{grp} ({list.length})</span>
+                                    {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                  </button>
+
+                                  {!isCollapsed && (
+                                    <div className="flex flex-col gap-2.5">
+                                      {list.map(n => {
+                                        const CatIcon = getCategoryIcon(n.category);
+                                        const isUnread = n.status === "unread";
+                                        const priorityColor = n.priority === "Critical" 
+                                          ? "border-l-4 border-l-red-500" 
+                                          : n.priority === "High" 
+                                            ? "border-l-4 border-l-orange-500"
+                                            : n.priority === "Medium"
+                                              ? "border-l-4 border-l-yellow-500"
+                                              : "border-l-4 border-l-emerald-500";
+
+                                        return (
+                                          <div
+                                            key={n.id}
+                                            className={`p-3.5 rounded-xl border bg-slate-900/10 hover:bg-slate-900/30 transition-all flex flex-col gap-3 relative overflow-hidden group ${priorityColor} ${
+                                              isUnread ? "border-blue-500/25 bg-blue-500/[0.02]" : "border-blue-500/5"
+                                            }`}
+                                          >
+                                            <div className="flex justify-between items-start gap-3">
+                                              <div className="flex gap-2.5 items-start">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-800/40 flex items-center justify-center text-slate-400 mt-0.5">
+                                                  <CatIcon className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                  <h4 className="text-xs font-black text-white leading-snug">
+                                                    {n.title}
+                                                  </h4>
+                                                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed font-semibold">
+                                                    {n.description}
+                                                  </p>
+                                                </div>
+                                              </div>
+
+                                              {n.logo && (
+                                                <span className="text-[8px] font-black uppercase text-slate-500 bg-slate-900 border border-blue-500/5 px-1.5 py-0.5 rounded shrink-0">
+                                                  {n.logo}
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            {/* Time Display */}
+                                            <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase font-mono tracking-wider">
+                                              <span>📅 {n.scheduledTime}</span>
+                                              <span className={n.priority === "Critical" ? "text-red-400" : "text-blue-400"}>
+                                                ⏳ {n.timeRemaining}
+                                              </span>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-1.5 justify-end border-t border-blue-500/5 pt-2">
+                                              {isUnread && (
+                                                <button
+                                                  onClick={() => handleMarkReadNotif(n.id)}
+                                                  className="px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-wider cursor-pointer"
+                                                >
+                                                  Mark Read
+                                                </button>
+                                              )}
+                                              {n.status !== "completed" && (
+                                                <>
+                                                  <button
+                                                    onClick={() => handleSnoozeNotif(n.id)}
+                                                    className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-wider cursor-pointer"
+                                                  >
+                                                    Snooze
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleCompleteNotif(n.id)}
+                                                    className="px-2.5 py-1 rounded bg-emerald-600/15 hover:bg-emerald-600 text-[9px] font-black text-emerald-400 hover:text-white uppercase tracking-wider cursor-pointer"
+                                                  >
+                                                    Mark Paid
+                                                  </button>
+                                                </>
+                                              )}
+                                              <button
+                                                onClick={() => handleDismissNotif(n.id)}
+                                                className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[9px] font-black text-rose-400 uppercase tracking-wider cursor-pointer"
+                                              >
+                                                Dismiss
+                                              </button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+
+                      </div>
+
+                      {/* Footer Info */}
+                      <div className="border-t border-blue-500/10 pt-4 text-center text-[10px] text-slate-500">
+                        Never miss an important event. Real-time updates active.
+                      </div>
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
             </div>
