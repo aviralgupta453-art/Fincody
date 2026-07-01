@@ -68,7 +68,7 @@ export default function CurrencyRibbon() {
   }, []);
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-6 mt-24 mb-6 z-40 select-none">
+    <div className="relative w-full max-w-7xl mx-auto px-6 mt-6 mb-2 z-40 select-none">
       {/* 3D Glassmorphism Outer Ribbon Panel */}
       <div 
         className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-xl shadow-lg shadow-black/20 p-3 flex items-center justify-between gap-4"
@@ -129,14 +129,17 @@ export default function CurrencyRibbon() {
                   />
                 )}
 
-                {/* Flag emblem inside container */}
                 <motion.span 
-                  className="text-lg flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]"
+                  className="w-5 h-3.5 flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] overflow-hidden rounded-sm"
                   animate={isActive ? { y: [-1.5, 0, -1.5], scale: 1.05 } : {}}
                   transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
                   whileHover={{ rotate: 12, scale: 1.15 }}
                 >
-                  {currency.flag}
+                  <img 
+                    src={`https://flagcdn.com/w20/${currency.code.substring(0, 2).toLowerCase()}.png`} 
+                    className="w-full h-full object-cover"
+                    alt={currency.code}
+                  />
                 </motion.span>
 
                 {/* Currency specifications */}

@@ -657,7 +657,7 @@ export default function Home() {
       </AnimatePresence>
 
         {/* Fincody Live Financial Intelligence Feed v3.0 */}
-        <section id="fincody-live" className="pt-24 pb-12 px-6 max-w-7xl mx-auto border-b border-blue-500/10 relative text-left">
+        <section id="fincody-live" className="pt-6 pb-12 px-6 max-w-7xl mx-auto border-b border-blue-500/10 relative text-left">
           
           <style>{`
             @keyframes marquee {
