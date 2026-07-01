@@ -656,8 +656,8 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-              {/* Fincody Live Financial Intelligence Feed v2.0 */}
-        <section id="fincody-live" className="py-16 px-6 max-w-7xl mx-auto border-b border-blue-500/10 relative text-left">
+        {/* Fincody Live Financial Intelligence Feed v3.0 */}
+        <section id="fincody-live" className="pt-24 pb-12 px-6 max-w-7xl mx-auto border-b border-blue-500/10 relative text-left">
           
           <style>{`
             @keyframes marquee {
@@ -706,10 +706,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-6 md:p-10 border-x border-b border-blue-500/10 bg-slate-950/40 rounded-b-2xl shadow-[0_0_50px_rgba(59,130,246,0.05)]">
+          <div className="p-6 md:p-8 border-x border-b border-blue-500/10 bg-slate-950/40 rounded-b-2xl shadow-[0_0_50px_rgba(59,130,246,0.05)]">
             
             {/* Header / Intro section with enlarged texts */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-blue-500/10 pb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 border-b border-blue-500/10 pb-4">
               <div>
                 <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-extrabold text-blue-400 uppercase tracking-widest mb-3">
                   <Sparkles className="w-3.5 h-3.5" /> Flagship Intelligence
@@ -763,50 +763,73 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 12. AI Daily Intelligence Digest Panel */}
-            <div className="glass-card p-6 rounded-xl border border-blue-500/10 bg-slate-900/10 mb-8 flex flex-col gap-6 text-slate-300">
-              <div className="flex justify-between items-center border-b border-blue-500/5 pb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <h4 className="text-sm font-black text-white uppercase tracking-wider">Today's Global Financial Intelligence Digest</h4>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Updated: July 30, 2026 • 2 min read</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <span className="text-[9px] text-slate-500 font-bold uppercase block">Fear & Greed Index</span>
-                    <span className="text-sm font-black text-emerald-400 font-mono block">72 — GREED</span>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono font-bold text-xs">
-                    72
-                  </div>
-                </div>
+            {/* Country and Category selectors placed IMMEDIATELY upper to remove gaps */}
+            <div className="flex flex-col gap-4 mb-6 border-b border-blue-500/10 pb-4">
+              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {["Global", "India", "USA", "Europe", "Japan", "Asia"].map((c) => {
+                  const isActive = selectedCountry === c;
+                  return (
+                    <button
+                      key={c}
+                      onClick={() => setSelectedCountry(c)}
+                      className={`px-4 py-2 rounded-xl border text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
+                        isActive 
+                          ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
+                          : "bg-slate-900/30 border-blue-500/5 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {c === "Global" && <span>🌍 Global</span>}
+                      {c === "India" && (
+                        <>
+                          <img src="https://flagcdn.com/w20/in.png" className="w-5 h-3.5 object-cover rounded-sm" alt="India" />
+                          <span>India</span>
+                        </>
+                      )}
+                      {c === "USA" && (
+                        <>
+                          <img src="https://flagcdn.com/w20/us.png" className="w-5 h-3.5 object-cover rounded-sm" alt="USA" />
+                          <span>USA</span>
+                        </>
+                      )}
+                      {c === "Europe" && (
+                        <>
+                          <img src="https://flagcdn.com/w20/eu.png" className="w-5 h-3.5 object-cover rounded-sm" alt="Europe" />
+                          <span>Europe</span>
+                        </>
+                      )}
+                      {c === "Japan" && (
+                        <>
+                          <img src="https://flagcdn.com/w20/jp.png" className="w-5 h-3.5 object-cover rounded-sm" alt="Japan" />
+                          <span>Japan</span>
+                        </>
+                      )}
+                      {c === "Asia" && <span>🌏 Asia</span>}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2">🎯 Opportunities</span>
-                  <ul className="space-y-1.5 text-xs font-semibold text-slate-300 leading-normal">
-                    <li>• Lock yields in 7.25% fixed deposits</li>
-                    <li>• Accumulate premium IT device makers</li>
-                    <li>• Increase index-fund SIP ratios</li>
-                  </ul>
-                </div>
-                <div>
-                  <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest block mb-2">⚠️ Risks</span>
-                  <ul className="space-y-1.5 text-xs font-semibold text-slate-300 leading-normal">
-                    <li>• High multiples stretch in mega-caps</li>
-                    <li>• Yen carry-trade liquidity reshuffles</li>
-                    <li>• Bond yields flattening volatility</li>
-                  </ul>
-                </div>
-                <div className="p-3.5 rounded-xl bg-blue-600/[0.03] border border-blue-500/10 text-left">
-                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">🧠 Personalized Insight</span>
-                  <p className="text-xs font-semibold text-slate-300 leading-relaxed">
-                    Based on your portfolio's 18% weight in Reliance and active fixed deposits, today's repo rate forecasts suggest a potential +₹14,200 asset net-worth bump.
-                  </p>
-                </div>
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                {["Markets", "Stocks", "Economy", "IPO", "Crypto", "Banking", "Policy", "Technology"].map((cat) => {
+                  const isActive = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-2 text-xs font-bold transition-all relative cursor-pointer ${
+                        isActive ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      {cat}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabIndicatorLandingV3"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -816,51 +839,6 @@ export default function Home() {
               {/* Left Column: News Feed Stream */}
               <div className="lg:col-span-8 flex flex-col gap-6">
                 
-                {/* Filters Row */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                    {["Global", "India", "USA", "Europe", "Japan", "Asia"].map((c) => {
-                      const isActive = selectedCountry === c;
-                      return (
-                        <button
-                          key={c}
-                          onClick={() => setSelectedCountry(c)}
-                          className={`px-4 py-2 rounded-xl border text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                            isActive 
-                              ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
-                              : "bg-slate-900/30 border-blue-500/5 text-slate-400 hover:text-slate-200"
-                          }`}
-                        >
-                          {c === "Global" ? "🌍 Global" : c === "India" ? "🇮🇳 India" : c === "USA" ? "🇺🇸 USA" : c === "Europe" ? "🇪🇺 Europe" : c === "Japan" ? "🇯🇵 Japan" : "🌏 Asia"}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex gap-1.5 border-b border-blue-500/5 pb-2 overflow-x-auto scrollbar-none">
-                    {["Markets", "Stocks", "Economy", "IPO", "Crypto", "Banking", "Policy", "Technology"].map((cat) => {
-                      const isActive = selectedCategory === cat;
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => setSelectedCategory(cat)}
-                          className={`px-3 py-2 text-xs font-bold transition-all relative cursor-pointer ${
-                            isActive ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
-                          }`}
-                        >
-                          {cat}
-                          {isActive && (
-                            <motion.div
-                              layoutId="activeTabIndicatorLandingV2"
-                              className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* News Cards Feed */}
                 <div className="flex flex-col gap-6">
                   {filteredNews.map((news) => {
@@ -1087,6 +1065,44 @@ export default function Home() {
               {/* Right Column: Graphs, Calendars, Recaps */}
               <div className="lg:col-span-4 flex flex-col gap-6">
                 
+                {/* 12. AI Daily Intelligence Digest Panel - moved to sidebar */}
+                <div className="glass-card p-5 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4 text-slate-300">
+                  <div className="flex justify-between items-center border-b border-blue-500/5 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-blue-400" />
+                      <div>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider">AI Daily Digest</h4>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono font-bold text-[10px]">
+                      72
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">🎯 Opportunities</span>
+                      <ul className="space-y-1 text-xs font-semibold text-slate-300">
+                        <li>• Lock yields in 7.25% fixed deposits</li>
+                        <li>• Accumulate IT device makers</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest block mb-1">⚠️ Risks</span>
+                      <ul className="space-y-1 text-xs font-semibold text-slate-300">
+                        <li>• High multiples stretch in mega-caps</li>
+                        <li>• Yen carry-trade liquidity cycles</li>
+                      </ul>
+                    </div>
+                    <div className="p-3 rounded-lg bg-blue-600/[0.03] border border-blue-500/10 text-left">
+                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-0.5">🧠 AI Insight</span>
+                      <p className="text-xs font-semibold text-slate-300 leading-normal">
+                        Your Reliance (18% weight) holding suggests a potential +₹14,200 net-worth bump.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 11. News Intelligence Graph */}
                 <div className="glass-card p-5 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
                   <div>
