@@ -140,6 +140,13 @@ export default function Dashboard() {
 
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("fincody-theme") || "dark";
+      setTheme(savedTheme as any);
+    }
+  }, []);
+
 
   useEffect(() => {
     // Check active session on mount

@@ -274,6 +274,13 @@ const LIVE_NEWS_DATABASE = [
 
 export default function LivePage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("fincody-theme") || "dark";
+      setTheme(savedTheme as any);
+    }
+  }, []);
+
   const [user, setUser] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [editName, setEditName] = useState("");

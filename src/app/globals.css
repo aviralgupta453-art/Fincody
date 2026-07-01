@@ -35,16 +35,16 @@
 /* Override variables if root element has .light class */
 :root.light {
   --bg-color: #f8fafc;
-  --text-color: #0b1020;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --card-border: rgba(11, 16, 32, 0.06);
-  --nav-bg: rgba(255, 255, 255, 0.85);
-  --text-subtitle: #475569;
-  --accent-color: #2563eb;
-  --accent-hover: #1d4ed8;
+  --text-color: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: rgba(15, 23, 42, 0.08);
+  --nav-bg: rgba(255, 255, 255, 0.9);
+  --text-subtitle: #334155;
+  --accent-color: #1d4ed8;
+  --accent-hover: #1e40af;
   --border-color: rgba(15, 23, 42, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05);
-  --glow-opacity: 0.05;
+  --glass-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.1);
+  --glow-opacity: 0.03;
 }
 
 html {
@@ -147,6 +147,9 @@ body {
 }
 
 /* Accessibility contrast overrides for Light Mode */
+html.light .text-slate-600 {
+  color: #1e293b !important; /* slate-800 */
+}
 html.light .text-slate-500 {
   color: #334155 !important; /* slate-700 */
 }
@@ -154,16 +157,10 @@ html.light .text-slate-400 {
   color: #475569 !important; /* slate-600 */
 }
 html.light .text-slate-300 {
-  color: #1e293b !important; /* slate-800 */
+  color: #475569 !important; /* slate-600 */
 }
-html.light .text-slate-600 {
-  color: #1e293b !important; /* slate-800 */
-}
-html.light .text-gray-400 {
-  color: #475569 !important; /* gray-600 */
-}
-html.light .text-gray-500 {
-  color: #334155 !important; /* gray-700 */
+html.light .text-slate-200 {
+  color: #64748b !important; /* slate-500 */
 }
 html.light .text-slate-500\/80 {
   color: #334155 !important;
