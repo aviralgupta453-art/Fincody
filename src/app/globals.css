@@ -34,16 +34,16 @@
 
 /* Override variables if root element has .light class */
 :root.light {
-  --bg-color: #f8fafc;
-  --text-color: #0f172a;
+  --bg-color: #f0f4fc;
+  --text-color: #0c1a30;
   --card-bg: #ffffff;
-  --card-border: rgba(15, 23, 42, 0.08);
-  --nav-bg: rgba(255, 255, 255, 0.9);
-  --text-subtitle: #334155;
-  --accent-color: #1d4ed8;
-  --accent-hover: #1e40af;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --glass-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.1);
+  --card-border: rgba(12, 26, 48, 0.06);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --text-subtitle: #1a365d;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --border-color: rgba(37, 99, 235, 0.12);
+  --glass-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.08);
   --glow-opacity: 0.03;
 }
 
@@ -148,32 +148,32 @@ body {
 
 /* Accessibility contrast overrides for Light Mode */
 html.light .text-slate-600 {
-  color: #1e293b !important; /* slate-800 */
+  color: #0c1a30 !important; /* Midnight Navy */
 }
 html.light .text-slate-500 {
-  color: #334155 !important; /* slate-700 */
+  color: #1a365d !important; /* Deep Blue-Navy */
 }
 html.light .text-slate-400 {
-  color: #475569 !important; /* slate-600 */
+  color: #2563eb !important; /* Royal Blue */
 }
 html.light .text-slate-300 {
-  color: #475569 !important; /* slate-600 */
+  color: #3b82f6 !important; /* Medium Blue */
 }
 html.light .text-slate-200 {
-  color: #64748b !important; /* slate-500 */
+  color: #60a5fa !important; /* Sky Blue */
 }
 html.light .text-slate-500\/80 {
-  color: #334155 !important;
+  color: #1a365d !important;
 }
 html.light .text-slate-400\/80 {
-  color: #475569 !important;
+  color: #2563eb !important;
 }
 html.light .text-slate-500\/60 {
-  color: #475569 !important;
+  color: #2563eb !important;
 }
 html.light .text-slate-400\/60 {
-  color: #64748b !important;
+  color: #3b82f6 !important;
 }
 html.light .text-slate-300\/60 {
-  color: #475569 !important;
+  color: #2563eb !important;
 }
