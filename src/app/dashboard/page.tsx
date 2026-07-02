@@ -1128,6 +1128,32 @@ export default function Dashboard() {
     setSyncStatus("synced");
   }, [user]);
 
+  // Live spot gold price update hook (queries live GC=F Futures & USDINR=X Exchange Rate)
+  useEffect(() => {
+    const fetchLiveGoldPrice = async () => {
+      try {
+        const goldRes = await fetch("/api/stock?action=quote&symbol=GC%3DF");
+        const exRes = await fetch("/api/stock?action=quote&symbol=USDINR%3DX");
+        
+        if (goldRes.ok && exRes.ok) {
+          const goldData = await goldRes.ok ? await goldRes.json() : null;
+          const exData = await exRes.ok ? await exRes.json() : null;
+          if (goldData && goldData.price && exData && exData.price) {
+            const goldUSDPerGram = goldData.price / 31.1034768;
+            const goldINRPerGram = goldUSDPerGram * exData.price;
+            setSpotGoldPrice(parseFloat(goldINRPerGram.toFixed(2)));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching live gold price:", err);
+      }
+    };
+
+    fetchLiveGoldPrice();
+    const intervalId = setInterval(fetchLiveGoldPrice, 30000); // Poll every 30s
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Debounced Autosave Sync to Supabase User Metadata
   useEffect(() => {
     if (!user) return;
@@ -3634,7 +3660,7 @@ const handlePredefinedQuestion = (q: string) => {
                     <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Value</div>
                       <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
-                        <RollingNumber value={totalInvestmentValue} />
+                        <RollingNumber value={totalInvestmentValue} decimals={2} />
                       </div>
                       <div className="text-xs text-slate-500 mt-2 font-semibold">
                         Pool count: <span className="text-[var(--text-color)] font-bold">{totalHoldingsCount} active</span>
@@ -3644,10 +3670,10 @@ const handlePredefinedQuestion = (q: string) => {
                     <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Return</div>
                       <div className={`text-3xl font-black mt-1 font-mono ${overallGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                        {overallGainLoss >= 0 ? "+" : ""}<RollingNumber value={overallGainLoss} />
+                        {overallGainLoss >= 0 ? "+" : ""}<RollingNumber value={overallGainLoss} decimals={2} />
                       </div>
                       <div className={`text-xs mt-2 font-bold flex items-center gap-1 ${todayGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                        {todayGainLoss >= 0 ? "▲" : "▼"} {todayGainLoss >= 0 ? "+" : ""}<RollingNumber value={todayGainLoss} /> <span className="text-slate-500 font-semibold">today</span>
+                        {todayGainLoss >= 0 ? "▲" : "▼"} {todayGainLoss >= 0 ? "+" : ""}<RollingNumber value={todayGainLoss} decimals={2} /> <span className="text-slate-500 font-semibold">today</span>
                       </div>
                     </div>
 
@@ -4062,7 +4088,7 @@ const handlePredefinedQuestion = (q: string) => {
                                       <div className="text-right">
                                         <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">Price / Value</span>
                                         <span className="font-mono text-xs font-extrabold text-white mt-1 block">
-                                          <RollingNumber value={currentPrice} /> / <RollingNumber value={currentValue} />
+                                          <RollingNumber value={currentPrice} decimals={2} /> / <RollingNumber value={currentValue} decimals={2} />
                                         </span>
                                       </div>
                                     </div>
@@ -4116,7 +4142,7 @@ const handlePredefinedQuestion = (q: string) => {
                                       <div className="flex flex-col text-right">
                                         <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
                                         <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                                          {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} />
+                                          {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} decimals={2} />
                                         </span>
                                       </div>
                                     </div>
@@ -4149,11 +4175,11 @@ const handlePredefinedQuestion = (q: string) => {
                                   </div>
                                   <div className="text-center font-mono">
                                     <span className="text-[10px] text-slate-500 block">Units / Price</span>
-                                    <span className="text-white font-bold block mt-0.5">{etf.units} @ <RollingNumber value={etf.avgPrice} /></span>
+                                    <span className="text-white font-bold block mt-0.5">{etf.units} @ <RollingNumber value={etf.avgPrice} decimals={2} /></span>
                                   </div>
                                   <div className="text-right">
                                     <span className="text-[10px] text-slate-500 block">Valuation / Return</span>
-                                    <span className="text-white font-bold block font-mono"><RollingNumber value={etf.currentValue} /></span>
+                                    <span className="text-white font-bold block font-mono"><RollingNumber value={etf.currentValue} decimals={2} /></span>
                                     <span className={`text-[9px] font-bold block mt-0.5 ${etf.profit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                                       {etf.profit >= 0 ? "+" : ""}{etf.profitPct.toFixed(1)}%
                                     </span>
