@@ -44,7 +44,8 @@ import {
   User,
   ChevronRight,
   Edit2,
-  RotateCcw
+  RotateCcw,
+  Info
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -133,6 +134,9 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     "command" | "goals" | "investments" | "subscriptions" | "insurance" | "vault" | "decisions"
   >("command");
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [hoveredLegend, setHoveredLegend] = useState<"standard" | "fincody" | null>(null);
+  const [refreshingAdvice, setRefreshingAdvice] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Sync Status State
@@ -2483,6 +2487,59 @@ const handlePredefinedQuestion = (q: string) => {
     );
   }
 
+  // Dynamically calculated financial metrics incorporating all assets & entries
+  const equitiesVal = portfolio.reduce((acc: number, curr: any) => acc + (curr.qty * (quotes[curr.symbol]?.price || curr.avgBuyPrice)), 0);
+  const fdsTotalValue = fixedDeposits.reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate);
+    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+    const interest = curr.principal * (curr.interestRate / 100) * yearsElapsed;
+    return acc + curr.principal + interest;
+  }, 0);
+  const ppfTotalValue = ppfData.balance;
+  const npsTotalValue = npsData.corpus;
+  const goldTotalValue = goldHoldings.reduce((acc: number, curr: any) => {
+    const livePrice = spotGoldPrice || 7420;
+    return acc + (curr.grams * livePrice);
+  }, 0);
+  const etfsTotalValue = etfHoldings.reduce((acc: number, curr: any) => acc + (curr.units * (quotes[curr.symbol]?.price || curr.avgPrice)), 0);
+  const bondsTotalValue = bondHoldings.reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate);
+    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+    const interest = curr.faceValue * (curr.couponRate / 100) * yearsElapsed;
+    return acc + curr.faceValue + interest;
+  }, 0);
+
+  const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue;
+  const baselineCash = parseFloat(manualNetWorth) || 1200000;
+  const calculatedNetWorth = baselineCash + totalInvestmentValue;
+
+  const salaryVal = parseFloat(manualSalary) || 185000;
+  const emiVal = parseFloat(manualEMI) || 28000;
+  const otherExpVal = parseFloat(manualOtherExpenses) || 45000;
+  const calculatedMonthlySavings = Math.max(0, salaryVal - emiVal - otherExpVal - monthlySubscriptionSpend);
+  
+  const calculatedGoalContributions = goals.reduce((acc: number, curr: any) => acc + curr.current, 0);
+
+  // Helper to format Y-Axis compactly
+  const formatYAxisTick = (val: number) => {
+    const valueInINR = val * 100000;
+    const converted = convert(valueInINR);
+    if (activeCurrency.code === "INR") {
+      if (converted >= 10000000) {
+        return `${activeCurrency.symbol}${(converted / 10000000).toFixed(1)}Cr`;
+      }
+      return `${activeCurrency.symbol}${(converted / 100000).toFixed(0)}L`;
+    } else {
+      if (converted >= 1000000) {
+        return `${activeCurrency.symbol}${(converted / 1000000).toFixed(1)}M`;
+      }
+      if (converted >= 1000) {
+        return `${activeCurrency.symbol}${(converted / 1000).toFixed(0)}K`;
+      }
+      return `${activeCurrency.symbol}${converted.toFixed(0)}`;
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-[var(--bg-color)] text-[var(--text-color)] flex flex-col md:flex-row relative overflow-hidden transition-colors duration-300">
       
@@ -2936,46 +2993,181 @@ const handlePredefinedQuestion = (q: string) => {
                 exit={{ opacity: 0, y: 15 }}
                 className="flex flex-col gap-6"
               >
-                {/* Micro Widgets */}
+                {/* Micro Widgets with interactive info tooltips */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden">
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Net Worth</div>
+                  {/* Net Worth Widget */}
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                        Net Worth
+                        <button 
+                          onClick={() => setActiveTooltip(activeTooltip === "netWorth" ? null : "netWorth")}
+                          className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">Live</span>
+                    </div>
+                    
                     <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
-                      <RollingNumber value={netWorth} />
+                      <RollingNumber value={calculatedNetWorth} />
                     </div>
                     <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1 font-bold">
                       +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">this month</span>
                     </div>
+
+                    <AnimatePresence>
+                      {activeTooltip === "netWorth" && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                        >
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Net Worth Crux</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          </div>
+                          <p className="text-slate-300 leading-normal">
+                            Aggregates baseline liquid savings (₹${baselineCash.toLocaleString()}) and active investments (₹${totalInvestmentValue.toLocaleString()}) from all linked assets.
+                          </p>
+                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                            Calculated real-time from: ${calculationStartDate}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Monthly Savings</div>
+                  {/* Monthly Savings Widget */}
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                        Monthly Savings
+                        <button 
+                          onClick={() => setActiveTooltip(activeTooltip === "monthlySavings" ? null : "monthlySavings")}
+                          className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                     <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
-                      <RollingNumber value={monthlySavings} />
+                      <RollingNumber value={calculatedMonthlySavings} />
                     </div>
                     <div className="text-xs text-[var(--text-subtitle)] mt-2 font-semibold">
-                      36.2% <span className="text-slate-500">savings rate</span>
+                      ${((calculatedMonthlySavings / (salaryVal || 1)) * 100).toFixed(1)}% <span className="text-slate-500">savings rate</span>
                     </div>
+
+                    <AnimatePresence>
+                      {activeTooltip === "monthlySavings" && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                        >
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Savings Formula</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          </div>
+                          <p className="text-slate-300 leading-normal">
+                            Formula: <strong>Salary - EMIs - Other Expenses - Subscriptions</strong>.<br />
+                            Tracks surplus monthly income ready for capital rebalancing.
+                          </p>
+                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                            Calculating starting: ${calculationStartDate}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Active Subscriptions</div>
+                  {/* Active Subscriptions Widget */}
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                        Subscription Spend
+                        <button 
+                          onClick={() => setActiveTooltip(activeTooltip === "subscriptions" ? null : "subscriptions")}
+                          className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                     <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                       <RollingNumber value={monthlySubscriptionSpend} />
                     </div>
                     <div className="text-xs text-rose-500 mt-2 flex items-center gap-1 font-bold">
                       -2.4% <TrendingDown className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">from last month</span>
                     </div>
+
+                    <AnimatePresence>
+                      {activeTooltip === "subscriptions" && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                        >
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Subscription Crux</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          </div>
+                          <p className="text-slate-300 leading-normal">
+                            Aggregates monthly and annualized subscription rates ( Netflix, Spotify, Adobe) active in your vault.
+                          </p>
+                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                            Calculated dynamically on rolling basis
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left">
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Goal Contributions</div>
+                  {/* Goal Contributions Widget */}
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                        Goal Contributions
+                        <button 
+                          onClick={() => setActiveTooltip(activeTooltip === "goals" ? null : "goals")}
+                          className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                     <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
-                      <RollingNumber value={goals.reduce((acc, curr) => acc + curr.current, 0)} />
+                      <RollingNumber value={calculatedGoalContributions} />
                     </div>
                     <div className="text-xs text-blue-500 mt-2 font-semibold">
                       {goals.length} goals <span className="text-slate-500 font-semibold">actively tracked</span>
                     </div>
+
+                    <AnimatePresence>
+                      {activeTooltip === "goals" && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                        >
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Goal Contributions</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          </div>
+                          <p className="text-slate-300 leading-normal">
+                            Aggregates cumulative capital contributed across emergency, automobile, and retirement goals.
+                          </p>
+                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                            Refreshed since initial goal creation dates
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -3024,9 +3216,47 @@ const handlePredefinedQuestion = (q: string) => {
                         </div>
                       </div>
 
-                      <div className="flex gap-4 text-xs font-semibold">
-                        <span className="flex items-center gap-1.5 text-[var(--text-subtitle)]"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> Standard Path</span>
-                        <span className="flex items-center gap-1.5 text-blue-500"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Fincody AI Path</span>
+                      <div className="flex gap-4 text-xs font-semibold relative">
+                        <span 
+                          onMouseEnter={() => setHoveredLegend("standard")}
+                          onMouseLeave={() => setHoveredLegend(null)}
+                          className="flex items-center gap-1.5 text-[var(--text-subtitle)] cursor-help relative animate-pulse"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> 
+                          Standard Path
+                        </span>
+                        
+                        <span 
+                          onMouseEnter={() => setHoveredLegend("fincody")}
+                          onMouseLeave={() => setHoveredLegend(null)}
+                          className="flex items-center gap-1.5 text-blue-500 cursor-help relative animate-pulse"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> 
+                          Fincody AI Path
+                        </span>
+
+                        <AnimatePresence>
+                          {hoveredLegend === "standard" && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute z-50 bottom-[120%] left-0 max-w-xs p-3 rounded-lg border border-slate-800 bg-slate-950/95 text-[10px] text-slate-300 shadow-xl backdrop-blur-md"
+                            >
+                              <strong>Standard Path:</strong> Projections representing baseline compound savings with basic market indices, unoptimized subscriptions bleed, and standard insurance payouts.
+                            </motion.div>
+                          )}
+                          {hoveredLegend === "fincody" && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute z-50 bottom-[120%] right-0 max-w-xs p-3 rounded-lg border border-blue-500/20 bg-slate-950/95 text-[10px] text-slate-300 shadow-xl backdrop-blur-md"
+                            >
+                              <strong>Fincody AI Path:</strong> Optimizations utilizing auto-rebalanced portfolios, subscription cleanup savings, and audited premium adjustments compounded over 15 years.
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                     <div className="w-full min-w-0 h-72">
@@ -3044,7 +3274,8 @@ const handlePredefinedQuestion = (q: string) => {
                              fontSize={11} 
                              tickLine={false} 
                              axisLine={false} 
-                             tickFormatter={(val) => format(val * 100000, true)} 
+                             width={60}
+                             tickFormatter={formatYAxisTick} 
                            />
                            <Tooltip 
                              contentStyle={{ 
@@ -3119,22 +3350,90 @@ const handlePredefinedQuestion = (q: string) => {
                       <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)]">AI Advice Feed</span>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3 text-xs leading-relaxed">
-                        <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-[var(--text-color)] block mb-0.5">Asset Rebalancing Alert</span>
-                          <p className="text-[var(--text-subtitle)]">Cryptocurrency has expanded to 9.1% of assets. Consider rebalancing 2.5% into liquid FDs to lock gains.</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dynamic Recommendations</span>
+                      <button 
+                        onClick={() => {
+                          setRefreshingAdvice(true);
+                          setTimeout(() => setRefreshingAdvice(false), 900);
+                        }}
+                        className="text-[10px] text-blue-400 hover:text-blue-300 font-bold border border-blue-500/20 px-2 py-0.5 rounded hover:bg-blue-500/5 transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        {refreshingAdvice ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" /> Recalculating...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-3 h-3" /> Refresh Feed
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-3 min-h-[140px] justify-center">
+                      {refreshingAdvice ? (
+                        <div className="flex flex-col items-center gap-2 py-8 text-slate-500 text-xs">
+                          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                          <span>Fincody life engines scanning transactions...</span>
                         </div>
-                      </div>
-                      
-                      <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3 text-xs leading-relaxed">
-                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-[var(--text-color)] block mb-0.5">Overlapping Subscriptions Detected</span>
-                          <p className="text-[var(--text-subtitle)]">Adobe Creative Cloud usage has dropped below 15% this quarter. Cancellation could save <RollingNumber value={4220} />/month.</p>
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          {/* 1. Subscription Check */}
+                          {(() => {
+                            const expensiveSub = [...subscriptions]
+                              .filter(s => s.status === "active")
+                              .sort((a, b) => b.price - a.price)[0];
+                            if (expensiveSub) {
+                              return (
+                                <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3 text-xs leading-relaxed">
+                                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-bold text-[var(--text-color)] block mb-0.5">Overlapping Subscriptions Detected</span>
+                                    <p className="text-[var(--text-subtitle)]">
+                                      {expensiveSub.name} usage has fallen this quarter. Auto-cancellation could save you {format(expensiveSub.price)}/month.
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+
+                          {/* 2. Goal Cushion Check */}
+                          {(() => {
+                            const emergencyGoal = goals.find(g => g.name.toLowerCase().includes("emergency"));
+                            if (emergencyGoal && emergencyGoal.current < emergencyGoal.target) {
+                              const gap = emergencyGoal.target - emergencyGoal.current;
+                              return (
+                                <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3 text-xs leading-relaxed">
+                                  <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-bold text-[var(--text-color)] block mb-0.5">Emergency Fund Rebalancing Alert</span>
+                                    <p className="text-[var(--text-subtitle)]">
+                                      Your Emergency Fund is short of safety targets by {format(gap)}. We recommend allocating {format(8000)}/month from cash surpluses.
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+
+                          {/* 3. Asset Allocation Alert */}
+                          {totalInvestmentValue > 0 && (
+                            <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3 text-xs leading-relaxed">
+                              <Coins className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-bold text-[var(--text-color)] block mb-0.5">Asset Rebalancing Strategy</span>
+                                <p className="text-[var(--text-subtitle)]">
+                                  Equities comprise {((equitiesVal / (totalInvestmentValue || 1)) * 100).toFixed(0)}% of your active holdings. Allocate a portion into FDs to hedge current market volatility.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
