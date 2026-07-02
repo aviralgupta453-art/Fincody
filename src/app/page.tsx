@@ -785,7 +785,7 @@ export default function Home() {
           </div>
         </div>
       </header>
-      <div className="h-20" /> {/* Spacer for fixed header */}
+      <div className="h-16" /> {/* Spacer for fixed header */}
       <CurrencyRibbon />
 
       {/* Mobile Drawer Menu */}
@@ -956,7 +956,7 @@ export default function Home() {
       `}} />
 
       {/* Redesigned Premium Hero Section */}
-      <section className="relative pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left min-h-[600px] flex items-center justify-center overflow-hidden rounded-3xl border border-blue-500/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950/20 via-slate-950 to-slate-950">
+      <section className="relative pt-6 pb-12 mt-2 px-6 max-w-none w-[97%] mx-auto text-left min-h-[550px] flex items-start justify-center overflow-hidden rounded-3xl border border-blue-500/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950/20 via-slate-950 to-slate-950">
         {/* Canvas Neural Background */}
         <canvas 
           ref={canvasRef}
@@ -967,7 +967,7 @@ export default function Home() {
         <div className="absolute top-1/4 left-1/3 w-[350px] h-[350px] rounded-full bg-blue-600/10 blur-[100px] pointer-events-none z-0" />
         <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-purple-600/10 blur-[100px] pointer-events-none z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* ================= LEFT COLUMN (40% copy + live snapshot) ================= */}
           <motion.div

@@ -17,15 +17,15 @@ export async function GET(request: NextRequest) {
   let query = categoryQuery;
   if (country.toLowerCase() !== "global") {
     if (country.toLowerCase() === "india") {
-      query = `${categoryQuery} India Sensex Nifty NSE rupee RBI`;
+      query = "India Nifty Sensex Indian business finance Rupee RBI";
     } else if (country.toLowerCase() === "usa") {
-      query = `${categoryQuery} US Wall Street S&P Nasdaq Dow dollar Fed`;
+      query = "US stocks Wall Street Fed Nasdaq SP500 inflation";
     } else if (country.toLowerCase() === "europe") {
-      query = `${categoryQuery} Europe ECB Eurozone CAC DAX FTSE`;
+      query = "Europe markets ECB Eurozone CAC DAX FTSE economy";
     } else if (country.toLowerCase() === "japan") {
-      query = `${categoryQuery} Japan BOJ Yen Nikkei Tokyo`;
+      query = "Japan Nikkei Tokyo BOJ Yen corporate earnings";
     } else if (country.toLowerCase() === "asia") {
-      query = `${categoryQuery} Asia China Hang Seng Singapore SGX HSI`;
+      query = "Asia stock markets China Hang Seng Singapore trade";
     }
   }
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&newsCount=15`;
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-      next: { revalidate: 300 } // cache for 5 minutes
+      cache: "no-store" // disable cache to guarantee fresh, country-specific queries
     });
 
     if (!res.ok) {
