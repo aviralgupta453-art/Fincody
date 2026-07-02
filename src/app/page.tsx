@@ -956,25 +956,25 @@ export default function Home() {
       `}} />
 
       {/* Redesigned Premium Hero Section */}
-      <section className="relative pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left min-h-[640px] flex items-center justify-center overflow-hidden rounded-3xl border border-blue-500/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950/20 via-slate-950 to-slate-950">
+      <section className="relative pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left min-h-[600px] flex items-center justify-center overflow-hidden rounded-3xl border border-blue-500/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950/20 via-slate-950 to-slate-950">
         {/* Canvas Neural Background */}
         <canvas 
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-40"
+          className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-30"
         />
         
         {/* Ambient Glows */}
         <div className="absolute top-1/4 left-1/3 w-[350px] h-[350px] rounded-full bg-blue-600/10 blur-[100px] pointer-events-none z-0" />
         <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-purple-600/10 blur-[100px] pointer-events-none z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* ================= LEFT COLUMN (40%) ================= */}
+          {/* ================= LEFT COLUMN (40% copy + live snapshot) ================= */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="lg:col-span-5 flex flex-col items-start gap-6"
+            className="lg:col-span-7 flex flex-col items-start gap-6"
           >
             {/* Premium Animated Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-blue-500/20 bg-blue-600/5 text-blue-400 text-xs font-bold tracking-wide uppercase shadow-lg shadow-blue-500/5 animate-pulse">
@@ -1010,169 +1010,58 @@ export default function Home() {
                 Launch Demo
               </a>
             </div>
-          </motion.div>
 
-          {/* ================= CENTER COLUMN (35%) ================= */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="lg:col-span-4 flex items-center justify-center h-[360px]"
-          >
-            <div className="ai-core-container">
-              <div className="ai-ring-outer" />
-              <div className="ai-ring-inner" />
-
-              <div className="ai-core-sphere flex items-center justify-center">
-                <Bot className="w-10 h-10 text-white animate-pulse" />
+            {/* Live Snapshot section below Launch Demo */}
+            <div className="w-full flex flex-col gap-3 mt-4 border-t border-slate-900/60 pt-6">
+              <div className="border-l-2 border-blue-500/20 pl-4 mb-2 text-left">
+                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Live Snapshot</span>
+                <span className="text-xs text-slate-400 font-bold block mt-0.5">Real-time status updates</span>
               </div>
-
-              <div className="orbit-container">
-                {[
-                  { label: "Portfolio", icon: "💼", link: "/dashboard" },
-                  { label: "Investments", icon: "📈", link: "/dashboard" },
-                  { label: "Goals", icon: "🎯", link: "/dashboard" },
-                  { label: "Budget", icon: "💰", link: "/dashboard" },
-                  { label: "AI", icon: "🤖", link: "/dashboard" },
-                  { label: "Documents", icon: "📁", link: "/dashboard" },
-                  { label: "Live Markets", icon: "⚡", link: "/live" },
-                  { label: "News", icon: "📰", link: "/live" },
-                  { label: "Insurance", icon: "🛡️", link: "/dashboard" }
-                ].map((mod, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => window.location.href = mod.link}
-                    className="orbit-item group/item"
-                    title={mod.label}
-                  >
-                    <span className="text-lg select-none">{mod.icon}</span>
-                    <span className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity bg-slate-900/90 border border-slate-800 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded text-slate-300 pointer-events-none whitespace-nowrap">
-                      {mod.label}
-                    </span>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+                {/* Net Worth */}
+                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
+                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Net Worth</span>
+                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+                    <RollingNumber value={snapshotNetWorth} />
+                  </span>
+                </div>
+                {/* Portfolio */}
+                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
+                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Portfolio</span>
+                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+                    <RollingNumber value={snapshotPortfolio} />
+                  </span>
+                </div>
+                {/* Health Score */}
+                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
+                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Health Score</span>
+                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+                    {snapshotHealthScore}%
+                  </span>
+                </div>
+                {/* Monthly Savings */}
+                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
+                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Mo. Savings</span>
+                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+                    <RollingNumber value={snapshotSavings} />
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
 
-          {/* ================= RIGHT COLUMN (25%) ================= */}
+          {/* ================= RIGHT COLUMN (25% news & tickers) ================= */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="lg:col-span-3 flex flex-col gap-4 w-full"
+            className="lg:col-span-5 w-full glass-card p-6 border border-blue-500/10 bg-slate-950/30 rounded-2xl flex flex-col gap-4 text-left relative overflow-hidden"
           >
-            <div className="border-l-2 border-blue-500/20 pl-4 mb-2 text-left">
-              <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Live Snapshot</span>
-              <span className="text-xs text-slate-400 font-bold block mt-0.5">Real-time status updates</span>
-            </div>
-
-            <div className="p-4 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1.5 hover:border-slate-800 transition-colors">
-              <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Net Worth</span>
-              <div className="flex justify-between items-baseline">
-                <span className="text-lg font-black text-white font-mono leading-none">
-                  <RollingNumber value={snapshotNetWorth} />
-                </span>
-                <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">
-                  Active
-                </span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-2 hover:border-slate-800 transition-colors">
-              <div className="flex justify-between items-center">
-                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Portfolio Value</span>
-                <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5 font-mono">
-                  ▲ +1.17%
-                </span>
-              </div>
-              <div className="flex justify-between items-baseline">
-                <span className="text-lg font-black text-white font-mono leading-none">
-                  <RollingNumber value={snapshotPortfolio} />
-                </span>
-                <span className="text-[9px] text-emerald-500 font-mono font-bold">
-                  +<RollingNumber value={snapshotTodayGain} />
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors justify-between items-start">
-                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Health Score</span>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-base font-black text-white font-mono">{snapshotHealthScore}%</span>
-                  <div className="w-8 h-8 relative flex items-center justify-center">
-                    <svg className="w-8 h-8 transform -rotate-90">
-                      <circle cx="16" cy="16" r="11" stroke="rgba(255,255,255,0.05)" strokeWidth="2" fill="transparent" />
-                      <circle cx="16" cy="16" r="11" stroke="#3b82f6" strokeWidth="2" fill="transparent" strokeDasharray={2 * Math.PI * 11} strokeDashoffset={2 * Math.PI * 11 * (1 - snapshotHealthScore / 100)} />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors justify-between items-start">
-                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Mo. Savings</span>
-                <span className="text-sm font-black text-white font-mono mt-1">
-                  <RollingNumber value={snapshotSavings} />
-                </span>
-              </div>
-            </div>
-
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ================= QUICK ACCESS SECTION ================= */}
-      <section className="py-12 px-6 max-w-none w-[97%] mx-auto z-10 relative">
-        <div className="max-w-7xl mx-auto w-full flex flex-col gap-6">
-          <div className="border-l-2 border-blue-500/20 pl-4 text-left">
-            <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Dashboard Gateways</span>
-            <span className="text-xs text-slate-400 font-bold block mt-0.5">Quick access to individual Fincody engines</span>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: "Investment Engine", desc: "Audit and track equities", icon: TrendingUp, link: "/dashboard" },
-              { label: "AI Assistant", desc: "Interactive command center", icon: Bot, link: "/dashboard" },
-              { label: "FINCODY Live", desc: "Live market news & updates", icon: Activity, link: "/live" },
-              { label: "Budget Monitor", desc: "Track weekly spending", icon: PiggyBank, link: "/dashboard" },
-              { label: "Goal Planner", desc: "Establish key milestones", icon: Compass, link: "/dashboard" },
-              { label: "Vault Documents", desc: "Manage financial PDFs", icon: BookOpen, link: "/dashboard" },
-              { label: "Asset Allocation", desc: "Visual portfolio split", icon: Shield, link: "/dashboard" },
-              { label: "Subscription Engine", desc: "Cancel forgotten trials", icon: Clock, link: "/dashboard" }
-            ].map((gate, gIdx) => {
-              const Icon = gate.icon;
-              return (
-                <div
-                  key={gIdx}
-                  onClick={() => window.location.href = gate.link}
-                  className="group p-4 rounded-2xl border border-slate-900 hover:border-slate-800 bg-slate-950/20 hover:bg-slate-900/10 cursor-pointer backdrop-blur-md transition-all flex flex-col gap-3 text-left hover:shadow-lg hover:shadow-blue-500/5"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                    <Icon className="w-4.5 h-4.5 text-blue-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-black text-white block group-hover:text-blue-400 transition-colors">{gate.label}</span>
-                    <span className="text-[9px] text-slate-500 font-bold block mt-0.5 leading-normal">{gate.desc}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= CRUX / NEWS PORTAL SECTION ================= */}
-      <section className="py-12 px-6 max-w-none w-[97%] mx-auto z-10 relative border-t border-slate-900/40">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
-          {/* News Marquee Column */}
-          <div className="lg:col-span-8 w-full glass-card p-6 border border-blue-500/10 bg-slate-950/30 rounded-2xl flex flex-col gap-4 text-left relative overflow-hidden">
             <div className="flex justify-between items-center border-b border-blue-500/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                 <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                  The Crux • Live Financial News
+                  Breaking Market Events
                 </h3>
               </div>
               <Link 
@@ -1181,6 +1070,23 @@ export default function Home() {
               >
                 Go Live <ArrowRight className="w-3.5 h-3.5" />
               </Link>
+            </div>
+
+            {/* Stocks Status Row */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              {liveStocks.map((stock) => (
+                <div key={stock.name} className="p-2.5 rounded-xl border border-blue-500/5 bg-slate-900/10 flex flex-col gap-0.5 relative overflow-hidden">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{stock.name}</span>
+                  <div className="flex justify-between items-baseline gap-1 mt-0.5">
+                    <span className="text-xs font-mono font-bold text-white">
+                      {stock.name === "BTC-USD" ? "$" + stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : stock.name === "SENSEX" || stock.name === "NIFTY 50" ? stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$" + stock.price.toFixed(2)}
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold ${stock.up ? "text-emerald-500" : "text-rose-500"}`}>
+                      {stock.up ? "▲" : "▼"} {stock.change >= 0 ? "+" + stock.change.toFixed(2) + "%" : stock.change.toFixed(2) + "%"}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Vertical Marquee for World News */}
@@ -1255,37 +1161,10 @@ export default function Home() {
                 Full Live Command
               </Link>
             </div>
-          </div>
-
-          {/* Ticker Column */}
-          <div className="lg:col-span-4 glass-card p-6 border border-blue-500/10 bg-slate-950/30 rounded-2xl flex flex-col gap-4 text-left justify-between">
-            <div className="flex flex-col gap-4 w-full">
-              <span className="text-xs font-black text-white uppercase tracking-wider block">Live Tickers</span>
-              <div className="flex flex-col gap-3">
-                {liveStocks.map((stock) => (
-                  <div key={stock.name} className="p-3.5 rounded-xl border border-blue-500/5 bg-slate-900/10 flex items-center justify-between relative overflow-hidden">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{stock.name}</span>
-                      <span className="text-xs font-mono font-bold text-white mt-1">
-                        {stock.name === "BTC-USD" ? "$" + stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : stock.name === "SENSEX" || stock.name === "NIFTY 50" ? stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$" + stock.price.toFixed(2)}
-                      </span>
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold ${stock.up ? "text-emerald-500" : "text-rose-500"}`}>
-                      {stock.up ? "▲" : "▼"} {stock.change >= 0 ? "+" + stock.change.toFixed(2) + "%" : stock.change.toFixed(2) + "%"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <Link 
-              href="/live" 
-              className="w-full text-center py-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer mt-4"
-            >
-              Analyze Live Ticker Correlations
-            </Link>
-          </div>
+          </motion.div>
         </div>
-      </section>      {/* Interactive AI Demo Section */}
+      </section>
+      {/* Interactive AI Demo Section */}
       <section id="demo" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
         <div className="max-w-none w-[97%] mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
