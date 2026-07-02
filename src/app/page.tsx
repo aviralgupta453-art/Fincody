@@ -726,6 +726,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
             <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
+            <Link href="/dashboard" className="hover:text-[var(--text-color)] transition-colors">Alert Center</Link>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </nav>
@@ -792,6 +793,7 @@ export default function Home() {
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-white font-extrabold">Home</Link>
               <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">FinCody Live</Link>
+              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Alert Center</Link>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</a>
             </div>
@@ -986,12 +988,6 @@ export default function Home() {
               >
                 {user ? "Go to Dashboard" : "Enter Dashboard"} <ArrowRight className="w-4 h-4" />
               </Link>
-              <a 
-                href="#demo"
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Launch Demo
-              </a>
             </div>
 
             {/* Live Snapshot section below Launch Demo */}
