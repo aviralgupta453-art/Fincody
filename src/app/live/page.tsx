@@ -349,6 +349,25 @@ export default function LivePage() {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [countdownString, setCountdownString] = useState("02:14:45");
   const [newsFeed, setNewsFeed] = useState(LIVE_NEWS_DATABASE);
+  const [loadingNews, setLoadingNews] = useState(false);
+
+  useEffect(() => {
+    const fetchLiveNews = async () => {
+      setLoadingNews(true);
+      try {
+        const res = await fetch(`/api/news?category=${encodeURIComponent(selectedCategory)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setNewsFeed(data);
+        }
+      } catch (err) {
+        console.error("Error fetching live news:", err);
+      } finally {
+        setLoadingNews(false);
+      }
+    };
+    fetchLiveNews();
+  }, [selectedCategory]);
 
   // Sync theme with HTML class
   useEffect(() => {
@@ -447,7 +466,7 @@ export default function LivePage() {
 
   const filteredNews = newsFeed.filter((item) => {
     const countryMatch = selectedCountry === "Global" || item.country === selectedCountry;
-    const categoryMatch = selectedCategory === "Markets" || item.category === selectedCategory;
+    const categoryMatch = selectedCategory === "Markets" || item.category === selectedCategory || item.category.toLowerCase() === selectedCategory.toLowerCase();
     return countryMatch && categoryMatch;
   });
 

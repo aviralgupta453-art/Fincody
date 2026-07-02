@@ -313,6 +313,22 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("Markets");
   const [activeArticle, setActiveArticle] = useState<any>(null);
   const [countdownString, setCountdownString] = useState("02:14:45");
+  const [homeNews, setHomeNews] = useState(LIVE_NEWS_DATA);
+
+  useEffect(() => {
+    const fetchHomeNews = async () => {
+      try {
+        const res = await fetch("/api/news?category=markets");
+        if (res.ok) {
+          const data = await res.json();
+          setHomeNews(data);
+        }
+      } catch (err) {
+        console.error("Error fetching home news:", err);
+      }
+    };
+    fetchHomeNews();
+  }, []);
   const [expandedMattersId, setExpandedMattersId] = useState<string | null>(null);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [liveStocks, setLiveStocks] = useState([
@@ -357,7 +373,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const filteredNews = LIVE_NEWS_DATA.filter((item) => {
+  const filteredNews = homeNews.filter((item) => {
     const countryMatch = selectedCountry === "Global" || item.country === selectedCountry;
     const categoryMatch = selectedCategory === "Markets" || item.category === selectedCategory;
     return countryMatch && categoryMatch;
@@ -795,7 +811,7 @@ export default function Home() {
               `}</style>
               
               <div className="animate-marquee-vertical hover:[animation-play-state:paused] flex flex-col gap-3 py-3 cursor-pointer">
-                {[...LIVE_NEWS_DATA, ...LIVE_NEWS_DATA].map((news, idx) => (
+                {[...homeNews, ...homeNews].map((news, idx) => (
                   <div 
                     key={idx} 
                     onClick={() => window.location.href = '/live'}
