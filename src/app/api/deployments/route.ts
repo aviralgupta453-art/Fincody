@@ -6,6 +6,32 @@ import path from "path";
 // In-Memory state for mock reviews to persist modifications during the browser session
 let mockReviews = [
   {
+    id: "rev-hero-redesign",
+    branchName: "feature/hero-redesign",
+    commitMessage: "feat: redesign homepage hero section with premium three-column layout and animated AI core",
+    author: "Antigravity AI",
+    date: "02 Jul 2026",
+    status: "Ready",
+    previewUrl: "/?preview=hero-redesign",
+    diff: `diff --git a/src/app/page.tsx b/src/app/page.tsx
+index db3c401..76de6a3 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -723,153 +723,380 @@
+-      {/* Hero Section */}
+-      <section className="relative pt-12 md:pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left">
++      {/* Redesigned Premium Hero Section */}
++      <section className="relative pt-24 pb-20 px-6 max-w-none w-[97%] mx-auto text-left min-h-[640px] flex items-center justify-center overflow-hidden rounded-3xl border border-blue-500/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950/20 via-slate-950 to-slate-950">`,
+    logs: `▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+Creating an optimized production build ...
+✓ Compiled successfully in 4.8s
+Running TypeScript ...
+Finished TypeScript in 5.5s ...
+✓ Generating static pages (11/11) in 400ms
+● Ready: Deployment successfully registered to Edge networks.`
+  },
+  {
     id: "rev-chatbot",
     branchName: "feature/chatbot-redesign",
     commitMessage: "feat: transform AI Chatbot into FINCODY AI JARVIS-inspired Command Center",
