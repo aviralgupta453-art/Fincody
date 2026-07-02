@@ -3,14 +3,31 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") || "finance";
+  const country = searchParams.get("country") || "Global";
   
   // Construct search query based on category
-  let query = "finance";
-  if (category.toLowerCase() === "markets") query = "stock market";
-  else if (category.toLowerCase() === "stocks") query = "equities";
-  else if (category.toLowerCase() === "economy") query = "macroeconomics inflation";
-  else if (category.toLowerCase() === "policy") query = "federal reserve ECB central bank";
-  else if (category.toLowerCase() === "technology") query = "AI semiconductor tech stocks";
+  let categoryQuery = "finance";
+  if (category.toLowerCase() === "markets") categoryQuery = "stock market";
+  else if (category.toLowerCase() === "stocks") categoryQuery = "equities";
+  else if (category.toLowerCase() === "economy") categoryQuery = "macroeconomics inflation interest rates";
+  else if (category.toLowerCase() === "policy") categoryQuery = "central bank regulations monetary policy";
+  else if (category.toLowerCase() === "technology") categoryQuery = "AI semiconductor tech stocks";
+
+  // Combine category and country-specific queries
+  let query = categoryQuery;
+  if (country.toLowerCase() !== "global") {
+    if (country.toLowerCase() === "india") {
+      query = `${categoryQuery} India Sensex Nifty NSE rupee RBI`;
+    } else if (country.toLowerCase() === "usa") {
+      query = `${categoryQuery} US Wall Street S&P Nasdaq Dow dollar Fed`;
+    } else if (country.toLowerCase() === "europe") {
+      query = `${categoryQuery} Europe ECB Eurozone CAC DAX FTSE`;
+    } else if (country.toLowerCase() === "japan") {
+      query = `${categoryQuery} Japan BOJ Yen Nikkei Tokyo`;
+    } else if (country.toLowerCase() === "asia") {
+      query = `${categoryQuery} Asia China Hang Seng Singapore SGX HSI`;
+    }
+  }
 
   try {
     const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&newsCount=15`;
@@ -61,7 +78,6 @@ export async function GET(request: NextRequest) {
 
       // Map related tickers or fallback to index assets
       const affected = (n.relatedTickers || []).slice(0, 3).map((tick: string) => {
-        // Mock a reasonable daily price change
         const isUp = impact === "Bullish" || (impact === "Neutral" && Math.random() > 0.5);
         const delta = (Math.random() * 2 + 0.1) * (isUp ? 1 : -1);
         return {
@@ -72,10 +88,17 @@ export async function GET(request: NextRequest) {
       });
 
       if (affected.length === 0) {
-        affected.push(
-          { symbol: "^GSPC", name: "S&P 500", change: impact === "Bullish" ? 0.85 : impact === "Bearish" ? -0.92 : 0.05 },
-          { symbol: "^IXIC", name: "NASDAQ", change: impact === "Bullish" ? 1.25 : impact === "Bearish" ? -1.45 : -0.12 }
-        );
+        if (country.toLowerCase() === "india") {
+          affected.push(
+            { symbol: "^BSESN", name: "SENSEX", change: impact === "Bullish" ? 0.95 : impact === "Bearish" ? -1.12 : 0.12 },
+            { symbol: "^NSEI", name: "NIFTY 50", change: impact === "Bullish" ? 1.05 : impact === "Bearish" ? -1.18 : 0.15 }
+          );
+        } else {
+          affected.push(
+            { symbol: "^GSPC", name: "S&P 500", change: impact === "Bullish" ? 0.85 : impact === "Bearish" ? -0.92 : 0.05 },
+            { symbol: "^IXIC", name: "NASDAQ", change: impact === "Bullish" ? 1.25 : impact === "Bearish" ? -1.45 : -0.12 }
+          );
+        }
       }
 
       // Dynamically generate descriptive analysis blocks
@@ -89,7 +112,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: n.uuid || `news-${idx}-${Date.now()}`,
-        country: lowerTitle.includes("india") ? "India" : lowerTitle.includes("china") ? "China" : lowerTitle.includes("europe") ? "Europe" : "Global",
+        country: country.toLowerCase() !== "global" ? country : (lowerTitle.includes("india") ? "India" : lowerTitle.includes("china") ? "China" : lowerTitle.includes("europe") ? "Europe" : "Global"),
         category: category.charAt(0).toUpperCase() + category.slice(1),
         headline: title,
         summary: title + ". Market observers note that this news will affect investor sentiment and short-term liquidity profiles across domestic exchanges.",

@@ -355,7 +355,7 @@ export default function LivePage() {
     const fetchLiveNews = async () => {
       setLoadingNews(true);
       try {
-        const res = await fetch(`/api/news?category=${encodeURIComponent(selectedCategory)}`);
+        const res = await fetch(`/api/news?category=${encodeURIComponent(selectedCategory)}&country=${encodeURIComponent(selectedCountry)}`);
         if (res.ok) {
           const data = await res.json();
           setNewsFeed(data);
@@ -367,7 +367,7 @@ export default function LivePage() {
       }
     };
     fetchLiveNews();
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedCountry]);
 
   // Sync theme with HTML class
   useEffect(() => {
