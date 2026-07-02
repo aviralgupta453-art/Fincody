@@ -1012,43 +1012,95 @@ export default function Home() {
             </div>
 
             {/* Live Snapshot section below Launch Demo */}
-            <div className="w-full flex flex-col gap-3 mt-4 border-t border-slate-900/60 pt-6">
-              <div className="border-l-2 border-blue-500/20 pl-4 mb-2 text-left">
+            <div className="w-full flex flex-col gap-4 mt-6 border-t border-slate-900/60 pt-6">
+              <div className="border-l-2 border-blue-500/20 pl-4 mb-3 text-left">
                 <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Live Snapshot</span>
                 <span className="text-xs text-slate-400 font-bold block mt-0.5">Real-time status updates</span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
-                {/* Net Worth */}
-                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
-                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Net Worth</span>
-                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {/* Net Worth Card (Large & Creative) */}
+                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col gap-2 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Net Worth</span>
+                    <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Active</span>
+                  </div>
+                  <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left group-hover:text-emerald-400 transition-colors">
                     <RollingNumber value={snapshotNetWorth} />
                   </span>
+                  <div className="w-full h-10 mt-2 opacity-80">
+                    <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <path d="M0 25 Q15 20, 30 12 T60 18 T90 2 T100 5" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M0 25 Q15 20, 30 12 T60 18 T90 2 T100 5 L100 30 L0 30 Z" fill="url(#snapshotNetWorthGrad)" opacity="0.1" />
+                      <defs>
+                        <linearGradient id="snapshotNetWorthGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                 </div>
-                {/* Portfolio */}
-                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
-                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Portfolio</span>
-                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
+
+                {/* Portfolio Card (Large & Creative) */}
+                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col gap-2 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Portfolio Valuation</span>
+                    <span className="text-[9px] text-blue-400 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">▲ +1.17%</span>
+                  </div>
+                  <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left group-hover:text-blue-400 transition-colors">
                     <RollingNumber value={snapshotPortfolio} />
                   </span>
+                  <div className="w-full h-10 mt-2 opacity-80">
+                    <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <path d="M0 22 Q20 10, 40 25 T80 5 T100 2" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M0 22 Q20 10, 40 25 T80 5 T100 2 L100 30 L0 30 Z" fill="url(#snapshotPortfolioGrad)" opacity="0.1" />
+                      <defs>
+                        <linearGradient id="snapshotPortfolioGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                 </div>
-                {/* Health Score */}
-                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
-                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Health Score</span>
-                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
-                    {snapshotHealthScore}%
-                  </span>
+
+                {/* Health Score Card (Large & Creative) */}
+                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col justify-between gap-3 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Financial Health Score</span>
+                    <span className="text-[9px] text-indigo-400 font-bold bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">Excellent</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left">
+                      {snapshotHealthScore}%
+                    </span>
+                    <div className="w-10 h-10 relative flex items-center justify-center">
+                      <svg className="w-10 h-10 transform -rotate-90">
+                        <circle cx="20" cy="20" r="15" stroke="rgba(255,255,255,0.05)" strokeWidth="2.5" fill="transparent" />
+                        <circle cx="20" cy="20" r="15" stroke="#3b82f6" strokeWidth="2.5" fill="transparent" strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 * (1 - snapshotHealthScore / 100)} className="transition-all duration-1000" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                {/* Monthly Savings */}
-                <div className="p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 backdrop-blur-md flex flex-col gap-1 hover:border-slate-800 transition-colors">
-                  <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Mo. Savings</span>
-                  <span className="text-sm font-black text-white font-mono leading-none font-semibold">
-                    <RollingNumber value={snapshotSavings} />
-                  </span>
+
+                {/* Monthly Savings Card (Large & Creative) */}
+                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col justify-between gap-3 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Monthly Savings Goal</span>
+                    <span className="text-[9px] text-purple-400 font-bold bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">87% Achieved</span>
+                  </div>
+                  <div className="flex flex-col gap-2 mt-1">
+                    <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left">
+                      <RollingNumber value={snapshotSavings} />
+                    </span>
+                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden mt-1">
+                      <div className="bg-purple-500 h-full rounded-full transition-all duration-1000" style={{ width: "87%" }} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+                    </motion.div>
 
           {/* ================= RIGHT COLUMN (25% news & tickers) ================= */}
           <motion.div
@@ -1294,219 +1346,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="py-20 px-6 max-w-none w-[97%] mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-            Everything you need. Integrated.
-          </h2>
-          <p className="text-[var(--text-subtitle)] text-lg leading-relaxed">
-            Consolidate your life admin details in one secure vault. Leverage an AI partner designed to forecast and navigate life changes.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((feature, idx) => {
-            const Icon = feature.icon;
-            return (
-              <div 
-                key={idx}
-                className="group p-6 rounded-2xl glass-card border border-[var(--border-color)] bg-slate-900/5 hover:bg-slate-900/10 transition-all duration-300 flex flex-col gap-4 text-left glass-card-hover"
-              >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-bold text-[var(--text-color)] group-hover:text-blue-500 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-[var(--text-subtitle)] leading-relaxed">
-                    {feature.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Future Simulator Section */}
-      <section id="simulator" className="py-20 px-6 border-t border-[var(--border-color)] bg-slate-950/10 relative">
-        <div className="max-w-none w-[97%] mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Quantify Your Tomorrow
-            </h2>
-            <p className="text-[var(--text-subtitle)] text-lg">
-              Simulate high-impact life choices and instantly project your cumulative net worth over the next 30 years.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Control Panel */}
-            <div className="lg:col-span-5 glass-card border border-[var(--border-color)] rounded-2xl p-6 md:p-8 flex flex-col gap-6 text-left justify-between bg-slate-950/10">
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-2 border-b border-[var(--border-color)] pb-4">
-                  <TrendingUp className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                  <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)]">Variables Panel</span>
-                </div>
-
-                {/* Variable 1 */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-sm font-medium">
-                    <span className="text-[var(--text-subtitle)] flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> Salary Growth Rate</span>
-                    <span className="text-blue-500 dark:text-blue-400 font-mono font-bold">{salaryIncrease}% <span className="text-xs text-slate-500 font-semibold">/year</span></span>
-                  </div>
-                  <input
-                    type="range"
-                    min="3"
-                    max="25"
-                    step="1"
-                    value={salaryIncrease}
-                    onChange={(e) => setSalaryIncrease(Number(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                    <span>3% (Slow)</span>
-                    <span>25% (Hyper)</span>
-                  </div>
-                </div>
-
-                {/* Variable 2 */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center text-sm font-medium">
-                    <span className="text-[var(--text-subtitle)] flex items-center gap-1.5"><PiggyBank className="w-4 h-4" /> Monthly Savings Rate</span>
-                    <span className="text-blue-500 dark:text-blue-400 font-mono font-bold">{savingsRate}% <span className="text-xs text-slate-500 font-semibold">of income</span></span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="70"
-                    step="5"
-                    value={savingsRate}
-                    onChange={(e) => setSavingsRate(Number(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                    <span>10% (Basic)</span>
-                    <span>70% (FIRE)</span>
-                  </div>
-                </div>
-
-                {/* Variable 3 */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[var(--text-subtitle)] flex items-center gap-1.5 mb-1">
-                    <GraduationCap className="w-4 h-4" /> Higher Education Costs
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "None", value: 0 },
-                      { label: "₹20 Lakhs", value: 20 },
-                      { label: "₹40 Lakhs", value: 40 }
-                    ].map((item) => (
-                      <button
-                        key={item.value}
-                        type="button"
-                        onClick={() => setMbaCost(item.value)}
-                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
-                          mbaCost === item.value 
-                            ? "bg-blue-600/10 border-blue-500/40 text-blue-500 dark:text-blue-400" 
-                            : "bg-[#11172a]/30 border-[var(--border-color)] text-[var(--text-subtitle)] hover:text-[var(--text-color)]"
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Variable 4 */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[var(--text-subtitle)] flex items-center gap-1.5 mb-1">
-                    <HomeIcon className="w-4 h-4" /> Home Purchase Year
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: "Never", value: 0 },
-                      { label: "Year 5", value: 5 },
-                      { label: "Year 10", value: 10 },
-                      { label: "Year 15", value: 15 }
-                    ].map((item) => (
-                      <button
-                        key={item.value}
-                        type="button"
-                        onClick={() => setHomePurchaseYear(item.value)}
-                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
-                          homePurchaseYear === item.value 
-                            ? "bg-blue-600/10 border-blue-500/40 text-blue-500 dark:text-blue-400" 
-                            : "bg-[#11172a]/30 border-[var(--border-color)] text-[var(--text-subtitle)] hover:text-[var(--text-color)]"
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Projection Chart */}
-            <div className="lg:col-span-7 glass-card border border-[var(--border-color)] rounded-2xl p-6 md:p-8 flex flex-col gap-6 text-left justify-between bg-slate-950/10">
-              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
-                <div>
-                  <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">30-Year Wealth Forecast</span>
-                  <span className="text-xs text-slate-500 mt-0.5 block">Estimated values in ₹ Lakhs</span>
-                </div>
-                <div className="flex gap-4 text-xs font-semibold">
-                  <span className="flex items-center gap-1 text-[var(--text-subtitle)]"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /> Standard</span>
-                  <span className="flex items-center gap-1 text-blue-500"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Custom Pivot</span>
-                </div>
-              </div>
-
-              <div className="w-full h-72 md:h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="simGradLanding" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} />
-                    <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        background: "var(--bg-color)", 
-                        border: "1px solid var(--border-color)", 
-                        borderRadius: "12px", 
-                        color: "var(--text-color)" 
-                      }} 
-                    />
-                    <Area type="monotone" dataKey="Standard" stroke="#475569" strokeWidth={1.5} fill="transparent" />
-                    <Area type="monotone" dataKey="Fincody Projections" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#simGradLanding)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 gap-3 mt-4">
-                <div>
-                  <span className="text-xs text-slate-500 block uppercase font-bold tracking-wider">Wealth Difference</span>
-                  <span className="text-xl font-black text-emerald-500 mt-0.5 block">
-                    +₹{(chartData[29]["Fincody Projections"] - chartData[29]["Standard"]).toLocaleString("en-IN")} Lakhs
-                  </span>
-                </div>
-                <Link 
-                  href="/dashboard"
-                  className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-1.5"
-                >
-                  Save Scenario <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* Testimonials 
       {/* Testimonials */}
       <section className="py-20 px-6 max-w-none w-[97%] mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
