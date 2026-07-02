@@ -726,9 +726,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
             <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
-            <a href="#features" className="hover:text-[var(--text-color)] transition-colors">Features</a>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
-            <a href="#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </nav>
 
@@ -745,12 +743,6 @@ export default function Home() {
 
             {user ? (
               <>
-                <Link 
-                  href="/dashboard" 
-                  className="text-sm font-medium text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors"
-                >
-                  Dashboard
-                </Link>
                 <button 
                   onClick={handleSignOut}
                   className="text-sm font-medium text-[var(--text-subtitle)] hover:text-rose-400 transition-colors cursor-pointer"
@@ -800,22 +792,13 @@ export default function Home() {
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-white font-extrabold">Home</Link>
               <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">FinCody Live</Link>
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Features</a>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
-              <a href="#simulator" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Simulator</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</a>
             </div>
             <hr className="border-[var(--border-color)]" />
             <div className="flex flex-col gap-3">
               {user ? (
                 <>
-                  <Link 
-                    href="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25"
-                  >
-                    Dashboard
-                  </Link>
                   <button 
                     onClick={() => {
                       handleSignOut();
