@@ -1482,9 +1482,11 @@ export default function Dashboard() {
 
   const parentTotalInvestmentValue = parentEquitiesVal + parentFdsVal + parentPpfVal + parentNpsVal + parentGoldVal + parentEtfsVal + parentBondsVal + parentMfVal;
 
-  // Dynamic Investment Allocation Data
+  // Dynamic Investment Allocation Data (Including Cash & Banks to represent entire Net Worth)
   const getDynamicAssetAllocation = () => {
+    const baselineCashVal = parseFloat(manualNetWorth) || 1200000;
     const list = [
+      { name: "Cash & Banks", value: baselineCashVal, color: "#0ea5e9" },
       { name: "Stocks", value: parentEquitiesVal, color: "#3b82f6" },
       { name: "Mutual Funds", value: parentMfVal, color: "#a855f7" },
       { name: "ETFs", value: parentEtfsVal, color: "#8b5cf6" },
@@ -1492,11 +1494,12 @@ export default function Dashboard() {
       { name: "PPF", value: parentPpfVal, color: "#ec4899" },
       { name: "NPS", value: parentNpsVal, color: "#f59e0b" },
       { name: "Gold", value: parentGoldVal, color: "#eab308" },
-      { name: "Bonds", value: parentBondsVal, color: "#06b6d4" }
+      { name: "Bonds", value: parentBondsVal, color: "#6366f1" }
     ].filter(item => item.value > 0);
 
     if (list.length === 0) {
       return [
+        { name: "Cash & Banks", value: 1200000, color: "#0ea5e9" },
         { name: "Stocks", value: 1500000, color: "#3b82f6" },
         { name: "Mutual Funds", value: 852400, color: "#a855f7" },
         { name: "Fixed Deposits", value: 450000, color: "#10b981" },
@@ -3617,9 +3620,9 @@ const handlePredefinedQuestion = (q: string) => {
                         </PieChart>
                       </ResponsiveContainer>
                       <div className="absolute flex flex-col items-center justify-center">
-                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Assets</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Net Worth</span>
                         <span className="text-sm font-black text-[var(--text-color)] font-mono">
-                           <RollingNumber value={parentTotalInvestmentValue} />
+                           <RollingNumber value={calculatedNetWorth} />
                          </span>
                       </div>
                     </div>
