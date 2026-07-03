@@ -441,6 +441,7 @@ export const DEFAULT_MUTUAL_FUNDS: FundData[] = [
   }
 ];
 
+// Rich, expanded global/world registry of mutual funds for searching
 const ALL_DISCOVERABLE_FUNDS = [
   { name: "SBI Small Cap Fund", rate: 28.5, nav: 142.50, risk: "Very High", cat: "Small Cap", house: "SBI Mutual Fund" },
   { name: "Parag Parikh Flexi Cap Fund", rate: 21.8, nav: 72.85, risk: "High", cat: "Flexi Cap", house: "PPFAS Mutual Fund" },
@@ -449,7 +450,12 @@ const ALL_DISCOVERABLE_FUNDS = [
   { name: "Axis Midcap Fund", rate: 17.5, nav: 84.10, risk: "Very High", cat: "Mid Cap", house: "Axis Mutual Fund" },
   { name: "Motilal Oswal Midcap Fund", rate: 26.4, nav: 92.50, risk: "Very High", cat: "Mid Cap", house: "Motilal Oswal MF" },
   { name: "Quant Infrastructure Fund", rate: 31.4, nav: 48.90, risk: "Very High", cat: "Index", house: "Quant Mutual Fund" },
-  { name: "Mirae Asset Emerging Bluechip", rate: 22.1, nav: 118.40, risk: "High", cat: "Large Cap", house: "Mirae Asset MF" }
+  { name: "Mirae Asset Emerging Bluechip", rate: 22.1, nav: 118.40, risk: "High", cat: "Large Cap", house: "Mirae Asset MF" },
+  { name: "Vanguard 500 Index Fund (VOO)", rate: 14.8, nav: 462.50, risk: "Moderate", cat: "Index", house: "Vanguard Group" },
+  { name: "Fidelity Contrafund (FCNTX)", rate: 16.2, nav: 18.90, risk: "High", cat: "Flexi Cap", house: "Fidelity Investments" },
+  { name: "Tata Digital India Fund", rate: 24.1, nav: 45.20, risk: "Very High", cat: "Sectoral", house: "Tata Mutual Fund" },
+  { name: "Nippon India Small Cap Fund", rate: 32.4, nav: 154.10, risk: "Very High", cat: "Small Cap", house: "Nippon India MF" },
+  { name: "UTI Nifty 50 Index Fund", rate: 13.9, nav: 168.30, risk: "Moderate", cat: "Index", house: "UTI Mutual Fund" }
 ];
 
 interface MutualFundsSectionProps {
@@ -513,13 +519,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
   // Discover Carousel active filter
   const [discoverFilter, setDiscoverFilter] = useState("High Growth");
 
-  // Direct Add Mutual Fund Form States (same style as FDs)
-  const [directAddName, setDirectAddName] = useState("");
-  const [directAddAmount, setDirectAddAmount] = useState("");
-  const [directAddSip, setDirectAddSip] = useState("");
-  const [directAddNAV, setDirectAddNAV] = useState("100");
-  const [directAddCategory, setDirectAddCategory] = useState("Flexi Cap");
-
   // Inline Folio Editing State
   const [editingFund, setEditingFund] = useState<FundData | null>(null);
   const [editInvested, setEditInvested] = useState("");
@@ -528,6 +527,12 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
   const [editSipAmount, setEditSipAmount] = useState("");
   const [editFolio, setEditFolio] = useState("");
   const [editBroker, setEditBroker] = useState("");
+
+  // External Track Setup state
+  const [trackingExternalFund, setTrackingExternalFund] = useState<any | null>(null);
+  const [extTrackAmount, setExtTrackAmount] = useState("10000");
+  const [extTrackSip, setExtTrackSip] = useState("5000");
+  const [extTrackFolio, setExtTrackFolio] = useState("");
 
   // Dynamic portfolio stats calculation
   const totalMfValue = mutualFunds.reduce((acc, f) => acc + f.current, 0);
@@ -562,8 +567,8 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     }
   };
 
-  // Sort & Filter Logic
-  const filteredFunds = mutualFunds.filter((fund) => {
+  // Filter My Funds
+  const filteredMyFunds = mutualFunds.filter((fund) => {
     const matchCategory = selectedCategory === "All" || fund.category === selectedCategory;
     const matchSearch = fund.name.toLowerCase().includes(searchQuery.toLowerCase()) || fund.house.toLowerCase().includes(searchQuery.toLowerCase());
     const matchRisk = filterRisk === "All" || fund.riskLevel === filterRisk;
@@ -578,6 +583,14 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     if (sortOption === "Expense") return a.expenseRatio - b.expenseRatio;
     return 0;
   });
+
+  // Global search match for funds NOT currently in portfolio
+  const filteredGlobalMatches = searchQuery.trim() !== "" 
+    ? ALL_DISCOVERABLE_FUNDS.filter(f => 
+        (f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.house.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        !mutualFunds.some(my => my.name.toLowerCase() === f.name.toLowerCase())
+      )
+    : [];
 
   // Calculate dynamic calculations for SIP Calculator
   const monthlyRate = (sipExpectedReturn / 12) / 100;
@@ -612,7 +625,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
         }
         if (next >= 100) {
           clearInterval(timer);
-          // Apply mock synced funds
           const importedFunds: FundData[] = [
             {
               id: "fund-cas-1",
@@ -677,7 +689,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
   const handleVerifyOtp = () => {
     setIsSyncingBank(true);
     setTimeout(() => {
-      // Import simulated holdings
       const syncedFunds: FundData[] = [
         {
           id: "fund-sync-1",
@@ -787,67 +798,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     setManualFolio("");
   };
 
-  // DIRECT ADD SUBMIT (same style as FDs)
-  const handleDirectAddFund = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!directAddName || !directAddAmount) return;
-
-    const principal = parseFloat(directAddAmount) || 0;
-    const navVal = parseFloat(directAddNAV) || 100;
-    const sipVal = parseFloat(directAddSip) || 0;
-    const computedUnits = parseFloat((principal / navVal).toFixed(2));
-
-    const matchedInfo = ALL_DISCOVERABLE_FUNDS.find(f => f.name.toLowerCase() === directAddName.toLowerCase()) || {
-      rate: 12.5,
-      risk: "Moderate",
-      cat: "Flexi Cap",
-      house: "Self Managed"
-    };
-
-    const newFund: FundData = {
-      id: "fund-direct-" + Date.now(),
-      name: directAddName,
-      logo: "📈",
-      category: matchedInfo.cat as any,
-      house: matchedInfo.house,
-      invested: principal,
-      current: principal,
-      xirr: matchedInfo.rate / 2,
-      sipStatus: sipVal > 0 ? "Active" : "None",
-      sipAmount: sipVal,
-      oneYearReturn: matchedInfo.rate,
-      threeYearReturn: matchedInfo.rate - 2,
-      fiveYearReturn: matchedInfo.rate - 4,
-      nav: navVal,
-      minSip: 500,
-      aum: 4800,
-      expenseRatio: 0.72,
-      manager: "Direct Track Asset",
-      exitLoad: "1% if redeemed before 12 months",
-      riskLevel: matchedInfo.risk as any,
-      aiInsight: "Directly tracked mutual fund. Added via quick-tracker form.",
-      sharpeRatio: 1.45,
-      sortinoRatio: 1.62,
-      alpha: 2.15,
-      beta: 0.95,
-      holdings: [{ name: "Equity Broad Market", percentage: 100 }],
-      sectors: [{ name: "Diversified Assets", percentage: 100 }],
-      folioNumber: "DIR-" + Date.now().toString().slice(-4),
-      broker: "Direct Form",
-      purchaseDate: new Date().toISOString().split("T")[0],
-      units: computedUnits,
-      nextSipDate: sipVal > 0 ? "05 July 2026" : "None",
-      bank: sipVal > 0 ? "HDFC Bank" : "None",
-      autoDebitStatus: sipVal > 0 ? "Enabled" : "Disabled"
-    };
-
-    setMutualFunds(prevList => [...prevList, newFund]);
-    setDirectAddName("");
-    setDirectAddAmount("");
-    setDirectAddSip("");
-    setDirectAddNAV("100");
-  };
-
   // SEARCH AND ADD AUTOCOMPLETE SELECT
   const handleSearchAddSelect = (selected: any) => {
     setSelectedSearchAddFund(selected);
@@ -900,6 +850,57 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     setSyncMethod("menu");
     setSelectedSearchAddFund(null);
     setAddSearchQuery("");
+  };
+
+  // APPLY EXTERNAL TRACK ADD
+  const handleApplyExternalTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackingExternalFund) return;
+
+    const principal = parseFloat(extTrackAmount) || 0;
+    const sipVal = parseFloat(extTrackSip) || 0;
+    const computedUnits = parseFloat((principal / trackingExternalFund.nav).toFixed(2));
+
+    const newFund: FundData = {
+      id: "fund-ext-track-" + Date.now(),
+      name: trackingExternalFund.name,
+      logo: "📈",
+      category: trackingExternalFund.cat,
+      house: trackingExternalFund.house,
+      invested: principal,
+      current: principal,
+      xirr: trackingExternalFund.rate / 2,
+      sipStatus: sipVal > 0 ? "Active" : "None",
+      sipAmount: sipVal,
+      oneYearReturn: trackingExternalFund.rate,
+      threeYearReturn: trackingExternalFund.rate - 2,
+      fiveYearReturn: trackingExternalFund.rate - 4,
+      nav: trackingExternalFund.nav,
+      minSip: 500,
+      aum: 12400,
+      expenseRatio: 0.68,
+      manager: "Global Fund Advisor",
+      exitLoad: "1% if redeemed before 12 months",
+      riskLevel: trackingExternalFund.risk,
+      aiInsight: "External fund portfolio tracking initiated successfully.",
+      sharpeRatio: 1.68,
+      sortinoRatio: 1.88,
+      alpha: 2.85,
+      beta: 0.95,
+      holdings: [{ name: "Equities Component Registry", percentage: 100 }],
+      sectors: [{ name: "Diversified global", percentage: 100 }],
+      folioNumber: extTrackFolio || "EXT-" + Date.now().toString().slice(-4),
+      broker: "Unified Search",
+      purchaseDate: new Date().toISOString().split("T")[0],
+      units: computedUnits,
+      nextSipDate: sipVal > 0 ? "05 July 2026" : "None",
+      bank: sipVal > 0 ? "HDFC Bank" : "None",
+      autoDebitStatus: sipVal > 0 ? "Enabled" : "Disabled"
+    };
+
+    setMutualFunds(prevList => [...prevList, newFund]);
+    setTrackingExternalFund(null);
+    setSearchQuery(""); // Clear search so they see it in their list
   };
 
   // BUY MORE / REDEEM TRANSACTION HANDLERS
@@ -1113,7 +1114,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search mutual funds, fund houses, index pools..."
+              placeholder="Search all funds in the world (e.g. Vanguard, SBI, Tata)..."
               className="w-full bg-transparent text-xs text-white placeholder-slate-600 focus:outline-none font-semibold"
             />
           </div>
@@ -1180,7 +1181,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
         </div>
       </div>
 
-      {/* 3. MAIN WIDGETS ROW: TABLE (LEFT) & SIDEBAR DETAILS (RIGHT) */}
+      {/* 3. MAIN WIDGETS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* LEFT COLUMN: MUTUAL FUNDS PORTFOLIO TABLE */}
@@ -1193,11 +1194,13 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
               <div className="col-span-2 text-right">Current</div>
               <div className="col-span-2 text-right">P/L</div>
               <div className="col-span-1 text-right">XIRR</div>
-              <div className="col-span-1 text-center">Compare</div>
+              <div className="col-span-1 text-center">Action</div>
             </div>
 
             <div className="divide-y divide-[var(--border-color)]/30">
-              {filteredFunds.map((fund) => {
+              
+              {/* Render Invested Matches first */}
+              {filteredMyFunds.map((fund) => {
                 const profit = fund.current - fund.invested;
                 const isProfit = profit >= 0;
                 const isExpanded = !!expandedRows[fund.id];
@@ -1289,7 +1292,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                               </div>
                             </div>
 
-                            {/* SIP Overrides & Transactions Actions Panel */}
                             <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]/20 justify-between items-center">
                               <div className="flex flex-wrap gap-2">
                                 <button 
@@ -1355,87 +1357,48 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                   </div>
                 );
               })}
+
+              {/* Render External Global search matches next */}
+              {filteredGlobalMatches.map((fund) => (
+                <div key={fund.name} className="flex flex-col bg-blue-500/[0.01] hover:bg-blue-600/[0.03] transition-colors border-l-2 border-dashed border-blue-500/25">
+                  <div className="grid grid-cols-12 gap-2 p-4 text-xs font-semibold items-center text-left">
+                    <div className="col-span-4 flex items-center gap-2.5">
+                      <span className="text-base select-none shrink-0 w-8 h-8 rounded-xl bg-slate-800/10 border border-blue-500/10 flex items-center justify-center">
+                        🏦
+                      </span>
+                      <div className="flex flex-col truncate">
+                        <span className="font-black text-slate-300 truncate">{fund.name}</span>
+                        <span className="text-[9px] text-slate-500 uppercase tracking-wider mt-0.5">{fund.cat} &bull; {fund.house}</span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 text-right font-mono text-slate-600">—</div>
+                    <div className="col-span-2 text-right font-mono text-slate-600">—</div>
+                    <div className="col-span-2 text-right font-mono text-slate-600">—</div>
+                    
+                    <div className="col-span-1 text-right font-mono font-black text-emerald-400">
+                      {fund.rate}%
+                    </div>
+
+                    <div className="col-span-1 flex items-center justify-center">
+                      <button
+                        onClick={() => {
+                          setTrackingExternalFund(fund);
+                        }}
+                        className="px-2 py-1 rounded bg-blue-600/90 hover:bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-2.5 h-2.5" /> Track
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
             </div>
 
-            {filteredFunds.length === 0 && (
+            {filteredMyFunds.length === 0 && filteredGlobalMatches.length === 0 && (
               <span className="text-xs text-slate-500 italic text-center py-6 block">No active portfolios matching filters.</span>
             )}
-            
-            {/* Direct Add Form (same style as FDs) */}
-            <div className="p-4 bg-slate-950/20 border-t border-[var(--border-color)]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">➕ Track Mutual Fund Direct Entry</span>
-              <form onSubmit={handleDirectAddFund} className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                <div className="relative flex flex-col sm:col-span-2">
-                  <input
-                    type="text"
-                    value={directAddName}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setDirectAddName(val);
-                      const exact = ALL_DISCOVERABLE_FUNDS.find(f => f.name.toLowerCase() === val.toLowerCase());
-                      if (exact) {
-                        setDirectAddNAV(exact.nav.toString());
-                        setDirectAddCategory(exact.cat);
-                      }
-                    }}
-                    placeholder="Mutual Fund Name (e.g. SBI Small Cap)"
-                    required
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
-                  />
-                  {directAddName && !ALL_DISCOVERABLE_FUNDS.some(f => f.name === directAddName) && (
-                    (() => {
-                      const suggestions = ALL_DISCOVERABLE_FUNDS.filter(f => f.name.toLowerCase().includes(directAddName.toLowerCase()));
-                      if (suggestions.length === 0) return null;
-                      return (
-                        <div className="absolute z-[9999] left-0 right-0 top-full mt-1 rounded-xl border border-blue-500/25 bg-slate-950 shadow-2xl p-1.5 flex flex-col gap-1 max-h-[140px] overflow-y-auto">
-                          {suggestions.map((s) => (
-                            <button
-                              key={s.name}
-                              type="button"
-                              onClick={() => {
-                                setDirectAddName(s.name);
-                                setDirectAddNAV(s.nav.toString());
-                                setDirectAddCategory(s.cat);
-                              }}
-                              className="px-2.5 py-1.5 text-left rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-blue-600/10 transition-colors w-full cursor-pointer flex justify-between"
-                            >
-                              <span>🏦 {s.name}</span>
-                              <span className="text-emerald-400 font-mono">₹{s.nav}</span>
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })()
-                  )}
-                </div>
-
-                <input
-                  type="number"
-                  value={directAddAmount}
-                  onChange={(e) => setDirectAddAmount(e.target.value)}
-                  placeholder="Invested Amount"
-                  required
-                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
-                />
-
-                <input
-                  type="number"
-                  value={directAddSip}
-                  onChange={(e) => setDirectAddSip(e.target.value)}
-                  placeholder="SIP Amount (0 if Lumpsum)"
-                  required
-                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
-                />
-
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 font-black uppercase tracking-wider"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Track Fund
-                </button>
-              </form>
-            </div>
-
           </div>
 
           {/* D. PORTFOLIO ANALYTICS MATRIX */}
@@ -1503,6 +1466,64 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
             >
               View All SIPs
             </button>
+          </div>
+
+          {/* B. ASSET ALLOCATION DONUT CHART (Restored to fill empty space) */}
+          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
+            <span className="text-xs font-black uppercase tracking-wider text-white border-b border-[var(--border-color)] pb-3 block">Asset Allocation</span>
+            
+            <div className="flex justify-center items-center py-2 relative">
+              <svg className="w-36 h-36 transform -rotate-90">
+                <circle cx="72" cy="72" r="52" stroke="transparent" strokeWidth="8" fill="none" />
+                <circle 
+                  cx="72" cy="72" r="52" stroke="#3b82f6" strokeWidth="10" fill="none"
+                  strokeDasharray={2 * Math.PI * 52}
+                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.55)}
+                  strokeLinecap="round"
+                />
+                <circle 
+                  cx="72" cy="72" r="52" stroke="#10b981" strokeWidth="10" fill="none"
+                  strokeDasharray={2 * Math.PI * 52}
+                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
+                  className="origin-center transform rotate-[198deg]"
+                />
+                <circle 
+                  cx="72" cy="72" r="52" stroke="#a855f7" strokeWidth="10" fill="none"
+                  strokeDasharray={2 * Math.PI * 52}
+                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
+                  className="origin-center transform rotate-[252deg]"
+                />
+                <circle 
+                  cx="72" cy="72" r="52" stroke="#f59e0b" strokeWidth="10" fill="none"
+                  strokeDasharray={2 * Math.PI * 52}
+                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
+                  className="origin-center transform rotate-[306deg]"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className="text-lg font-black text-white font-mono">100%</span>
+                <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Compounded</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-slate-400">Equity (55%)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-slate-400">Debt (15%)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                <span className="text-slate-400">Hybrid (15%)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="text-slate-400">Index (15%)</span>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -2197,6 +2218,85 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                   className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider mt-2 cursor-pointer"
                 >
                   Save Folio Changes
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* EXTERNAL TRACK SETUP DIALOG */}
+      <AnimatePresence>
+        {trackingExternalFund && (
+          <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md glass-card rounded-3xl border border-blue-500/25 p-7 shadow-2xl relative bg-slate-900/95 text-left flex flex-col gap-6"
+            >
+              <button
+                onClick={() => setTrackingExternalFund(null)}
+                className="absolute right-5 top-5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3.5 border-b border-blue-500/10 pb-4">
+                <span className="text-xl bg-slate-950/50 p-2 rounded-xl border border-blue-500/20 w-10 h-10 flex items-center justify-center">📈</span>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Track External Mutual Fund</h3>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{trackingExternalFund.name}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleApplyExternalTrack} className="flex flex-col gap-4 text-xs font-semibold">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Invested Amount ({activeCurrency.symbol})</label>
+                    <input 
+                      type="number" 
+                      value={extTrackAmount}
+                      onChange={(e) => setExtTrackAmount(e.target.value)}
+                      required
+                      placeholder="10000"
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Monthly SIP ({activeCurrency.symbol})</label>
+                    <input 
+                      type="number" 
+                      value={extTrackSip}
+                      onChange={(e) => setExtTrackSip(e.target.value)}
+                      required
+                      placeholder="5000"
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] text-slate-400 uppercase tracking-widest">Folio Number (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={extTrackFolio}
+                    onChange={(e) => setExtTrackFolio(e.target.value)}
+                    placeholder="928410/55"
+                    className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold border-t border-slate-800 pt-3">
+                  <span>Current NAV: ₹{trackingExternalFund.nav}</span>
+                  <span>Est. Units: {extTrackAmount ? (parseFloat(extTrackAmount) / trackingExternalFund.nav).toFixed(2) : 0}</span>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider cursor-pointer"
+                >
+                  Start Tracking Fund
                 </button>
               </form>
             </motion.div>
