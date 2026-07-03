@@ -5556,10 +5556,13 @@ const handlePredefinedQuestion = (q: string) => {
                         const portfolioTotalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
                         const stockCounts = portfolio.length;
                         
-                        let auditResult = "You do not have any active equity holdings. We recommend starting with large-cap index funds to build a core foundation.";
+                        let auditResult = "You do not have any active equity holdings. We recommend starting with a low-cost Nifty 50 Index ETF or S&P 500 ETF (e.g., NIFTYBEES, SPY) to capture steady index-compounding returns without stock-picking risk.";
                         let adviceBadge = "Inactivity Audit";
                         let adviceColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
                         
+                        let sectorAnalysis = "Sector Exposure: We suggest diversifying your holdings across high-growth Tech and defensive FMCG/Financial sectors to form a balanced equity foundation.";
+                        let tacticalTip = "SIP Strategy: Set up recurring monthly systematic investments into large-cap benchmarks to automatically benefit from dollar-cost averaging.";
+
                         if (stockCounts > 0) {
                           const sortedPortfolio = [...portfolio].sort((a, b) => {
                             const valA = a.qty * (quotes[a.symbol]?.price || a.avgBuyPrice || 100);
@@ -5569,15 +5572,33 @@ const handlePredefinedQuestion = (q: string) => {
                           const topStock = sortedPortfolio[0];
                           const topStockWeight = portfolioTotalVal > 0 ? ((topStock.qty * (quotes[topStock.symbol]?.price || topStock.avgBuyPrice || 100)) / portfolioTotalVal) * 100 : 0;
                           
-                          if (topStockWeight > 40) {
-                            auditResult = `High Concentration: ${topStock.symbol} comprises ${topStockWeight.toFixed(1)}% of your equities portfolio. Consider diversifying across other sectors to minimize systemic risks.`;
+                          // Determine sector concentrations dynamically based on ticker keywords
+                          const techHoldings = portfolio.filter(item => ["AAPL", "MSFT", "GOOG", "TCS", "INFY", "NVDA", "META"].includes(item.symbol.toUpperCase())).length;
+                          const financialHoldings = portfolio.filter(item => ["HDFC", "ICICI", "SBI", "JPM", "BAC", "AXIS"].includes(item.symbol.toUpperCase())).length;
+                          
+                          if (stockCounts === 1) {
+                            auditResult = `Concentrated Portfolio: You hold only 1 active equity position (${topStock.symbol}). While focused holdings offer high beta capture, single-stock exposure exposes your capital to severe company-specific business risks.`;
+                            adviceBadge = "High Risk Alert";
+                            adviceColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                          } else if (topStockWeight > 35) {
+                            auditResult = `High Asset Concentration: ${topStock.symbol} comprises ${topStockWeight.toFixed(1)}% of your equities portfolio. Standard modern portfolio theory suggests trimming single positions above 30% to reallocate into diversified index buckets.`;
                             adviceBadge = "High Risk Alert";
                             adviceColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
                           } else {
-                            auditResult = `Well-Balanced: Your top holding ${topStock.symbol} represents ${topStockWeight.toFixed(1)}% of the total equity, indicating healthy portfolio diversification.`;
+                            auditResult = `Well-Diversified Portfolio: Your top holding (${topStock.symbol}) represents ${topStockWeight.toFixed(1)}% of your equities capital. This represents an exceptionally healthy and balanced asset allocation.`;
                             adviceBadge = "Balanced Allocation";
                             adviceColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
                           }
+
+                          if (techHoldings > financialHoldings && techHoldings >= 2) {
+                            sectorAnalysis = "Tech-Heavy Tilt: Your portfolio is heavily exposed to technology growth assets. We recommend adding exposure to defensive, consumer-facing assets or financial sectors to hedge tech volatility.";
+                          } else if (financialHoldings > techHoldings && financialHoldings >= 2) {
+                            sectorAnalysis = "Financial-Heavy Tilt: You are highly exposed to interest rate cycles. We suggest balancing this by allocating 15% to consumer staples or defensive IT services counters.";
+                          } else {
+                            sectorAnalysis = "Balanced Sectors: Your holdings span different economic drivers, lowering sector-specific drawdown risks during major macroeconomic cycle rotations.";
+                          }
+
+                          tacticalTip = "Tactical Yield Optimization: Consider utilizing tax-loss harvesting by booking short-term capital losses under tax-free thresholds to offset net tax liabilities before the fiscal year-end.";
                         }
 
                         return (
@@ -5588,7 +5609,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <span className="text-xs text-slate-500 mt-0.5 block">Robo-advisor portfolio strategy & audit</span>
                               </div>
                               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${adviceColor}`}>
-                                ${adviceBadge}
+                                {adviceBadge}
                               </span>
                             </div>
 
@@ -5598,13 +5619,13 @@ const handlePredefinedQuestion = (q: string) => {
                               </p>
 
                               <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl text-[11px] text-slate-400">
-                                <span className="text-blue-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🔍 Benchmark Cycles</span>
-                                large-cap banking and digital services cycles are showing positive momentum. Allocate 10-15% more to Technology / Financials sector benchmark funds to match index compounding.
+                                <span className="text-blue-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🔍 Sector & Cycle Audit</span>
+                                {sectorAnalysis}
                               </div>
 
                               <div className="p-3 bg-purple-500/5 border border-purple-500/15 rounded-xl text-[11px] text-slate-400">
-                                <span className="text-purple-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🛡️ SIP Strategy Tip</span>
-                                Set up automated monthly dollar-cost averaging in existing large-cap holdings to mitigate elevated market volatility.
+                                <span className="text-purple-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🛡️ Fincody Tactical Advice</span>
+                                {tacticalTip}
                               </div>
                             </div>
                           </div>
