@@ -913,6 +913,8 @@ export default function Dashboard() {
   const [selectedStockSymbol, setSelectedStockSymbol] = useState("");
   const [selectedStockHistory, setSelectedStockHistory] = useState<any[] | null>(null);
   const [selectedStockHistoryRange, setSelectedStockHistoryRange] = useState("1M");
+  const [hoveredPrice, setHoveredPrice] = useState<number | null>(null);
+  const [hoveredTime, setHoveredTime] = useState<string | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const [priceUpdateStatus, setPriceUpdateStatus] = useState<Record<string, "up" | "down" | null>>({});
@@ -2138,6 +2140,8 @@ const handleSaveCurrentPortfolio = (name: string) => {
     setSelectedStockHistory(null);
     setHistoryLoading(true);
     setIsChartModalOpen(true);
+    setHoveredPrice(null);
+    setHoveredTime(null);
     await fetchChartHistory(symbol, "1M");
   };
 
@@ -5363,6 +5367,66 @@ const handlePredefinedQuestion = (q: string) => {
                         </div>
                       </div>
 
+                      {/* Fincody Suggestion Robo-Advisor Widget Card */}
+                      {(() => {
+                        const portfolioTotalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+                        const stockCounts = portfolio.length;
+                        
+                        let auditResult = "You do not have any active equity holdings. We recommend starting with large-cap index funds to build a core foundation.";
+                        let adviceBadge = "Inactivity Audit";
+                        let adviceColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
+                        
+                        if (stockCounts > 0) {
+                          const sortedPortfolio = [...portfolio].sort((a, b) => {
+                            const valA = a.qty * (quotes[a.symbol]?.price || a.avgBuyPrice || 100);
+                            const valB = b.qty * (quotes[b.symbol]?.price || b.avgBuyPrice || 100);
+                            return valB - valA;
+                          });
+                          const topStock = sortedPortfolio[0];
+                          const topStockWeight = portfolioTotalVal > 0 ? ((topStock.qty * (quotes[topStock.symbol]?.price || topStock.avgBuyPrice || 100)) / portfolioTotalVal) * 100 : 0;
+                          
+                          if (topStockWeight > 40) {
+                            auditResult = `High Concentration: ${topStock.symbol} comprises ${topStockWeight.toFixed(1)}% of your equities portfolio. Consider diversifying across other sectors to minimize systemic risks.`;
+                            adviceBadge = "High Risk Alert";
+                            adviceColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                          } else {
+                            auditResult = `Well-Balanced: Your top holding ${topStock.symbol} represents ${topStockWeight.toFixed(1)}% of the total equity, indicating healthy portfolio diversification.`;
+                            adviceBadge = "Balanced Allocation";
+                            adviceColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                          }
+                        }
+
+                        return (
+                          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-blue-600/[0.02] flex flex-col gap-4">
+                            <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
+                              <div>
+                                <span className="text-sm font-bold uppercase tracking-wider text-white block">💡 Fincody AI Suggestions</span>
+                                <span className="text-xs text-slate-500 mt-0.5 block">Robo-advisor portfolio strategy & audit</span>
+                              </div>
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${adviceColor}`}>
+                                ${adviceBadge}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col gap-3.5 text-xs leading-relaxed font-semibold">
+                              <p className="text-slate-300">
+                                {auditResult}
+                              </p>
+
+                              <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl text-[11px] text-slate-400">
+                                <span className="text-blue-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🔍 Benchmark Cycles</span>
+                                large-cap banking and digital services cycles are showing positive momentum. Allocate 10-15% more to Technology / Financials sector benchmark funds to match index compounding.
+                              </div>
+
+                              <div className="p-3 bg-purple-500/5 border border-purple-500/15 rounded-xl text-[11px] text-slate-400">
+                                <span className="text-purple-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🛡️ SIP Strategy Tip</span>
+                                Set up automated monthly dollar-cost averaging in existing large-cap holdings to mitigate elevated market volatility.
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                     </div>
                   </div>
                   )}
@@ -6866,12 +6930,14 @@ const handlePredefinedQuestion = (q: string) => {
             {quotes[selectedStockSymbol] && (() => {
               const q = quotes[selectedStockSymbol];
               const isPositive = q.change >= 0;
+              const displayPrice = hoveredPrice !== null ? hoveredPrice : q.price;
+              const displayLabel = hoveredPrice !== null ? `Price at ${hoveredTime}` : "Live Market Value";
               return (
                 <div className="flex justify-between items-end bg-slate-950/30 p-4 rounded-xl border border-[var(--border-color)]">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Live Market Value</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{displayLabel}</span>
                     <span className="text-3xl font-black text-white font-mono block mt-1">
-                      <RollingNumber value={q.price} />
+                      <RollingNumber value={displayPrice} decimals={2} />
                     </span>
                   </div>
                   <div className="text-right">
@@ -6915,7 +6981,20 @@ const handlePredefinedQuestion = (q: string) => {
 
                 return (
                   <ResponsiveContainer width="99%" height="100%">
-                    <AreaChart data={selectedStockHistory}>
+                    <AreaChart 
+                      data={selectedStockHistory}
+                      onMouseMove={(state: any) => {
+                        if (state && state.activePayload && state.activePayload.length > 0) {
+                          const payload = state.activePayload[0].payload;
+                          setHoveredPrice(payload.price);
+                          setHoveredTime(payload.time);
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredPrice(null);
+                        setHoveredTime(null);
+                      }}
+                    >
                       <defs>
                         <linearGradient id="chartOverlayGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={isOverallPositive ? "#10b981" : "#ef4444"} stopOpacity={0.25}/>
@@ -6937,7 +7016,7 @@ const handlePredefinedQuestion = (q: string) => {
                         axisLine={false} 
                         domain={["auto", "auto"]}
                         dx={-5}
-                        tickFormatter={(val) => format(val, true)}
+                        tickFormatter={(val) => activeCurrency.symbol + Number(val).toFixed(2)}
                       />
                       <Tooltip
                         contentStyle={{
@@ -6946,7 +7025,7 @@ const handlePredefinedQuestion = (q: string) => {
                           borderRadius: "12px",
                           color: "var(--text-color)"
                         }}
-                        formatter={(value) => [format(Number(value)), "Price"]}
+                        formatter={(value) => [activeCurrency.symbol + Number(value).toFixed(2), "Price"]}
                       />
                       <Area 
                         type="monotone" 
