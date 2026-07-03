@@ -1401,25 +1401,55 @@ export default function Dashboard() {
 
   const chartData = getProjectionsChartData();
 
+  // Parent-level calculations for assets (to prevent hoisting ReferenceErrors in static pages prerender)
+  const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+  const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+  const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
+    const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
+    return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
+  }, 0);
+  const parentBondsVal = (bondHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(curr.buyPrice || 1000)), 0);
+  
+  const parentFdsVal = (fixedDeposits || []).map(fd => {
+    const start = new Date(fd.startDate);
+    const maturity = new Date(start);
+    maturity.setFullYear(maturity.getFullYear() + fd.tenureYears);
+    const daysTotal = Math.max(1, Math.round((maturity.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const now = new Date();
+    const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const elapsedTenureInYears = (Math.min(daysElapsed, daysTotal) / 365);
+    const currentValue = Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * elapsedTenureInYears));
+    return currentValue;
+  }).reduce((acc, val) => acc + val, 0);
+
+  const parentPpfVal = ppfData?.balance || 0;
+  const parentNpsVal = npsData?.balance || 0;
+  const parentMfVal = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+
+  const parentTotalInvestmentValue = parentEquitiesVal + parentFdsVal + parentPpfVal + parentNpsVal + parentGoldVal + parentEtfsVal + parentBondsVal + parentMfVal;
+
   // Dynamic Investment Allocation Data
   const getDynamicAssetAllocation = () => {
-    if (portfolio.length === 0) {
+    const list = [
+      { name: "Stocks", value: parentEquitiesVal, color: "#3b82f6" },
+      { name: "Mutual Funds", value: parentMfVal, color: "#a855f7" },
+      { name: "ETFs", value: parentEtfsVal, color: "#8b5cf6" },
+      { name: "Fixed Deposits", value: parentFdsVal, color: "#10b981" },
+      { name: "PPF", value: parentPpfVal, color: "#ec4899" },
+      { name: "NPS", value: parentNpsVal, color: "#f59e0b" },
+      { name: "Gold", value: parentGoldVal, color: "#eab308" },
+      { name: "Bonds", value: parentBondsVal, color: "#06b6d4" }
+    ].filter(item => item.value > 0);
+
+    if (list.length === 0) {
       return [
-        { name: "Stocks & Mutual Funds", value: 2450000, color: "#3B82F6" },
-        { name: "Cryptocurrency", value: 350000, color: "#A855F7" },
-        { name: "Gold & Commodities", value: 450000, color: "#EAB308" },
-        { name: "Liquid Cash/FDs", value: 595210, color: "#10B981" }
+        { name: "Stocks", value: 1500000, color: "#3b82f6" },
+        { name: "Mutual Funds", value: 852400, color: "#a855f7" },
+        { name: "Fixed Deposits", value: 450000, color: "#10b981" },
+        { name: "Gold", value: 300000, color: "#eab308" }
       ];
     }
-    
-    return portfolio.map((item, idx) => {
-      const price = quotes[item.symbol]?.price || 0;
-      return {
-        name: item.symbol,
-        value: item.qty * price || 1,
-        color: ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899", "#ef4444"][idx % 6]
-      };
-    });
+    return list;
   };
 
   const assetAllocationData = getDynamicAssetAllocation();
@@ -3521,8 +3551,8 @@ const handlePredefinedQuestion = (q: string) => {
                       </ResponsiveContainer>
                       <div className="absolute flex flex-col items-center justify-center">
                         <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Assets</span>
-                        <span className="text-sm font-black text-[var(--text-color)]">
-                           <RollingNumber value={3845210} />
+                        <span className="text-sm font-black text-[var(--text-color)] font-mono">
+                           <RollingNumber value={parentTotalInvestmentValue} />
                          </span>
                       </div>
                     </div>
@@ -5313,6 +5343,15 @@ const handlePredefinedQuestion = (q: string) => {
 
                         <div className="flex flex-col gap-3">
                           
+                          {/* Mutual Fund Active SIP Milestones */}
+                          {(mutualFunds || []).filter(f => f.sipStatus === "Active" && f.nextSipDate && f.nextSipDate !== "None").map(f => (
+                            <div key={f.id} className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
+                              <span className="text-[9px] uppercase tracking-wider text-purple-400 font-black block">Mutual Fund SIP Debit</span>
+                              <span className="font-extrabold text-white block mt-0.5">{f.name}</span>
+                              <span className="text-xs text-blue-400 block mt-1 font-semibold">⏰ Auto-debit due {f.nextSipDate} (₹{f.sipAmount.toLocaleString()})</span>
+                            </div>
+                          ))}
+
                           {/* Loop over FDs */}
                           {fdsCalculated.slice(0, 2).map(fd => (
                             <div key={fd.id} className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
