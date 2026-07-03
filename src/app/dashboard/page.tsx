@@ -4539,13 +4539,16 @@ const handlePredefinedQuestion = (q: string) => {
                                     layoutId={`holdings-${item.symbol}`}
                                     className={`p-4 rounded-xl border transition-all flex flex-col gap-3 group ${flashClass}`}
                                   >
-                                    <div className="flex justify-between items-start">
+                                    <div 
+                                      onClick={() => handleOpenChart(item.symbol)}
+                                      className="flex justify-between items-start cursor-pointer hover:opacity-85 transition-opacity"
+                                    >
                                       <div className="flex items-center gap-3">
                                         <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[var(--border-color)] flex items-center justify-center font-mono text-[9px] font-black text-slate-300">
                                           {item.symbol.substring(0, 4)}
                                         </div>
                                         <div className="text-left">
-                                          <span className="font-black text-xs text-white block font-mono">{item.symbol}</span>
+                                          <span className="font-black text-xs text-white block font-mono hover:text-blue-400 transition-colors">{item.symbol}</span>
                                           <span className="text-[9px] text-slate-500 font-extrabold block mt-0.5">{item.name}</span>
                                         </div>
                                       </div>
@@ -4560,10 +4563,18 @@ const handlePredefinedQuestion = (q: string) => {
 
                                     {/* Localized Exchange details */}
                                     <div className="border-t border-[var(--border-color)] pt-2.5 flex justify-between items-center text-[10px]">
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`w-1.5 h-1.5 rounded-full ${marketState.includes("Open") ? "bg-emerald-500 animate-pulse" : marketState.includes("Pre") ? "bg-amber-500 animate-pulse" : "bg-slate-500"}`} />
                                         <span className="text-slate-400 font-bold">{marketState}</span>
                                         <span className="text-slate-500">• Local Time: {localTimeStr}</span>
+                                        {quote && (
+                                          <>
+                                            <span className="text-slate-500">•</span>
+                                            <span className={`font-mono font-black ${quote.change >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                              {quote.change >= 0 ? "▲" : "▼"} {quote.change >= 0 ? "+" : ""}{quote.change.toFixed(2)} ({quote.change >= 0 ? "+" : ""}{quote.changePercent?.toFixed(2) || "0.00"}%)
+                                            </span>
+                                          </>
+                                        )}
                                       </div>
                                       
                                       <button
@@ -6849,12 +6860,12 @@ const handlePredefinedQuestion = (q: string) => {
 
             {/* Timeframe Selectors */}
             <div className="flex gap-2 border-b border-[var(--border-color)] pb-3 overflow-x-auto shrink-0">
-              {["1D", "1W", "1M", "6M", "1Y", "Max"].map((range) => (
+              {["1D", "5D", "1M", "6M", "1Y", "Max"].map((range) => (
                 <button
                   key={range}
-                  onClick={() => fetchChartHistory(selectedStockSymbol, range)}
+                  onClick={() => fetchChartHistory(selectedStockSymbol, range === "5D" ? "1W" : range)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                    selectedStockHistoryRange === range
+                    (selectedStockHistoryRange === range || (selectedStockHistoryRange === "1W" && range === "5D"))
                       ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/20"
                       : "bg-[#11172a]/30 border-[var(--border-color)] text-slate-400 hover:text-white hover:bg-[#11172a]/50"
                   }`}
