@@ -2625,7 +2625,9 @@ const handlePredefinedQuestion = (q: string) => {
     return acc + faceValue + (isNaN(interest) ? 0 : interest);
   }, 0);
 
-  const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue;
+  const mfTotalValue = 1245678;
+  const mfTotalInvested = 1012222;
+  const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
   const baselineCash = parseFloat(manualNetWorth) || 1200000;
   const calculatedNetWorth = baselineCash + totalInvestmentValue;
 
@@ -3952,8 +3954,10 @@ const handlePredefinedQuestion = (q: string) => {
               const bondsTotalInterest = bondsCalculated.reduce((acc, b) => acc + b.interestEarned, 0);
 
               // Aggregated Totals
-              const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue;
-              const totalCost = equitiesCost + fixedDeposits.reduce((acc, fd) => acc + fd.principal, 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + bondHoldings.reduce((acc, b) => acc + b.faceValue, 0);
+              const mfTotalValue = 1245678;
+              const mfTotalInvested = 1012222;
+              const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
+              const totalCost = equitiesCost + fixedDeposits.reduce((acc, fd) => acc + fd.principal, 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + bondHoldings.reduce((acc, b) => acc + b.faceValue, 0) + mfTotalInvested;
               const overallGainLoss = totalInvestmentValue - totalCost;
               const todayGainLoss = equitiesTodayChange + etfsTodayChange;
 
@@ -3981,6 +3985,7 @@ const handlePredefinedQuestion = (q: string) => {
               // Unified Asset Allocation Data
               const consolidatedAllocationData = [
                 { name: "Stocks", value: equitiesVal, color: "#3b82f6" },
+                { name: "Mutual Funds", value: mfTotalValue, color: "#a855f7" },
                 { name: "ETFs", value: etfsTotalValue, color: "#8b5cf6" },
                 { name: "Fixed Deposits", value: fdsTotalValue, color: "#10b981" },
                 { name: "PPF", value: ppfTotalValue, color: "#ec4899" },
