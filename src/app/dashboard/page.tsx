@@ -62,7 +62,7 @@ import FincodyLogo from "@/components/FincodyLogo";
 import CurrencyRibbon from "@/components/CurrencyRibbon";
 import RollingNumber from "@/components/RollingNumber";
 import { useCurrency, SUPPORTED_CURRENCIES } from "@/context/CurrencyContext";
-import MutualFundsSection from "@/components/MutualFundsSection";
+import MutualFundsSection, { DEFAULT_MUTUAL_FUNDS } from "@/components/MutualFundsSection";
 
 // Standard bank Fixed Deposit rates as of date
 const BANK_FD_RATES = [
@@ -156,6 +156,8 @@ export default function Dashboard() {
 
   // Sync Status State
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error" | "guest">("guest");
+
+
 
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -926,6 +928,14 @@ export default function Dashboard() {
   const [syncErrorMessage, setSyncErrorMessage] = useState<string>("");
   // Investment Engine Enhancements States
   const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals" | "mutual_funds">("equities");
+  const [mutualFunds, setMutualFunds] = useState<any[]>([]);
+
+  // Persist mutual funds state changes
+  useEffect(() => {
+    if (mutualFunds.length > 0) {
+      persistData("mutualFunds", mutualFunds);
+    }
+  }, [mutualFunds]);
   const [ignoredRecs, setIgnoredRecs] = useState<string[]>([]);
   const [replacingRecStock, setReplacingRecStock] = useState<any | null>(null);
 
@@ -1060,6 +1070,13 @@ export default function Dashboard() {
         const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
         if (savedGold) setGoldHoldings(JSON.parse(savedGold));
 
+        const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
+        if (savedMutualFunds) {
+          setMutualFunds(JSON.parse(savedMutualFunds));
+        } else {
+          setMutualFunds(DEFAULT_MUTUAL_FUNDS);
+        }
+
         const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
         if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
 
@@ -1178,6 +1195,13 @@ export default function Dashboard() {
 
       const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
       if (savedGold) setGoldHoldings(JSON.parse(savedGold));
+
+      const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
+      if (savedMutualFunds) {
+        setMutualFunds(JSON.parse(savedMutualFunds));
+      } else {
+        setMutualFunds(DEFAULT_MUTUAL_FUNDS);
+      }
 
       const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
       if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
@@ -2625,8 +2649,8 @@ const handlePredefinedQuestion = (q: string) => {
     return acc + faceValue + (isNaN(interest) ? 0 : interest);
   }, 0);
 
-  const mfTotalValue = 1245678;
-  const mfTotalInvested = 1012222;
+  const mfTotalValue = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+  const mfTotalInvested = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
   const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
   const baselineCash = parseFloat(manualNetWorth) || 1200000;
   const calculatedNetWorth = baselineCash + totalInvestmentValue;
@@ -3954,8 +3978,8 @@ const handlePredefinedQuestion = (q: string) => {
               const bondsTotalInterest = bondsCalculated.reduce((acc, b) => acc + b.interestEarned, 0);
 
               // Aggregated Totals
-              const mfTotalValue = 1245678;
-              const mfTotalInvested = 1012222;
+              const mfTotalValue = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+              const mfTotalInvested = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
               const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
               const totalCost = equitiesCost + fixedDeposits.reduce((acc, fd) => acc + fd.principal, 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + bondHoldings.reduce((acc, b) => acc + b.faceValue, 0) + mfTotalInvested;
               const overallGainLoss = totalInvestmentValue - totalCost;
@@ -4165,7 +4189,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                   {/* 3. Main Dashboard Grid Layout / Mutual Funds Section */}
                   {selectedInvestmentSubTab === "mutual_funds" ? (
-                    <MutualFundsSection activeCurrency={activeCurrency} format={format} />
+                    <MutualFundsSection activeCurrency={activeCurrency} format={format} mutualFunds={mutualFunds} setMutualFunds={setMutualFunds} />
                   ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column: Sub-Tab Content Area (lg:col-span-8) */}
