@@ -2705,6 +2705,11 @@ const handlePredefinedQuestion = (q: string) => {
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Guest Mode (Local)
               </div>
             )}
+            
+            {/* Currency Ribbon in the topmost header row next to sync indicators */}
+            <div className="ml-2 scale-95 origin-left">
+              <CurrencyRibbon variant="compact" />
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -3008,8 +3013,7 @@ const handlePredefinedQuestion = (q: string) => {
           </div>
         </header>
 
-        {/* Global Currency Selection Ribbon */}
-        <CurrencyRibbon />
+
 
         {/* Tab Content Panels */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans">

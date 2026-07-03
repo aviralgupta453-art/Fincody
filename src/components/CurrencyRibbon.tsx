@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency, SUPPORTED_CURRENCIES, CurrencyDetails } from "@/context/CurrencyContext";
 import { Globe, Sparkles } from "lucide-react";
 
-export default function CurrencyRibbon() {
+interface CurrencyRibbonProps {
+  variant?: "full" | "compact";
+}
+
+export default function CurrencyRibbon({ variant = "full" }: CurrencyRibbonProps) {
   const { activeCurrency, setActiveCurrency } = useCurrency();
   const ribbonRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -66,6 +70,67 @@ export default function CurrencyRibbon() {
     }, 8000);
     return () => clearInterval(ambientInterval);
   }, []);
+
+  const isCompact = variant === "compact";
+
+  if (isCompact) {
+    return (
+      <div className="relative select-none z-40">
+        {/* Compact Scrolling Chips */}
+        <div 
+          ref={ribbonRef}
+          onWheel={handleWheel}
+          className="flex overflow-x-auto items-center gap-1.5 scrollbar-none py-1 relative max-w-[200px] sm:max-w-[260px] md:max-w-[320px] cursor-grab active:cursor-grabbing"
+          style={{ scrollBehavior: "smooth" }}
+        >
+          {SUPPORTED_CURRENCIES.map((currency) => {
+            const isActive = activeCurrency.code === currency.code;
+            return (
+              <motion.div
+                key={currency.code}
+                onClick={(e) => handleSelect(currency, e)}
+                className={`relative shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-300 cursor-pointer ${
+                  isActive 
+                    ? "bg-slate-900/80 border-blue-500/50 shadow shadow-blue-500/5 text-white" 
+                    : "bg-slate-950/20 border-slate-800/40 text-slate-400 hover:text-slate-200 hover:border-slate-700/60"
+                }`}
+                style={{
+                  opacity: isActive ? 1.0 : 0.65
+                }}
+                whileHover={{
+                  scale: 1.04,
+                  y: -0.5,
+                  opacity: 1
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeRibbonOutlineCompact"
+                    className="absolute inset-0 rounded-full border border-blue-400/35 pointer-events-none shadow-[0_0_12px_rgba(56,189,248,0.12)]"
+                    animate={{ scale: [1, 1.04, 1], opacity: [0.7, 0.9, 0.7] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                  />
+                )}
+
+                <span className="w-3.5 h-2.5 flex items-center justify-center filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)] overflow-hidden rounded-sm">
+                  <img 
+                    src={`https://flagcdn.com/w20/${currency.code.substring(0, 2).toLowerCase()}.png`} 
+                    className="w-full h-full object-cover"
+                    alt={currency.code}
+                  />
+                </span>
+
+                <div className="flex items-baseline gap-0.5 text-[9px] font-black uppercase tracking-wider">
+                  <span>{currency.code}</span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full max-w-7xl mx-auto px-6 mt-6 mb-2 z-40 select-none">

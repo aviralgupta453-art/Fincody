@@ -156,7 +156,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           {/* D Loop */}
           <motion.path
             d="M6 6 H14 C19 6 22 9 22 14 C22 19 19 22 14 22 H6 V6 Z"
-            fill="url(`#${uniqueId}-favDGrad`)"
+            fill={`url(#${uniqueId}-favDGrad)`}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: premiumEase as any }}
@@ -196,7 +196,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           {/* Y Growth Arrow */}
           <motion.path
             d="M18 18 L22 14 L22 26"
-            stroke="url(`#${uniqueId}-favYGrad`)"
+            stroke={`url(#${uniqueId}-favYGrad)`}
             strokeWidth={2}
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
@@ -205,7 +205,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           />
           <motion.path
             d="M20 14 L22 14 L22 16"
-            stroke="url(`#${uniqueId}-favYGrad`)"
+            stroke={`url(#${uniqueId}-favYGrad)`}
             strokeWidth={2}
             strokeLinecap="round"
             initial={{ opacity: 0 }}
@@ -488,7 +488,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 87, 8 H 94 C 98.5, 8 101, 10.5 101, 15.5 C 101, 20.5 98.5, 23 94, 23 H 87 V 8 Z"
                 : "M 112, 10 H 121 C 127, 10 130, 13 130, 19.5 C 130, 26 127, 29 121, 29 H 112 V 10 Z"
             }
-            fill="url(`#${uniqueId}-dGrad`)"
+            fill={`url(#${uniqueId}-dGrad)`}
           />
 
           {/* Minimal Emoticon overlay inside counter (D loop gap is around x: 90-95 in compact, 116-123 in desktop) */}
@@ -547,7 +547,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 107, 8 L 112, 15.5 V 23"
                 : "M 137, 10 L 144, 19.5 V 29"
             }
-            stroke="url(`#${uniqueId}-yGrad`)"
+            stroke={`url(#${uniqueId}-yGrad)`}
             strokeWidth={isCompact ? 3.5 : 4.5}
             strokeLinecap="round"
             fill="none"
@@ -560,7 +560,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 112, 15.5 Q 116, 12 121, 5"
                 : "M 144, 19.5 Q 150, 15 156, 6"
             }
-            stroke="url(`#${uniqueId}-yGrad`)"
+            stroke={`url(#${uniqueId}-yGrad)`}
             strokeWidth={isCompact ? 3.5 : 4.5}
             strokeLinecap="round"
             fill="none"
@@ -580,7 +580,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 117, 5 H 121 V 9"
                 : "M 151, 6 H 156 V 11"
             }
-            stroke="url(`#${uniqueId}-yGrad`)"
+            stroke={`url(#${uniqueId}-yGrad)`}
             strokeWidth={isCompact ? 2.5 : 3.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -649,8 +649,8 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           y="0"
           width="100"
           height={viewHeight}
-          fill="url(`#${uniqueId}-shineGrad`)"
-          clipPath="url(`#${uniqueId}-textClip`)"
+          fill={`url(#${uniqueId}-shineGrad)`}
+          clipPath={`url(#${uniqueId}-textClip)`}
           initial={{ x: -150 }}
           animate={{ x: viewWidth + 50 }}
           transition={{

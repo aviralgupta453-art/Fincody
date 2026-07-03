@@ -727,7 +727,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
             <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
-            <Link href="/dashboard" className="hover:text-[var(--text-color)] transition-colors">Alert Center</Link>
+
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </nav>
