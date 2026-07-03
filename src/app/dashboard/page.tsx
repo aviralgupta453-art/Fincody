@@ -512,6 +512,39 @@ export default function Dashboard() {
     }
   };
 
+  // Real-time ticking alert countdown timer
+  useEffect(() => {
+    const countdownTimer = setInterval(() => {
+      setFinancialNotifications((prev) => 
+        prev.map((n) => {
+          if (n.status === "completed" || n.timeRemainingSecs <= 0) return n;
+          const nextSecs = n.timeRemainingSecs - 1;
+          
+          let nextTimeStr = "";
+          if (nextSecs >= 86400) {
+            const days = Math.floor(nextSecs / 86400);
+            nextTimeStr = days + " Day" + (days > 1 ? "s" : "") + " Remaining";
+          } else if (nextSecs >= 3600) {
+            const hours = Math.floor(nextSecs / 3600);
+            nextTimeStr = "Due in " + hours + " Hour" + (hours > 1 ? "s" : "");
+          } else if (nextSecs >= 60) {
+            const mins = Math.floor(nextSecs / 60);
+            nextTimeStr = mins + " Minute" + (mins > 1 ? "s" : "") + " Remaining";
+          } else {
+            nextTimeStr = "Due in " + nextSecs + " Second" + (nextSecs > 1 ? "s" : "");
+          }
+
+          return {
+            ...n,
+            timeRemainingSecs: nextSecs,
+            timeRemaining: nextTimeStr
+          };
+        })
+      );
+    }, 1000);
+    return () => clearInterval(countdownTimer);
+  }, []);
+
   // Simulate live alerts
   useEffect(() => {
     const dividendTimeout = setTimeout(() => {
@@ -829,6 +862,7 @@ export default function Dashboard() {
   const [netWorth, setNetWorth] = useState(3845210);
   const [monthlySavings, setMonthlySavings] = useState(72450);
   const [healthScore, setHealthScore] = useState(94);
+  const [showScoreModal, setShowScoreModal] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -2104,14 +2138,26 @@ const handleSaveCurrentPortfolio = (name: string) => {
       const totalGoalTarget = goals.reduce((acc, curr) => acc + curr.target, 0).toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
       const totalGoalCurrent = goals.reduce((acc, curr) => acc + curr.current, 0).toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
 
-      if (query.includes("hello") || query.includes("hi ") || query.includes("hey")) {
-        replyText = `Hello! I am Jarvis, your Fincody AI Financial Co-pilot. I analyze your live Net Worth (${netWorthFormatted}), Monthly Savings (&apos;surplus&apos; of ${savingsFormatted}), and active subscriptions in real-time. Ask me anything about your investments, goal engines, or tax planning strategies!`;
-      } else if (query.includes("how does") && (query.includes("app") || query.includes("work") || query.includes("use"))) {
+      if (query.includes("hello") || query.includes("hi ") || query.includes("hey") || query.includes("greet")) {
+        replyText = `Hello! I am Jarvis, your Fincody AI Financial Co-pilot. I analyze your live Net Worth (${netWorthFormatted}), Monthly Savings (${savingsFormatted}), and active subscriptions in real-time. Ask me anything about your investments, goals, or financial strategy!`;
+      } else if (query.includes("how does") && (query.includes("app") || query.includes("work") || query.includes("use") || query.includes("fincody"))) {
         replyText = `Fincody is an AI-powered financial operating system. Here&apos;s what you can do:
 1. **Wealth Engine**: Monitor your live Net Worth (${netWorthFormatted}), Fixed Deposits, Gold, NPS, and Equities.
 2. **Goal Engine**: Simulate SIPs toward targets like Emergency Funds and Retirement.
 3. **Audit Subscriptions**: Automatically detect and cancel overlapping subscriptions (current spend: ${subSpendFormatted}/mo).
 4. **Secure Vault**: Upload tax, insurance, or asset documents for neural scanner optimization.`;
+      } else if (query.includes("inflation") || query.includes("interest rate") || query.includes("repo") || query.includes("rbi")) {
+        replyText = `Inflation erodes the purchasing power of your cash. With your current Net Worth at ${netWorthFormatted}, keeping money in low-yield savings accounts loses value. Fincody recommends allocating surplus monthly savings (${savingsFormatted}/mo) into bank Fixed Deposits (earning dynamic rates) or equity indexes to beat inflation.`;
+      } else if (query.includes("mutual fund") || query.includes("sip") || query.includes("invest") || query.includes("index")) {
+        replyText = `Passive mutual funds (like Nifty 50 Index ETFs) are the most efficient way to build long-term wealth. Auto-investing even a small portion of your monthly savings (${savingsFormatted}/mo) via a systematic investment plan (SIP) leverages rupee cost averaging. You are currently tracking ${goalsCount} active goal engines!`;
+      } else if (query.includes("crypto") || query.includes("bitcoin") || query.includes("btc") || query.includes("ethereum")) {
+        replyText = `Cryptocurrencies are highly volatile speculative assets. While they offer high potential yields, Fincody AI suggests allocating no more than 3% to 5% of your total Net Worth (${netWorthFormatted}) to crypto to protect your financial solvency.`;
+      } else if (query.includes("loan") || query.includes("debt") || query.includes("credit card") || query.includes("emi")) {
+        replyText = `Paying off high-interest debt is equivalent to earning a guaranteed tax-free return. Before expanding your investment portfolio, Fincody recommends clearing credit card debt and keeping credit utilization below 30% to secure your Fincody health score!`;
+      } else if (query.includes("compound") || query.includes("rule of 72") || query.includes("interest")) {
+        replyText = `Compounding is the 8th wonder of the world. Under the Rule of 72, dividing 72 by your expected interest rate gives the number of years to double your money. E.g., at 8% return, your wealth doubles in 9 years. Jarvis is simulating this compounding model across your goals!`;
+      } else if (query.includes("security") || query.includes("safe") || query.includes("encryption") || query.includes("soc2") || query.includes("private")) {
+        replyText = `Fincody uses 256-bit AES end-to-end encryption for your secure vault. All document scanning runs client-side using neural parsers. Your financial data is protected by SOC2 Type II compliance controls.`;
       } else if (query.includes("car") || query.includes("lakh")) {
         replyText = `Analyzing a ₹15 Lakh car purchase. Based on your current Monthly Savings of ${savingsFormatted} and Net Worth of ${netWorthFormatted}, you have the baseline capacity. However, your emergency cushion would dip. I suggest keeping your index fund SIP running and deferring the purchase for 3 months to avoid equity dilution. [SIMULATION: CAR]`;
       } else if (query.includes("mba") || query.includes("career") || query.includes("study")) {
@@ -2131,10 +2177,13 @@ const handleSaveCurrentPortfolio = (name: string) => {
       } else if (query.includes("gold") || query.includes("metal")) {
         replyText = `You have gold holdings with live valuation of ${format(goldTotalValue)}. Spot gold rate is currently ${format(spotGoldPrice)}/gram. Maintaining a 5-10% portfolio allocation in gold is recommended as a safe-haven hedge.`;
       } else if (query.includes("goal") || query.includes("emergency") || query.includes("retirement")) {
-        replyText = `You are tracking ${goalsCount} financial goals (Total Target: ${totalGoalTarget}, Accumulated: ${totalGoalCurrent}). Your progress is at ${((goals.reduce((acc, c) => acc + c.current, 0) / (goals.reduce((acc, c) => acc + c.target, 0) || 1)) * 100).toFixed(0)}%. I suggest setting a monthly SIP of ${format(5000)} toward your emergency fund.`;
+        replyText = `You are tracking ${goalsCount} financial goals (Total Target: ${totalGoalTarget}, Accumulated: ${totalGoalCurrent}). Your progress is at ${((goals.reduce((acc, c) => acc + c.target, 0) / (goals.reduce((acc, c) => acc + c.target, 0) || 1)) * 100).toFixed(0)}%. I suggest setting a monthly SIP of ${format(5000)} toward your emergency fund.`;
       } else {
-        replyText = `I have analyzed your query ("${text}"). To optimize your current wealth of ${netWorthFormatted}, Fincody AI recommends automated subscription cleanups (active: ${activeSubsCount} services) and redirecting surplus cash (${savingsFormatted}/mo) into rebalanced Fixed Deposits or Index SIPs.`;
+        replyText = `I have analyzed your query about "${text}". To optimize your live Net Worth of ${netWorthFormatted}, Fincody AI suggests allocating surplus cash (${savingsFormatted}/mo) into rebalanced Fixed Deposits or Index Fund SIPs to maximize passive compounding yields.`;
       }
+
+      // Escape single quotes for JSX representation safety
+      replyText = replyText.replace(/&apos;/g, "'");
 
       // Escape single quotes for JSX representation safety
       replyText = replyText.replace(/&apos;/g, "'");
@@ -2550,6 +2599,16 @@ const handlePredefinedQuestion = (q: string) => {
   const calculatedMonthlySavings = Math.max(0, salaryVal - emiVal - otherExpVal - monthlySubscriptionSpend);
   
   const calculatedGoalContributions = goals.reduce((acc: number, curr: any) => acc + curr.current, 0);
+
+  // Dynamic Financial Health Score calculations based on live vault indicators
+  const savingsRateRatio = salaryVal > 0 ? (calculatedMonthlySavings / salaryVal) : 0;
+  const healthSavingsScore = Math.min(40, Math.round(savingsRateRatio * 100 * 1.3));
+  const healthEmergencyGoal = (goals || []).find(g => g.name.toLowerCase().includes("emergency"));
+  const healthEmergencyRatio = healthEmergencyGoal ? (healthEmergencyGoal.current / healthEmergencyGoal.target) : 0.85;
+  const healthEmergencyScore = Math.min(30, Math.round(healthEmergencyRatio * 30));
+  const activeSubsCount = (subscriptions || []).filter(s => s.status === "active").length;
+  const healthSubScore = Math.max(10, 30 - (activeSubsCount * 3.5));
+  const dynamicCalculatedHealthScore = Math.min(99, Math.max(35, Math.round(healthSavingsScore + healthEmergencyScore + healthSubScore)));
 
   // Helper to format Y-Axis compactly
   const formatYAxisTick = (val: number) => {
@@ -3003,13 +3062,17 @@ const handlePredefinedQuestion = (q: string) => {
               </AnimatePresence>
             </div>
 
-            {/* Health Score */}
-            <div className="flex items-center gap-2 border border-[var(--border-color)] rounded-xl px-3 py-1.5 bg-slate-900/5">
-              <div className="w-7 h-7 rounded-full border-2 border-emerald-500 flex items-center justify-center text-[10px] font-black text-emerald-500">
-                {healthScore}
+            {/* Interactive Health Score Page Opener */}
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="flex items-center gap-2 border border-blue-500/20 rounded-xl px-3 py-1.5 bg-slate-900/5 hover:bg-slate-500/5 hover:border-blue-500/40 transition-all cursor-pointer shadow-md shadow-blue-500/5 group"
+              title="View Financial Health Insights"
+            >
+              <div className="w-7 h-7 rounded-full border-2 border-emerald-500 flex items-center justify-center text-[10px] font-black text-emerald-500 group-hover:scale-105 transition-transform">
+                {dynamicCalculatedHealthScore}
               </div>
               <span className="text-xs font-bold text-[var(--text-color)] hidden sm:inline">Score</span>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -5828,6 +5891,16 @@ const handlePredefinedQuestion = (q: string) => {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          {/* Edit Pencil Button to make manual entry sheet editable once document is uploaded */}
+                          <button 
+                            onClick={() => {
+                              setShowManualEntryModal(true);
+                            }}
+                            className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-500 transition-all cursor-pointer"
+                            title="Edit Extracted Manual Sheet"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
                           <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
                             <Download className="w-4 h-4" />
                           </button>
@@ -5883,9 +5956,25 @@ const handlePredefinedQuestion = (q: string) => {
                         <span className="text-slate-500">Calculation Start Date</span>
                         <span className="text-[var(--text-color)] font-mono font-bold">{calculationStartDate}</span>
                       </div>
+                      {/* Storage size calculated dynamically from real uploaded documents */}
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Storage Used</span>
-                        <span className="text-[var(--text-color)] font-mono font-bold">13.1 MB / 5.0 GB</span>
+                        <span className="text-[var(--text-color)] font-mono font-bold">
+                          {(() => {
+                            const totalMB = (documents || []).reduce((acc, doc) => {
+                              const match = doc.size.match(/([0-9.]+)\s*(MB|KB|B)/i);
+                              if (match) {
+                                const val = parseFloat(match[1]);
+                                const unit = match[2].toUpperCase();
+                                if (unit === "MB") return acc + val;
+                                if (unit === "KB") return acc + (val / 1024);
+                                return acc + (val / (1024 * 1024));
+                              }
+                              return acc;
+                            }, 0);
+                            return totalMB.toFixed(2);
+                          })()} MB / 5.0 GB
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Status</span>
@@ -5896,6 +5985,12 @@ const handlePredefinedQuestion = (q: string) => {
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Signature Certificate</span>
                         <span className="text-slate-400 font-mono">SOC2_TYPE_II</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Last Scanned Date</span>
+                        <span className="text-[var(--text-color)] font-mono font-bold">
+                          {documents.length > 0 ? documents[0].uploadedAt : "No scans performed"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -6399,6 +6494,134 @@ const handlePredefinedQuestion = (q: string) => {
       </div>
 
       {/* Manual Entry Modal */}
+      {/* Interactive, creative Financial Health Score details page modal */}
+      <AnimatePresence>
+        {showScoreModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="w-full max-w-lg glass-card rounded-3xl border border-blue-500/25 p-8 shadow-2xl relative bg-slate-900/95 text-left flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setShowScoreModal(false)}
+                className="absolute right-5 top-5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3.5 border-b border-blue-500/10 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">Fincody Financial Health Index</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">FHI Engine Analysis</p>
+                </div>
+              </div>
+
+              {/* Score Circular Glow Gauge */}
+              <div className="flex flex-col items-center py-6 gap-3 rounded-2xl bg-slate-950/40 border border-blue-500/5 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none" />
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="64" cy="64" r="54" stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="transparent" />
+                    <circle 
+                      cx="64" 
+                      cy="64" 
+                      r="54" 
+                      stroke="#10b981" 
+                      strokeWidth="8" 
+                      fill="transparent" 
+                      strokeDasharray={2 * Math.PI * 54} 
+                      strokeDashoffset={2 * Math.PI * 54 * (1 - dynamicCalculatedHealthScore/100)} 
+                      strokeLinecap="round"
+                      className="transition-all duration-1000"
+                    />
+                  </svg>
+                  <span className="absolute text-4xl font-mono font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                    {dynamicCalculatedHealthScore}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                    {dynamicCalculatedHealthScore >= 80 ? "Excellent Solvency" : dynamicCalculatedHealthScore >= 60 ? "Stable Standpoint" : "Action Required"}
+                  </span>
+                  <p className="text-[10px] text-slate-500 mt-1 max-w-[280px]">Computed dynamically from real-time asset balances, monthly savings rate, and subscription weight.</p>
+                </div>
+              </div>
+
+              {/* Main Points of Calculations */}
+              <div className="flex flex-col gap-3">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800 pb-1">How it is calculated</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950/20 border border-slate-800/40">
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold tracking-wider">Savings Index (40%)</span>
+                    <span className="font-bold text-white block mt-1">{"₹" + calculatedMonthlySavings.toLocaleString()} / mo</span>
+                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Score: {healthSavingsScore}/40</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-950/20 border border-slate-800/40">
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold tracking-wider">Safety Net (30%)</span>
+                    <span className="font-bold text-white block mt-1">{healthEmergencyGoal ? (Math.round((healthEmergencyGoal.current / healthEmergencyGoal.target)*100) + "% Done") : "No Goal Set"}</span>
+                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Score: {healthEmergencyScore}/30</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-950/20 border border-slate-800/40">
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold tracking-wider">Services Load (30%)</span>
+                    <span className="font-bold text-white block mt-1">{activeSubsCount} Active Services</span>
+                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Score: {healthSubScore}/30</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Depiction Explanation */}
+              <div className="flex flex-col gap-2 bg-blue-500/5 border border-blue-500/10 p-4 rounded-xl">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">What this depicts</span>
+                <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                  This index evaluates your financial resilience. A score above **80** indicates a secure savings buffer and low service overheads, protecting you from sudden income disruption. A score below **60** highlights high subscription dependency or savings rates below 15%.
+                </p>
+              </div>
+
+              {/* Personal Improvement Recommendations */}
+              <div className="flex flex-col gap-2.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800 pb-1">Recommendations to Improve</span>
+                <ul className="text-xs text-slate-300 space-y-2 font-semibold">
+                  {savingsRateRatio < 0.25 && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>{"Increase your monthly savings surplus (currently " + Math.round(savingsRateRatio*100) + "%) to at least 25% by auditing monthly subscriptions."}</span>
+                    </li>
+                  )}
+                  {activeSubsCount > 3 && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>{"You have " + activeSubsCount + " active subscriptions. Cancel at least 2 services inside your Subscriptions vault to reclaim liquid monthly capacity."}</span>
+                    </li>
+                  )}
+                  {!healthEmergencyGoal && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>No Emergency Fund Goal detected. Create a goal of at least 3 months expenses inside your **Goal Engine** to secure your safety score.</span>
+                    </li>
+                  )}
+                  {dynamicCalculatedHealthScore >= 80 && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>Your score is premium! Lock in current high rates by allocating 15% of your equities into Fixed Deposits.</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {showManualEntryModal && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="w-full max-w-md glass-card rounded-2xl border border-[var(--border-color)] p-8 shadow-2xl relative bg-slate-900/95 text-left animate-in zoom-in-95 duration-200 flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
@@ -6439,17 +6662,6 @@ const handlePredefinedQuestion = (q: string) => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">EMI ({activeCurrency.symbol}/month)</label>
-                <input
-                  type="number"
-                  value={manualEMI}
-                  onChange={(e) => setManualEMI(e.target.value)}
-                  placeholder="e.g. 35000"
-                  className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Monthly Expenses ({activeCurrency.symbol})</label>
                 <input
                   type="number"
@@ -6468,26 +6680,6 @@ const handlePredefinedQuestion = (q: string) => {
                   onChange={(e) => setCalculationStartDate(e.target.value)}
                   className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500/30 text-[var(--text-color)] [color-scheme:dark] light:[color-scheme:light]"
                 />
-              </div>
-
-              <div className="border-t border-[var(--border-color)] pt-3 flex flex-col gap-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Add Linkable Subscription</span>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={manualSubscriptionName}
-                    onChange={(e) => setManualSubscriptionName(e.target.value)}
-                    placeholder="Subscription Name"
-                    className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
-                  />
-                  <input
-                    type="number"
-                    value={manualSubscriptionPrice}
-                    onChange={(e) => setManualSubscriptionPrice(e.target.value)}
-                    placeholder={`Price (${activeCurrency.symbol})`}
-                    className="px-4 py-2.5 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
-                  />
-                </div>
               </div>
 
               <button

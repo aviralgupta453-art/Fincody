@@ -63,6 +63,7 @@ export default function MagicCursor() {
     const particles: Particle[] = [];
     let isHovering = false;
     let isClicking = false;
+    let isOverInput = false;
 
     // Check if the page is currently in light mode
     const isLightMode = () => document.documentElement.classList.contains("light");
@@ -111,6 +112,23 @@ export default function MagicCursor() {
     // Global Hover element detection
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      
+      // Hide custom cursor completely if over input/textarea to let browser native I-beam cursor shine
+      if (
+        target && (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.closest("input") ||
+          target.closest("textarea") ||
+          target.closest("select")
+        )
+      ) {
+        isOverInput = true;
+      } else {
+        isOverInput = false;
+      }
+
       if (
         target && (
           target.tagName === "A" ||
@@ -239,6 +257,9 @@ export default function MagicCursor() {
       cursor.radius += (cursor.targetRadius - cursor.radius) * ease;
 
       // 2. Render Custom Cursor elements
+      if (isOverInput) {
+        // Skip drawing dot/aura over inputs
+      } else {
       // A. Outer Glow Aura (Trailing with inertia)
       const auraGradient = ctx.createRadialGradient(
         cursor.x, cursor.y, 0,
@@ -274,6 +295,7 @@ export default function MagicCursor() {
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, isHovering ? 4.5 : 6, 0, Math.PI * 2);
       ctx.fill();
+      }
 
       // 3. Update & Draw Particles
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -352,7 +374,7 @@ export default function MagicCursor() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[99999] hidden md:block"
+      className="fixed inset-0 pointer-events-none z-[9999999] hidden md:block"
     />
   );
 }

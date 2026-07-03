@@ -384,7 +384,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x="5"
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
+            fill={themeMode === "light" ? `url(#${uniqueId}-fincoLightGrad)` : `url(#${uniqueId}-fincoDarkGrad)`}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -404,7 +404,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "20" : "24"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
+            fill={themeMode === "light" ? `url(#${uniqueId}-fincoLightGrad)` : `url(#${uniqueId}-fincoDarkGrad)`}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -424,7 +424,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "29" : "35"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
+            fill={themeMode === "light" ? `url(#${uniqueId}-fincoLightGrad)` : `url(#${uniqueId}-fincoDarkGrad)`}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -444,7 +444,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "48" : "60"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
+            fill={themeMode === "light" ? `url(#${uniqueId}-fincoLightGrad)` : `url(#${uniqueId}-fincoDarkGrad)`}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -464,7 +464,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "66" : "82"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
+            fill={themeMode === "light" ? `url(#${uniqueId}-fincoLightGrad)` : `url(#${uniqueId}-fincoDarkGrad)`}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"

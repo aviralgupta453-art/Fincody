@@ -78,10 +78,7 @@ export default function CurrencyRibbon({ variant = "full" }: CurrencyRibbonProps
       <div className="relative select-none z-40">
         {/* Compact Scrolling Chips */}
         <div 
-          ref={ribbonRef}
-          onWheel={handleWheel}
-          className="flex overflow-x-auto items-center gap-1.5 scrollbar-none py-1 relative max-w-[200px] sm:max-w-[260px] md:max-w-[320px] cursor-grab active:cursor-grabbing"
-          style={{ scrollBehavior: "smooth" }}
+          className="flex items-center gap-1.5 flex-wrap py-1 relative max-w-[500px]"
         >
           {SUPPORTED_CURRENCIES.map((currency) => {
             const isActive = activeCurrency.code === currency.code;
