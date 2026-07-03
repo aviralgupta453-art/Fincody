@@ -1353,21 +1353,75 @@ export default function Dashboard() {
   const [simMba, setSimMba] = useState(0);
   const [simHouse, setSimHouse] = useState(0);
 
-  // Dynamic Chart Data Generator
+  // Dynamic Chart Data Generator (Fully synced to actual investments, savings, and yields)
   const getProjectionsChartData = () => {
     const data = [];
-    let netWorthVal = netWorth / 100000; // Dynamic Starting Net Worth (₹ Lakhs)
-    let baseWorth = netWorth / 100000;
     
-    const monthlyIncome = (manualSalary ? parseFloat(manualSalary) : 200000) / 100000; // Dynamic Salary in Lakhs
-    const growth = 1.08; // 8% asset return
+    // Calculate parent total investment value dynamically
+    const mfVal = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+    const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+    const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+    const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
+      const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
+      return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
+    }, 0);
+    const parentBondsVal = (bondHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(curr.buyPrice || 1000)), 0);
+    const parentFdsVal = (fixedDeposits || []).map(fd => {
+      const start = new Date(fd.startDate);
+      const maturity = new Date(start);
+      maturity.setFullYear(maturity.getFullYear() + fd.tenureYears);
+      const daysTotal = Math.max(1, Math.round((maturity.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+      const now = new Date();
+      const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+      const elapsedTenureInYears = (Math.min(daysElapsed, daysTotal) / 365);
+      return Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * elapsedTenureInYears));
+    }).reduce((acc, val) => acc + val, 0);
+    const parentPpfVal = ppfData?.balance || 0;
+    const parentNpsVal = npsData?.balance || 0;
+    
+    const parentTotalInvestmentValue = parentEquitiesVal + parentFdsVal + parentPpfVal + parentNpsVal + parentGoldVal + parentEtfsVal + parentBondsVal + mfVal;
+
+    // Combine manual net worth cash entries with live investments
+    const manualNetWorthNum = parseFloat(manualNetWorth) || 0;
+    const resolvedNetWorth = manualNetWorthNum > 0 ? (manualNetWorthNum + parentTotalInvestmentValue) : (netWorth || parentTotalInvestmentValue);
+    
+    let netWorthVal = resolvedNetWorth / 100000; 
+    let baseWorth = resolvedNetWorth / 100000;
+
+    // Calculate actual monthly surplus savings from Salary, EMI, and Expenses
+    const sal = parseFloat(manualSalary) || 200000;
+    const emi = parseFloat(manualEMI) || 0;
+    const exp = parseFloat(manualOtherExpenses) || 0;
+    const actualMonthlySavings = Math.max(0, sal - emi - exp);
+    
+    const monthlyIncome = sal / 100000;
+
+    // Determine compound growth rate using weighted portfolio yield average
+    let weightedReturn = 0.08; 
+    if (parentTotalInvestmentValue > 0) {
+      const stockReturn = parentEquitiesVal * 0.15;
+      const mfReturn = (mutualFunds || []).reduce((acc, f) => acc + (f.current * ((f.xirr || 15) / 100)), 0);
+      const etfReturn = parentEtfsVal * 0.12;
+      const fdReturn = (fixedDeposits || []).reduce((acc, f) => acc + (f.principal * ((f.rate || 7) / 100)), 0);
+      const ppfReturn = parentPpfVal * 0.071;
+      const npsReturn = parentNpsVal * 0.10;
+      const goldReturn = parentGoldVal * 0.11;
+      const bondReturn = parentBondsVal * 0.085;
+      
+      const totalReturnSum = stockReturn + mfReturn + etfReturn + fdReturn + ppfReturn + npsReturn + goldReturn + bondReturn;
+      weightedReturn = totalReturnSum / parentTotalInvestmentValue;
+    }
+    const finalGrowthRate = Math.min(0.18, Math.max(0.06, weightedReturn));
+    const growth = 1 + finalGrowthRate;
+
     const totalYears = Math.max(1, endYear - startYear + 1);
 
     for (let i = 0; i < totalYears; i++) {
       const yearLabel = startYear + i;
 
-      // Base Case
-      const baseSavings = (monthlyIncome * 12) * Math.pow(1.08, i) * 0.25;
+      // Base Case (Using actual monthly surplus savings rate)
+      const baseSavingsRate = sal > 0 ? (actualMonthlySavings / sal) : 0.25;
+      const baseSavings = (monthlyIncome * 12) * Math.pow(growth, i) * baseSavingsRate;
       baseWorth = (baseWorth + baseSavings) * growth;
 
       // Simulated Case
@@ -1379,13 +1433,12 @@ export default function Dashboard() {
           netWorthVal -= (simMba / 2);
           simulatedSavings = 0;
         } else if (i > 2) {
-          // Bumps income post MBA
           simulatedSavings = (simulatedIncome * 1.5) * (simSavingsRate / 100);
         }
       }
 
       if (simHouse > 0 && i === simHouse) {
-        netWorthVal -= 15; // ₹15L Downpayment
+        netWorthVal -= 15; 
       }
 
       netWorthVal = (netWorthVal + simulatedSavings) * growth;
