@@ -928,6 +928,28 @@ export default function Dashboard() {
   const [syncErrorMessage, setSyncErrorMessage] = useState<string>("");
   // Investment Engine Enhancements States
   const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals" | "mutual_funds">("equities");
+  
+  // Persist active tab and sub-tab selections across reloads
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTab = localStorage.getItem("fincody_active_tab");
+      if (savedTab) setActiveTab(savedTab as any);
+      const savedSubTab = localStorage.getItem("fincody_selected_investment_sub_tab");
+      if (savedSubTab) setSelectedInvestmentSubTab(savedSubTab as any);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem("fincody_active_tab", activeTab);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedInvestmentSubTab) {
+      localStorage.setItem("fincody_selected_investment_sub_tab", selectedInvestmentSubTab);
+    }
+  }, [selectedInvestmentSubTab]);
   const [mutualFunds, setMutualFunds] = useState<any[]>([]);
 
   // Persist mutual funds state changes
@@ -1112,6 +1134,8 @@ export default function Dashboard() {
         if (data.savedPortfolios) setSavedPortfolios(data.savedPortfolios);
         if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
         if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
+        if (data.manualNetWorth !== undefined) setManualNetWorth(data.manualNetWorth);
+        if (data.mutualFunds) setMutualFunds(data.mutualFunds);
 
         // Hydrate new asset classes from cloud
         if (data.fixedDeposits) setFixedDeposits(data.fixedDeposits);
@@ -1263,6 +1287,8 @@ export default function Dashboard() {
         manualSalary,
         manualEMI,
         manualOtherExpenses,
+        manualNetWorth,
+        mutualFunds,
         portfolio,
         savedPortfolios,
         activePortfolioName,
