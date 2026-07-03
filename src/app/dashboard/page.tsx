@@ -63,6 +63,20 @@ import CurrencyRibbon from "@/components/CurrencyRibbon";
 import RollingNumber from "@/components/RollingNumber";
 import { useCurrency, SUPPORTED_CURRENCIES } from "@/context/CurrencyContext";
 
+// Standard bank Fixed Deposit rates as of date
+const BANK_FD_RATES = [
+  { name: "HDFC Bank", rate: 7.25 },
+  { name: "ICICI Bank", rate: 7.20 },
+  { name: "State Bank of India (SBI)", rate: 6.80 },
+  { name: "Punjab National Bank (PNB)", rate: 7.00 },
+  { name: "Bank of Baroda (BOB)", rate: 7.05 },
+  { name: "Axis Bank", rate: 7.15 },
+  { name: "Kotak Mahindra Bank", rate: 7.25 },
+  { name: "Federal Bank", rate: 7.30 },
+  { name: "IDFC First Bank", rate: 7.50 },
+  { name: "IndusInd Bank", rate: 7.75 }
+];
+
 // TypeScript Interfaces
 interface Message {
   sender: "user" | "ai";
@@ -4705,14 +4719,45 @@ const handlePredefinedQuestion = (q: string) => {
 
                             {/* Add FD form */}
                             <form onSubmit={handleAddFD} className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-3 border-t border-[var(--border-color)]">
-                              <input
-                                type="text"
-                                value={addFdBank}
-                                onChange={(e) => setAddFdBank(e.target.value)}
-                                placeholder="Bank (e.g. HDFC)"
-                                required
-                                className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
-                              />
+                              <div className="relative flex flex-col">
+                                <input
+                                  type="text"
+                                  value={addFdBank}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAddFdBank(val);
+                                    const exact = BANK_FD_RATES.find(b => b.name.toLowerCase() === val.toLowerCase());
+                                    if (exact) setAddFdRate(exact.rate.toString());
+                                  }}
+                                  placeholder="Bank (e.g. HDFC)"
+                                  required
+                                  className="w-full px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white"
+                                />
+                                {addFdBank && !BANK_FD_RATES.some(b => b.name === addFdBank) && (
+                                  (() => {
+                                    const suggestions = BANK_FD_RATES.filter(b => b.name.toLowerCase().includes(addFdBank.toLowerCase()));
+                                    if (suggestions.length === 0) return null;
+                                    return (
+                                      <div className="absolute z-[9999] left-0 right-0 top-full mt-1 rounded-xl border border-blue-500/25 bg-slate-950 shadow-2xl p-1.5 flex flex-col gap-1 max-h-[140px] overflow-y-auto">
+                                        {suggestions.map((s) => (
+                                          <button
+                                            key={s.name}
+                                            type="button"
+                                            onClick={() => {
+                                              setAddFdBank(s.name);
+                                              setAddFdRate(s.rate.toString());
+                                            }}
+                                            className="px-2.5 py-1.5 text-left rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-blue-600/10 transition-colors w-full cursor-pointer flex justify-between"
+                                          >
+                                            <span>🏦 {s.name}</span>
+                                            <span className="text-emerald-400 font-mono">{s.rate}%</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()
+                                )}
+                              </div>
                               <input
                                 type="number"
                                 value={addFdPrincipal}
