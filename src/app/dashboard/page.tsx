@@ -868,10 +868,10 @@ export default function Dashboard() {
 
   // Manual Entry States
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
-  const [manualSalary, setManualSalary] = useState("");
+  const [manualSalary, setManualSalary] = useState("185000");
   const [manualEMI, setManualEMI] = useState("");
-  const [manualOtherExpenses, setManualOtherExpenses] = useState("");
-  const [manualNetWorth, setManualNetWorth] = useState("");
+  const [manualOtherExpenses, setManualOtherExpenses] = useState("45000");
+  const [manualNetWorth, setManualNetWorth] = useState("1200000");
   const [manualSubscriptionName, setManualSubscriptionName] = useState("");
   const [manualSubscriptionPrice, setManualSubscriptionPrice] = useState("");
   const [calculationStartDate, setCalculationStartDate] = useState("2026-06-01");
@@ -1629,10 +1629,7 @@ export default function Dashboard() {
     }
 
     // Clear inputs and close modal
-    setManualSalary("");
     setManualEMI("");
-    setManualOtherExpenses("");
-    setManualNetWorth("");
     setManualSubscriptionName("");
     setManualSubscriptionPrice("");
     setShowManualEntryModal(false);
@@ -3111,8 +3108,19 @@ const handlePredefinedQuestion = (q: string) => {
                     <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                       <RollingNumber value={calculatedNetWorth} />
                     </div>
-                    <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1 font-bold">
-                      +14.2% <TrendingUp className="w-3.5 h-3.5" /> <span className="text-slate-500 font-semibold">this month</span>
+                    <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1.5 font-bold flex-wrap">
+                      +14.2% <TrendingUp className="w-3.5 h-3.5" /> 
+                      <span className="text-slate-500 font-semibold">
+                        As of {(() => {
+                          try {
+                            const date = new Date(calculationStartDate);
+                            if (isNaN(date.getTime())) return calculationStartDate;
+                            return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+                          } catch (e) {
+                            return calculationStartDate;
+                          }
+                        })()}
+                      </span>
                     </div>
 
                     <AnimatePresence>
@@ -3128,7 +3136,7 @@ const handlePredefinedQuestion = (q: string) => {
                             <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800">✕</button>
                           </div>
                           <p className="text-slate-300 leading-normal my-1">
-                            Sum of cash (₹${baselineCash.toLocaleString()}) and active assets (₹${totalInvestmentValue.toLocaleString()}: Equities, Gold, FDs, NPS, PPF, Bonds).
+                            Sum of cash (${format(baselineCash)}) and active assets (${format(totalInvestmentValue)}: Equities, Gold, FDs, NPS, PPF, Bonds).
                           </p>
                           <div className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
                             Calculated since: ${calculationStartDate}
@@ -4095,31 +4103,19 @@ const handlePredefinedQuestion = (q: string) => {
                     </div>
                   </div>
 
-                  {/* 2. Sub-tab Navigation Switcher */}
-                  <div className="flex flex-wrap gap-2 border-b border-[var(--border-color)] pb-3">
-                    {[
-                      { id: "equities", label: "Equities & ETFs", icon: TrendingUp },
-                      { id: "fixed_income", label: "Fixed Income", icon: Percent },
-                      { id: "retirement", label: "Retirement Pools", icon: Shield },
-                      { id: "metals", label: "Precious Metals", icon: Coins }
-                    ].map((subTab) => {
-                      const Icon = subTab.icon;
-                      const isActive = selectedInvestmentSubTab === subTab.id;
-                      return (
-                        <button
-                          key={subTab.id}
-                          onClick={() => setSelectedInvestmentSubTab(subTab.id as any)}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                            isActive 
-                              ? "bg-blue-600/10 border-blue-500/40 text-blue-500 dark:text-blue-400"
-                              : "bg-slate-900/30 border-transparent text-slate-400 hover:text-[var(--text-color)] hover:bg-slate-500/5"
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          <span>{subTab.label}</span>
-                        </button>
-                      );
-                    })}
+                  {/* 2. Sub-tab Navigation Dropdown (Below the Performer statistics) */}
+                  <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4 mb-2 flex-wrap">
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Asset Class Portfolio:</span>
+                    <select
+                      value={selectedInvestmentSubTab}
+                      onChange={(e) => setSelectedInvestmentSubTab(e.target.value as any)}
+                      className="bg-slate-900 border border-[var(--border-color)] rounded-xl px-4 py-2 text-xs font-black text-white focus:outline-none focus:border-blue-500 cursor-pointer min-w-[220px]"
+                    >
+                      <option value="equities">📈 Equities & ETFs</option>
+                      <option value="fixed_income">💼 Fixed Income (FDs & Bonds)</option>
+                      <option value="retirement">🛡️ Retirement Pools (NPS & PPF)</option>
+                      <option value="metals">🪙 Precious Metals (Gold)</option>
+                    </select>
                   </div>
 
                   {/* 3. Main Dashboard Grid Layout */}
@@ -5901,9 +5897,11 @@ const handlePredefinedQuestion = (q: string) => {
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
-                            <Download className="w-4 h-4" />
-                          </button>
+                          {doc.type !== "MANUAL" && (
+                            <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
+                              <Download className="w-4 h-4" />
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleDeleteDocument(doc.id)}
                             className="p-2 rounded-lg border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer"
@@ -6158,7 +6156,7 @@ const handlePredefinedQuestion = (q: string) => {
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="absolute bottom-20 right-0 w-[380px] sm:w-[420px] h-[600px] rounded-2xl border border-blue-500/20 bg-slate-950/80 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.15)] flex flex-col justify-between overflow-hidden text-left relative z-[99999]"
+              className="absolute bottom-20 right-0 w-[380px] sm:w-[420px] h-[600px] rounded-2xl border border-blue-500/20 bg-slate-950/80 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.15)] flex flex-col justify-between overflow-hidden text-left z-[99999]"
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragHover(true);
@@ -6651,7 +6649,7 @@ const handlePredefinedQuestion = (q: string) => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Worth ({activeCurrency.symbol})</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash & Bank Balance ({activeCurrency.symbol})</label>
                 <input
                   type="number"
                   value={manualNetWorth}
