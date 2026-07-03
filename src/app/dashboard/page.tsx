@@ -3737,7 +3737,21 @@ const handlePredefinedQuestion = (q: string) => {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                      {goals.map((goal) => {
+                      {goals.length === 0 && (
+                    <div className="glass-card p-8 rounded-2xl border border-[var(--border-color)] text-center flex flex-col items-center justify-center gap-4 bg-slate-900/5 min-h-[300px]">
+                      <div className="w-16 h-16 rounded-full bg-slate-950 border border-dashed border-[var(--border-color)] flex items-center justify-center text-2xl animate-pulse">
+                        🚀
+                      </div>
+                      <div className="flex flex-col gap-1 max-w-sm">
+                        <span className="text-sm font-black text-white uppercase tracking-wider block">Are you not a futuristic person?</span>
+                        <span className="text-xs text-slate-500 leading-relaxed block mt-1">
+                          You haven't defined a single milestone or goal for your wealth yet. Compounding only works for those who design their future. Set a target to start.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {goals.map((goal) => {
                         const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
                         return (
                           <div key={goal.id} className="flex flex-col gap-1.5">
@@ -3989,6 +4003,63 @@ const handlePredefinedQuestion = (q: string) => {
                       </button>
                     </form>
                   </div>
+
+                  {/* Fincody AI Suggestions Card inside Goals tab */}
+                  {(() => {
+                    const sal = parseFloat(manualSalary) || 200000;
+                    const emi = parseFloat(manualEMI) || 0;
+                    const exp = parseFloat(manualOtherExpenses) || 0;
+                    const actualMonthlySavings = Math.max(0, sal - emi - exp);
+                    
+                    const totalTarget = goals.reduce((acc, g) => acc + g.target, 0);
+                    const totalCurrent = goals.reduce((acc, g) => acc + g.current, 0);
+                    
+                    let suggestionText = "💡 Emergency Reserve: We recommend creating an Emergency Fund goal covering 6 months of expenses (e.g. ₹5,00,000) before planning long-term investments.";
+                    let suggestionBadge = "Core Starter";
+                    let suggestionColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+                    
+                    if (goals.length > 0) {
+                      const yearsToMeet = 5;
+                      const requiredMonthlySaving = (totalTarget - totalCurrent) / (yearsToMeet * 12);
+                      const isFeasible = actualMonthlySavings >= requiredMonthlySaving;
+                      
+                      if (isFeasible) {
+                        suggestionText = `Feasible Milestones: Your current monthly surplus of ₹${actualMonthlySavings.toLocaleString()} is fully sufficient to meet your tracked goals (₹${totalTarget.toLocaleString()}) within 5 years.`;
+                        suggestionBadge = "Low Risk Plan";
+                        suggestionColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                      } else {
+                        suggestionText = `Underfunded Milestones: Based on your goals (₹${totalTarget.toLocaleString()}), you need to save ₹${Math.round(requiredMonthlySaving).toLocaleString()}/mo. Consider raising savings by 10% or extending deadlines.`;
+                        suggestionBadge = "Underfunded Alert";
+                        suggestionColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                      }
+                    }
+
+                    return (
+                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-blue-600/[0.02] flex flex-col gap-4 text-left">
+                        <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
+                          <div>
+                            <span className="text-sm font-bold uppercase tracking-wider text-white block">💡 Fincody AI Suggestions</span>
+                            <span className="text-xs text-slate-500 mt-0.5 block">Goals feasibility & recommendations</span>
+                          </div>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${suggestionColor}`}>
+                            ${suggestionBadge}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-3.5 text-xs leading-relaxed font-semibold">
+                          <p className="text-slate-300">
+                            {suggestionText}
+                          </p>
+
+                          <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl text-[11px] text-slate-400">
+                            <span className="text-blue-400 font-bold block uppercase tracking-wider text-[9px] mb-1">🎯 Compound Accelerator</span>
+                            Link your goals directly to high-yield asset buckets (Stocks or Mutual Funds) to reduce the required self-pay capital.
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 </div>
               </motion.div>
             )}
