@@ -2860,11 +2860,11 @@ const handlePredefinedQuestion = (q: string) => {
             {[
               { id: "home", icon: Home, label: "Home", isLink: true, href: "/" },
               { id: "command", icon: Sparkles, label: "Command Center" },
+              { id: "vault", icon: FileText, label: "Document Vault" },
               { id: "goals", icon: Compass, label: "Goal Engine" },
               { id: "investments", icon: Activity, label: "Investments" },
               { id: "subscriptions", icon: Calendar, label: "Subscriptions" },
               { id: "insurance", icon: Shield, label: "Insurance Vault" },
-              { id: "vault", icon: FileText, label: "Document Vault" },
               { id: "decisions", icon: HelpCircle, label: "Decision Simulator" }
             ].map((link) => {
               const Icon = link.icon;
