@@ -28,7 +28,8 @@ import {
   RefreshCw,
   Upload,
   KeyRound,
-  FileText
+  FileText,
+  Edit2
 } from "lucide-react";
 import RollingNumber from "./RollingNumber";
 
@@ -440,7 +441,6 @@ export const DEFAULT_MUTUAL_FUNDS: FundData[] = [
   }
 ];
 
-// Complete search listing for new additions search method
 const ALL_DISCOVERABLE_FUNDS = [
   { name: "SBI Small Cap Fund", rate: 28.5, nav: 142.50, risk: "Very High", cat: "Small Cap", house: "SBI Mutual Fund" },
   { name: "Parag Parikh Flexi Cap Fund", rate: 21.8, nav: 72.85, risk: "High", cat: "Flexi Cap", house: "PPFAS Mutual Fund" },
@@ -512,6 +512,22 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
 
   // Discover Carousel active filter
   const [discoverFilter, setDiscoverFilter] = useState("High Growth");
+
+  // Direct Add Mutual Fund Form States (same style as FDs)
+  const [directAddName, setDirectAddName] = useState("");
+  const [directAddAmount, setDirectAddAmount] = useState("");
+  const [directAddSip, setDirectAddSip] = useState("");
+  const [directAddNAV, setDirectAddNAV] = useState("100");
+  const [directAddCategory, setDirectAddCategory] = useState("Flexi Cap");
+
+  // Inline Folio Editing State
+  const [editingFund, setEditingFund] = useState<FundData | null>(null);
+  const [editInvested, setEditInvested] = useState("");
+  const [editCurrent, setEditCurrent] = useState("");
+  const [editXirr, setEditXirr] = useState("");
+  const [editSipAmount, setEditSipAmount] = useState("");
+  const [editFolio, setEditFolio] = useState("");
+  const [editBroker, setEditBroker] = useState("");
 
   // Dynamic portfolio stats calculation
   const totalMfValue = mutualFunds.reduce((acc, f) => acc + f.current, 0);
@@ -731,7 +747,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
       category: manualCategory,
       house: manualAMC || "Self Maintained",
       invested: principal,
-      current: principal, // initialized as flat
+      current: principal,
       xirr: 12.00,
       sipStatus: manualType === "SIP" ? "Active" : "None",
       sipAmount: manualType === "SIP" ? 5000 : 0,
@@ -764,12 +780,72 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     setMutualFunds(prevList => [...prevList, newFund]);
     setShowSyncModal(false);
     setSyncMethod("menu");
-    // Clear forms
     setManualName("");
     setManualAMC("");
     setManualAmount("");
     setManualNAV("100.00");
     setManualFolio("");
+  };
+
+  // DIRECT ADD SUBMIT (same style as FDs)
+  const handleDirectAddFund = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directAddName || !directAddAmount) return;
+
+    const principal = parseFloat(directAddAmount) || 0;
+    const navVal = parseFloat(directAddNAV) || 100;
+    const sipVal = parseFloat(directAddSip) || 0;
+    const computedUnits = parseFloat((principal / navVal).toFixed(2));
+
+    const matchedInfo = ALL_DISCOVERABLE_FUNDS.find(f => f.name.toLowerCase() === directAddName.toLowerCase()) || {
+      rate: 12.5,
+      risk: "Moderate",
+      cat: "Flexi Cap",
+      house: "Self Managed"
+    };
+
+    const newFund: FundData = {
+      id: "fund-direct-" + Date.now(),
+      name: directAddName,
+      logo: "📈",
+      category: matchedInfo.cat as any,
+      house: matchedInfo.house,
+      invested: principal,
+      current: principal,
+      xirr: matchedInfo.rate / 2,
+      sipStatus: sipVal > 0 ? "Active" : "None",
+      sipAmount: sipVal,
+      oneYearReturn: matchedInfo.rate,
+      threeYearReturn: matchedInfo.rate - 2,
+      fiveYearReturn: matchedInfo.rate - 4,
+      nav: navVal,
+      minSip: 500,
+      aum: 4800,
+      expenseRatio: 0.72,
+      manager: "Direct Track Asset",
+      exitLoad: "1% if redeemed before 12 months",
+      riskLevel: matchedInfo.risk as any,
+      aiInsight: "Directly tracked mutual fund. Added via quick-tracker form.",
+      sharpeRatio: 1.45,
+      sortinoRatio: 1.62,
+      alpha: 2.15,
+      beta: 0.95,
+      holdings: [{ name: "Equity Broad Market", percentage: 100 }],
+      sectors: [{ name: "Diversified Assets", percentage: 100 }],
+      folioNumber: "DIR-" + Date.now().toString().slice(-4),
+      broker: "Direct Form",
+      purchaseDate: new Date().toISOString().split("T")[0],
+      units: computedUnits,
+      nextSipDate: sipVal > 0 ? "05 July 2026" : "None",
+      bank: sipVal > 0 ? "HDFC Bank" : "None",
+      autoDebitStatus: sipVal > 0 ? "Enabled" : "Disabled"
+    };
+
+    setMutualFunds(prevList => [...prevList, newFund]);
+    setDirectAddName("");
+    setDirectAddAmount("");
+    setDirectAddSip("");
+    setDirectAddNAV("100");
   };
 
   // SEARCH AND ADD AUTOCOMPLETE SELECT
@@ -779,7 +855,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
 
   const handleApplySearchAdd = () => {
     if (!selectedSearchAddFund) return;
-    const principal = 10000; // default lumpsum test principal
+    const principal = 10000;
     const computedUnits = parseFloat((principal / selectedSearchAddFund.nav).toFixed(2));
 
     const newFund: FundData = {
@@ -790,7 +866,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
       house: selectedSearchAddFund.house,
       invested: principal,
       current: principal,
-      xirr: selectedSearchAddFund.rate / 2, // simulated initial xirr
+      xirr: selectedSearchAddFund.rate / 2,
       sipStatus: "None",
       sipAmount: 0,
       oneYearReturn: selectedSearchAddFund.rate,
@@ -842,7 +918,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
             const nextCurrent = f.current + amountVal;
             return { ...f, invested: nextInvested, units: parseFloat(nextUnits.toFixed(2)), current: nextCurrent };
           } else {
-            // redeem
             const nextInvested = Math.max(0, f.invested - amountVal);
             const nextUnits = Math.max(0, (f.units || 0) - deltaUnits);
             const nextCurrent = Math.max(0, f.current - amountVal);
@@ -855,6 +930,50 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
 
     setTransactionModal(null);
     setTransactionAmount("");
+  };
+
+  // OPEN EDIT FOLIO DIALOG
+  const handleOpenEdit = (fund: FundData) => {
+    setEditingFund(fund);
+    setEditInvested(fund.invested.toString());
+    setEditCurrent(fund.current.toString());
+    setEditXirr(fund.xirr.toString());
+    setEditSipAmount(fund.sipAmount.toString());
+    setEditFolio(fund.folioNumber || "");
+    setEditBroker(fund.broker || "");
+  };
+
+  // SAVE FOLIO CHANGES
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFund) return;
+
+    const investedVal = parseFloat(editInvested) || 0;
+    const currentVal = parseFloat(editCurrent) || 0;
+    const xirrVal = parseFloat(editXirr) || 0;
+    const sipVal = parseFloat(editSipAmount) || 0;
+
+    setMutualFunds(prevList => 
+      prevList.map(f => {
+        if (f.id === editingFund.id) {
+          const computedUnits = parseFloat((currentVal / f.nav).toFixed(2));
+          return {
+            ...f,
+            invested: investedVal,
+            current: currentVal,
+            xirr: xirrVal,
+            sipAmount: sipVal,
+            sipStatus: sipVal > 0 ? "Active" : "None",
+            folioNumber: editFolio,
+            broker: editBroker,
+            units: computedUnits
+          };
+        }
+        return f;
+      })
+    );
+
+    setEditingFund(null);
   };
 
   // SIP OVERRIDES (Pause, Resume, Stop)
@@ -883,7 +1002,7 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
   return (
     <div className="flex flex-col gap-8 text-left">
       
-      {/* HEADER SECTION WITH SYNC BUTTON */}
+      {/* HEADER SECTION */}
       <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-4">
         <div>
           <h2 className="text-xl font-black text-white uppercase tracking-wider">Premium Mutual Funds</h2>
@@ -1185,6 +1304,12 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                                 >
                                   Redeem Units
                                 </button>
+                                <button 
+                                  onClick={() => handleOpenEdit(fund)}
+                                  className="px-2.5 py-1.5 rounded-lg border border-[var(--border-color)] hover:bg-blue-500/10 hover:text-blue-400 text-slate-400 text-[10px] uppercase font-bold transition-all cursor-pointer flex items-center gap-1"
+                                >
+                                  <Edit2 className="w-3 h-3" /> Edit Folio
+                                </button>
                                 {fund.sipStatus === "Active" ? (
                                   <button 
                                     onClick={() => handleSipAction(fund.id, "pause")}
@@ -1235,6 +1360,82 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
             {filteredFunds.length === 0 && (
               <span className="text-xs text-slate-500 italic text-center py-6 block">No active portfolios matching filters.</span>
             )}
+            
+            {/* Direct Add Form (same style as FDs) */}
+            <div className="p-4 bg-slate-950/20 border-t border-[var(--border-color)]">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">➕ Track Mutual Fund Direct Entry</span>
+              <form onSubmit={handleDirectAddFund} className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div className="relative flex flex-col sm:col-span-2">
+                  <input
+                    type="text"
+                    value={directAddName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDirectAddName(val);
+                      const exact = ALL_DISCOVERABLE_FUNDS.find(f => f.name.toLowerCase() === val.toLowerCase());
+                      if (exact) {
+                        setDirectAddNAV(exact.nav.toString());
+                        setDirectAddCategory(exact.cat);
+                      }
+                    }}
+                    placeholder="Mutual Fund Name (e.g. SBI Small Cap)"
+                    required
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
+                  />
+                  {directAddName && !ALL_DISCOVERABLE_FUNDS.some(f => f.name === directAddName) && (
+                    (() => {
+                      const suggestions = ALL_DISCOVERABLE_FUNDS.filter(f => f.name.toLowerCase().includes(directAddName.toLowerCase()));
+                      if (suggestions.length === 0) return null;
+                      return (
+                        <div className="absolute z-[9999] left-0 right-0 top-full mt-1 rounded-xl border border-blue-500/25 bg-slate-950 shadow-2xl p-1.5 flex flex-col gap-1 max-h-[140px] overflow-y-auto">
+                          {suggestions.map((s) => (
+                            <button
+                              key={s.name}
+                              type="button"
+                              onClick={() => {
+                                setDirectAddName(s.name);
+                                setDirectAddNAV(s.nav.toString());
+                                setDirectAddCategory(s.cat);
+                              }}
+                              className="px-2.5 py-1.5 text-left rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-blue-600/10 transition-colors w-full cursor-pointer flex justify-between"
+                            >
+                              <span>🏦 {s.name}</span>
+                              <span className="text-emerald-400 font-mono">₹{s.nav}</span>
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()
+                  )}
+                </div>
+
+                <input
+                  type="number"
+                  value={directAddAmount}
+                  onChange={(e) => setDirectAddAmount(e.target.value)}
+                  placeholder="Invested Amount"
+                  required
+                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
+                />
+
+                <input
+                  type="number"
+                  value={directAddSip}
+                  onChange={(e) => setDirectAddSip(e.target.value)}
+                  placeholder="SIP Amount (0 if Lumpsum)"
+                  required
+                  className="px-3 py-2 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-semibold"
+                />
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 font-black uppercase tracking-wider"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Track Fund
+                </button>
+              </form>
+            </div>
+
           </div>
 
           {/* D. PORTFOLIO ANALYTICS MATRIX */}
@@ -1302,83 +1503,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
             >
               View All SIPs
             </button>
-          </div>
-
-          {/* B. ASSET ALLOCATION DONUT CHART */}
-          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
-            <span className="text-xs font-black uppercase tracking-wider text-white border-b border-[var(--border-color)] pb-3 block">Asset Allocation</span>
-            
-            <div className="flex justify-center items-center py-2 relative">
-              <svg className="w-36 h-36 transform -rotate-90">
-                <circle cx="72" cy="72" r="52" stroke="transparent" strokeWidth="8" fill="none" />
-                <circle 
-                  cx="72" cy="72" r="52" stroke="#3b82f6" strokeWidth="10" fill="none"
-                  strokeDasharray={2 * Math.PI * 52}
-                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.55)}
-                  strokeLinecap="round"
-                />
-                <circle 
-                  cx="72" cy="72" r="52" stroke="#10b981" strokeWidth="10" fill="none"
-                  strokeDasharray={2 * Math.PI * 52}
-                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
-                  className="origin-center transform rotate-[198deg]"
-                />
-                <circle 
-                  cx="72" cy="72" r="52" stroke="#a855f7" strokeWidth="10" fill="none"
-                  strokeDasharray={2 * Math.PI * 52}
-                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
-                  className="origin-center transform rotate-[252deg]"
-                />
-                <circle 
-                  cx="72" cy="72" r="52" stroke="#f59e0b" strokeWidth="10" fill="none"
-                  strokeDasharray={2 * Math.PI * 52}
-                  strokeDashoffset={2 * Math.PI * 52 * (1 - 0.15)}
-                  className="origin-center transform rotate-[306deg]"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-lg font-black text-white font-mono">100%</span>
-                <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Compounded</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                <span className="text-slate-400">Equity (55%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                <span className="text-slate-400">Debt (15%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-                <span className="text-slate-400">Hybrid (15%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                <span className="text-slate-400">Index (15%)</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* C. TOP PERFORMING FUNDS */}
-          <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4">
-            <span className="text-xs font-black uppercase tracking-wider text-white border-b border-[var(--border-color)] pb-3 block">Top Performers (1Y)</span>
-            <div className="flex flex-col gap-3">
-              {mutualFunds.slice(0, 3).map((f) => (
-                <div key={f.id} className="flex justify-between items-center text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded bg-slate-800/40 flex items-center justify-center">{f.logo}</span>
-                    <span className="font-bold text-slate-300 truncate max-w-[120px]">{f.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-emerald-400 font-black">+{f.oneYearReturn}%</span>
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
         </div>
@@ -1593,7 +1717,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Modal Head */}
               <div className="flex items-center gap-3 border-b border-blue-500/10 pb-4">
                 <span className="text-xl bg-slate-950/50 p-2 rounded-xl border border-blue-500/20 w-10 h-10 flex items-center justify-center">🔄</span>
                 <div>
@@ -1602,7 +1725,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 </div>
               </div>
 
-              {/* METHOD MENU SCREEN */}
               {syncMethod === "menu" && (
                 <div className="flex flex-col gap-2.5">
                   <button 
@@ -1636,7 +1758,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 </div>
               )}
 
-              {/* METHOD 1: SEARCH & ADD */}
               {syncMethod === "search" && (
                 <div className="flex flex-col gap-4 text-xs font-semibold">
                   <div className="flex flex-col gap-1">
@@ -1650,7 +1771,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                     />
                   </div>
 
-                  {/* Autocomplete suggestion matches */}
                   {addSearchQuery && (
                     <div className="max-h-[160px] overflow-y-auto border border-blue-500/15 rounded-xl bg-slate-950/60 divide-y divide-blue-500/10">
                       {ALL_DISCOVERABLE_FUNDS.filter(f => f.name.toLowerCase().includes(addSearchQuery.toLowerCase())).map(f => (
@@ -1695,7 +1815,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 </div>
               )}
 
-              {/* METHOD 2: UPLOAD CAS STATEMENT */}
               {syncMethod === "cas" && (
                 <div className="flex flex-col gap-4 text-xs">
                   {!isScanning ? (
@@ -1747,7 +1866,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 </div>
               )}
 
-              {/* METHOD 3: BANK CAMS/GROWW SYNC */}
               {syncMethod === "bank" && (
                 <div className="flex flex-col gap-4 text-xs font-semibold">
                   {!otpSent ? (
@@ -1808,7 +1926,6 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                 </div>
               )}
 
-              {/* METHOD 4: MANUAL ENTRY */}
               {syncMethod === "manual" && (
                 <form onSubmit={handleManualSubmit} className="flex flex-col gap-3.5 text-xs text-left font-semibold">
                   <div className="grid grid-cols-2 gap-3">
@@ -1976,6 +2093,112 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                   Confirm Transaction
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT FOLIO DIALOG MODAL */}
+      <AnimatePresence>
+        {editingFund && (
+          <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md glass-card rounded-3xl border border-blue-500/25 p-7 shadow-2xl relative bg-slate-900/95 text-left flex flex-col gap-6"
+            >
+              <button
+                onClick={() => setEditingFund(null)}
+                className="absolute right-5 top-5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3.5 border-b border-blue-500/10 pb-4">
+                <span className="text-xl bg-slate-950/50 p-2 rounded-xl border border-blue-500/20 w-10 h-10 flex items-center justify-center">{editingFund.logo}</span>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Edit Folio Details</h3>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{editingFund.name}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveEdit} className="flex flex-col gap-4 text-xs font-semibold">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Invested Cost ({activeCurrency.symbol})</label>
+                    <input 
+                      type="number" 
+                      value={editInvested}
+                      onChange={(e) => setEditInvested(e.target.value)}
+                      required
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Current Value ({activeCurrency.symbol})</label>
+                    <input 
+                      type="number" 
+                      value={editCurrent}
+                      onChange={(e) => setEditCurrent(e.target.value)}
+                      required
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">XIRR Return (%)</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      value={editXirr}
+                      onChange={(e) => setEditXirr(e.target.value)}
+                      required
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">SIP Amount ({activeCurrency.symbol})</label>
+                    <input 
+                      type="number" 
+                      value={editSipAmount}
+                      onChange={(e) => setEditSipAmount(e.target.value)}
+                      required
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Folio Number</label>
+                    <input 
+                      type="text" 
+                      value={editFolio}
+                      onChange={(e) => setEditFolio(e.target.value)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Broker Source</label>
+                    <input 
+                      type="text" 
+                      value={editBroker}
+                      onChange={(e) => setEditBroker(e.target.value)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider mt-2 cursor-pointer"
+                >
+                  Save Folio Changes
+                </button>
+              </form>
             </motion.div>
           </div>
         )}
