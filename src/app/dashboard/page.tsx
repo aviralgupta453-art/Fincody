@@ -3754,37 +3754,27 @@ const handlePredefinedQuestion = (q: string) => {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                      {goals.length === 0 && (
-                    <div className="glass-card p-8 rounded-2xl border border-[var(--border-color)] text-center flex flex-col items-center justify-center gap-4 bg-slate-900/5 min-h-[300px]">
-                      <div className="w-16 h-16 rounded-full bg-slate-950 border border-dashed border-[var(--border-color)] flex items-center justify-center text-2xl animate-pulse">
-                        🚀
-                      </div>
-                      <div className="flex flex-col gap-1 max-w-sm">
-                        <span className="text-sm font-black text-white uppercase tracking-wider block">Are you not a futuristic person?</span>
-                        <span className="text-xs text-slate-500 leading-relaxed block mt-1">
-                          You haven't defined a single milestone or goal for your wealth yet. Compounding only works for those who design their future. Set a target to start.
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {goals.map((goal) => {
-                        const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
-                        return (
-                          <div key={goal.id} className="flex flex-col gap-1.5">
-                            <div className="flex justify-between items-center text-xs font-bold">
-                              <span className="text-[var(--text-subtitle)]">{goal.name}</span>
-                              <span className="text-[var(--text-color)] font-mono">{percent}% <span className="text-slate-500 font-semibold">({goal.deadline})</span></span>
+                      {goals.length === 0 ? (
+                        <span className="text-xs text-slate-500 font-semibold italic text-center py-4">No active goal milestones tracked.</span>
+                      ) : (
+                        goals.map((goal) => {
+                          const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
+                          return (
+                            <div key={goal.id} className="flex flex-col gap-1.5">
+                              <div className="flex justify-between items-center text-xs font-bold">
+                                <span className="text-[var(--text-subtitle)]">{goal.name}</span>
+                                <span className="text-[var(--text-color)] font-mono">{percent}% <span className="text-slate-500 font-semibold">({goal.deadline})</span></span>
+                              </div>
+                              <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-blue-500 rounded-full transition-all duration-500" 
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-blue-500 rounded-full transition-all duration-500" 
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>
@@ -3819,6 +3809,20 @@ const handlePredefinedQuestion = (q: string) => {
                         <RotateCcw className="w-3.5 h-3.5" /> Undo last change
                       </button>
                     </motion.div>
+                  )}
+
+                  {goals.length === 0 && (
+                    <div className="glass-card p-8 rounded-2xl border border-[var(--border-color)] text-center flex flex-col items-center justify-center gap-4 bg-slate-900/5 min-h-[300px]">
+                      <div className="w-16 h-16 rounded-full bg-slate-950 border border-dashed border-[var(--border-color)] flex items-center justify-center text-2xl animate-pulse">
+                        🚀
+                      </div>
+                      <div className="flex flex-col gap-1 max-w-sm">
+                        <span className="text-sm font-black text-white uppercase tracking-wider block">Are you not a futuristic person?</span>
+                        <span className="text-xs text-slate-500 leading-relaxed block mt-1">
+                          You haven't defined a single milestone or goal for your wealth yet. Compounding only works for those who design their future. Set a target to start.
+                        </span>
+                      </div>
+                    </div>
                   )}
 
                   {goals.map((goal) => {
