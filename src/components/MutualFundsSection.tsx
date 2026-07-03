@@ -527,6 +527,8 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
   const [editSipAmount, setEditSipAmount] = useState("");
   const [editFolio, setEditFolio] = useState("");
   const [editBroker, setEditBroker] = useState("");
+  const [editCategory, setEditCategory] = useState("Flexi Cap");
+  const [editInvestmentType, setEditInvestmentType] = useState<"SIP" | "Lumpsum">("SIP");
 
   // External Track Setup state
   const [trackingExternalFund, setTrackingExternalFund] = useState<any | null>(null);
@@ -942,6 +944,8 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     setEditSipAmount(fund.sipAmount.toString());
     setEditFolio(fund.folioNumber || "");
     setEditBroker(fund.broker || "");
+    setEditCategory(fund.category);
+    setEditInvestmentType(fund.sipStatus !== "None" ? "SIP" : "Lumpsum");
   };
 
   // SAVE FOLIO CHANGES
@@ -952,7 +956,8 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
     const investedVal = parseFloat(editInvested) || 0;
     const currentVal = parseFloat(editCurrent) || 0;
     const xirrVal = parseFloat(editXirr) || 0;
-    const sipVal = parseFloat(editSipAmount) || 0;
+    const isSip = editInvestmentType === "SIP";
+    const sipVal = isSip ? (parseFloat(editSipAmount) || 5000) : 0;
 
     setMutualFunds(prevList => 
       prevList.map(f => {
@@ -964,7 +969,8 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
             current: currentVal,
             xirr: xirrVal,
             sipAmount: sipVal,
-            sipStatus: sipVal > 0 ? "Active" : "None",
+            sipStatus: isSip ? "Active" : "None",
+            category: editCategory as any,
             folioNumber: editFolio,
             broker: editBroker,
             units: computedUnits
@@ -2189,6 +2195,35 @@ export default function MutualFundsSection({ activeCurrency, format, mutualFunds
                       required
                       className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Category</label>
+                    <select 
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none focus:border-blue-500 font-bold"
+                    >
+                      <option value="Small Cap">Small Cap</option>
+                      <option value="Flexi Cap">Flexi Cap</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Large Cap">Large Cap</option>
+                      <option value="Mid Cap">Mid Cap</option>
+                      <option value="Index">Index</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-slate-400 uppercase tracking-widest">Investment Type</label>
+                    <select 
+                      value={editInvestmentType}
+                      onChange={(e) => setEditInvestmentType(e.target.value as any)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-blue-500/15 text-white focus:outline-none focus:border-blue-500 font-bold"
+                    >
+                      <option value="SIP">Monthly SIP</option>
+                      <option value="Lumpsum">Lumpsum (One-Time)</option>
+                    </select>
                   </div>
                 </div>
 
