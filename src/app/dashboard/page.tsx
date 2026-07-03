@@ -167,6 +167,10 @@ export default function Dashboard() {
     };
     checkSession();
 
+    if (typeof window !== "undefined") {
+      setHasAiMemory(!!localStorage.getItem("fincody_ai_memory"));
+    }
+
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
@@ -190,6 +194,9 @@ export default function Dashboard() {
       root.classList.add("light");
     } else {
       root.classList.remove("light");
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fincody-theme", theme);
     }
   }, [theme]);
 
@@ -268,6 +275,7 @@ export default function Dashboard() {
   const [voiceMode, setVoiceMode] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking] = useState(false);
   const [welcomeTitleIndex, setWelcomeTitleIndex] = useState(0);
+  const [hasAiMemory, setHasAiMemory] = useState(false);
   const [multistageThinking, setMultistageThinking] = useState("");
   const [dragHover, setDragHover] = useState(false);
   const [scanAnimation, setScanAnimation] = useState(false);
@@ -512,8 +520,9 @@ export default function Dashboard() {
     }
   };
 
-  // Real-time ticking alert countdown timer
+  // Real-time ticking alert countdown timer (optimized to tick ONLY when Alert Center drawer is open)
   useEffect(() => {
+    if (!financialNotificationsOpen) return;
     const countdownTimer = setInterval(() => {
       setFinancialNotifications((prev) => 
         prev.map((n) => {
@@ -543,7 +552,7 @@ export default function Dashboard() {
       );
     }, 1000);
     return () => clearInterval(countdownTimer);
-  }, []);
+  }, [financialNotificationsOpen]);
 
   // Simulate live alerts
   useEffect(() => {
@@ -1605,17 +1614,26 @@ export default function Dashboard() {
       updatedLog.push(`Calculation start date set to ${calculationStartDate}`);
     }
 
-    // Append document record to file list
-    const newDoc: DocumentFile = {
-      id: Date.now().toString(),
-      name: `Manual_Entry_Sheet_${new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "_")}.pdf`,
-      size: "18 KB",
-      uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-      type: "MANUAL"
-    };
-    
+    // Edit or append manual entry sheet without duplicating it
     setDocuments(prev => {
-      const updated = [newDoc, ...prev];
+      const exists = prev.some(d => d.type === "MANUAL");
+      let updated;
+      if (exists) {
+        // Update uploaded timestamp on the existing manual sheet rather than creating a new one
+        updated = prev.map(d => d.type === "MANUAL" ? {
+          ...d,
+          uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+        } : d);
+      } else {
+        const newDoc: DocumentFile = {
+          id: Date.now().toString(),
+          name: `Manual_Entry_Sheet_${new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "_")}.pdf`,
+          size: "18 KB",
+          uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          type: "MANUAL"
+        };
+        updated = [newDoc, ...prev];
+      }
       persistData("documents", updated);
       return updated;
     });
@@ -6245,7 +6263,7 @@ const handlePredefinedQuestion = (q: string) => {
                 {chatMessages.length === 1 && (
                   <div className="py-6 text-center flex flex-col gap-4 border-b border-blue-500/5 bg-blue-600/[0.01] rounded-2xl p-4">
                     {/* Chatbot Memory Prompt */}
-                    {localStorage.getItem("fincody_ai_memory") && (
+                    {hasAiMemory && (
                       <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-400 text-left font-bold flex justify-between items-center mb-1 animate-in fade-in duration-300">
                         <span>🧠 Jarvis Memory: You asked about retirement last week.</span>
                         <button

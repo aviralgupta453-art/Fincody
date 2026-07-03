@@ -354,6 +354,20 @@ export default function Home() {
           };
         })
       );
+
+      // Fluctuate live snapshot metrics in sync with market updates to feel alive!
+      setSnapshotNetWorth((prev) => {
+        const pct = (Math.random() - 0.47) * 0.0002;
+        return Math.round(prev * (1 + pct));
+      });
+      setSnapshotPortfolio((prev) => {
+        const pct = (Math.random() - 0.47) * 0.0003;
+        return Math.round(prev * (1 + pct));
+      });
+      setSnapshotTodayGain((prev) => {
+        const pct = (Math.random() - 0.47) * 0.003;
+        return parseFloat((prev * (1 + pct)).toFixed(2));
+      });
     }, 4000);
     return () => clearInterval(stockInterval);
   }, []);
@@ -529,6 +543,9 @@ export default function Home() {
       root.classList.add("light");
     } else {
       root.classList.remove("light");
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fincody-theme", theme);
     }
   }, [theme]);
 
