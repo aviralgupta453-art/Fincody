@@ -76,9 +76,33 @@ export default function CurrencyRibbon({ variant = "full" }: CurrencyRibbonProps
   if (isCompact) {
     return (
       <div className="relative select-none z-40">
-        {/* Compact Scrolling Chips */}
+        {/* 1. Mobile Dropdown selector (only visible on phones / screen widths < 768px) */}
+        <div className="block md:hidden">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 text-white text-xs font-black select-none">
+            <span className="w-4 h-3 flex items-center justify-center overflow-hidden rounded-sm shrink-0">
+              <img 
+                src={`https://flagcdn.com/w20/${activeCurrency.code.substring(0, 2).toLowerCase()}.png`} 
+                className="w-full h-full object-cover"
+                alt={activeCurrency.code}
+              />
+            </span>
+            <select
+              value={activeCurrency.code}
+              onChange={(e) => setActiveCurrency(e.target.value)}
+              className="bg-transparent text-white font-black uppercase tracking-wider focus:outline-none cursor-pointer pr-1"
+            >
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code} className="bg-slate-950 text-white font-sans text-xs">
+                  {currency.code} ({currency.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 2. Tablet & Laptop Chips selector (only visible on screen widths >= 768px) */}
         <div 
-          className="flex items-center gap-1.5 flex-wrap py-1 relative max-w-[500px]"
+          className="hidden md:flex items-center gap-1.5 flex-wrap py-1 relative max-w-[500px]"
         >
           {SUPPORTED_CURRENCIES.map((currency) => {
             const isActive = activeCurrency.code === currency.code;
