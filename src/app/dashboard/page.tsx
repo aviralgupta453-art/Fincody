@@ -62,6 +62,7 @@ import FincodyLogo from "@/components/FincodyLogo";
 import CurrencyRibbon from "@/components/CurrencyRibbon";
 import RollingNumber from "@/components/RollingNumber";
 import { useCurrency, SUPPORTED_CURRENCIES } from "@/context/CurrencyContext";
+import MutualFundsSection from "@/components/MutualFundsSection";
 
 // Standard bank Fixed Deposit rates as of date
 const BANK_FD_RATES = [
@@ -924,7 +925,7 @@ export default function Dashboard() {
   const [newPortfolioName, setNewPortfolioName] = useState("");
   const [syncErrorMessage, setSyncErrorMessage] = useState<string>("");
   // Investment Engine Enhancements States
-  const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals">("equities");
+  const [selectedInvestmentSubTab, setSelectedInvestmentSubTab] = useState<"equities" | "fixed_income" | "retirement" | "metals" | "mutual_funds">("equities");
   const [ignoredRecs, setIgnoredRecs] = useState<string[]>([]);
   const [replacingRecStock, setReplacingRecStock] = useState<any | null>(null);
 
@@ -4147,11 +4148,15 @@ const handlePredefinedQuestion = (q: string) => {
                       <option value="fixed_income">💼 Fixed Income (FDs & Bonds)</option>
                       <option value="retirement">🛡️ Retirement Pools (NPS & PPF)</option>
                       <option value="metals">🪙 Precious Metals (Gold)</option>
+                      <option value="mutual_funds">📊 Mutual Funds (SIPs)</option>
                     </select>
                   </div>
 
-                  {/* 3. Main Dashboard Grid Layout */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* 3. Main Dashboard Grid Layout / Mutual Funds Section */}
+                  {selectedInvestmentSubTab === "mutual_funds" ? (
+                    <MutualFundsSection activeCurrency={activeCurrency} format={format} />
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column: Sub-Tab Content Area (lg:col-span-8) */}
                     <div className="lg:col-span-8 flex flex-col gap-6">
                       
@@ -5288,6 +5293,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                     </div>
                   </div>
+                  )}
 
                 </motion.div>
               );
