@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { 
   Bot, 
+  Home,
   Sparkles, 
   TrendingUp, 
   Shield, 
@@ -2854,6 +2855,7 @@ const handlePredefinedQuestion = (q: string) => {
           {/* Navigation Links */}
           <nav className="flex flex-col gap-1 text-sm font-medium">
             {[
+              { id: "home", icon: Home, label: "Home", isLink: true, href: "/" },
               { id: "command", icon: Sparkles, label: "Command Center" },
               { id: "goals", icon: Compass, label: "Goal Engine" },
               { id: "investments", icon: Activity, label: "Investments" },
@@ -2863,6 +2865,18 @@ const handlePredefinedQuestion = (q: string) => {
               { id: "decisions", icon: HelpCircle, label: "Decision Simulator" }
             ].map((link) => {
               const Icon = link.icon;
+              if (link.isLink) {
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.href}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-left text-[var(--text-subtitle)] hover:text-[var(--text-color)] hover:bg-slate-500/5 transition-all"
+                  >
+                    <Icon className="w-4.5 h-4.5" />
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              }
               return (
                 <button
                   key={link.id}

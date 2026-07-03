@@ -110,12 +110,24 @@ export async function GET(request: NextRequest) {
       const opportunities = `Accumulate quality index funds or large-cap assets during minor drawdowns.`;
       const risks = `Uncertainty surrounding upcoming interest rate revisions or supply-chain shocks.`;
 
+      let crux = n.summary || n.description || "";
+      if (!crux || crux.length < 15) {
+        const tickerStr = affected.map((a: any) => a.name).join(", ");
+        if (impact === "Bullish") {
+          crux = `Market momentum increases as positive indicators surround ${tickerStr || "indices"}. Rising volumes and optimistic macroeconomic outlook are driving buyer sentiment, positioning large-cap leaders for steady gains in the upcoming sessions.`;
+        } else if (impact === "Bearish") {
+          crux = `Sellers dominate the session following adverse news cycles regarding ${tickerStr || "indices"}. Macro concerns, coupled with technical index resistance levels, suggest cautious trading as investors monitor key support benchmarks.`;
+        } else {
+          crux = `Trading remains range-bound for ${tickerStr || "indices"} ahead of major upcoming regulatory updates. Analysts suggest building exposure gradually in defensive sectors while keeping track of high-volume consolidations.`;
+        }
+      }
+
       return {
         id: n.uuid || `news-${idx}-${Date.now()}`,
         country: country.toLowerCase() !== "global" ? country : (lowerTitle.includes("india") ? "India" : lowerTitle.includes("china") ? "China" : lowerTitle.includes("europe") ? "Europe" : "Global"),
         category: category.charAt(0).toUpperCase() + category.slice(1),
         headline: title,
-        summary: title + ". Market observers note that this news will affect investor sentiment and short-term liquidity profiles across domestic exchanges.",
+        summary: crux,
         source: n.publisher || "Yahoo Finance",
         timestamp,
         breaking: idx < 2 && impact !== "Neutral",
