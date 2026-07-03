@@ -59,6 +59,7 @@ export default function MagicCursor() {
     // State parameters
     const mouse = { x: 0, y: 0, prevX: 0, prevY: 0, speed: 0 };
     const cursor = { x: 0, y: 0, radius: 11, targetRadius: 11 };
+    const dot = { x: 0, y: 0 };
     const particles: Particle[] = [];
     let isHovering = false;
     let isClicking = false;
@@ -211,6 +212,8 @@ export default function MagicCursor() {
       mouse.y = e.clientY;
       cursor.x = e.clientX;
       cursor.y = e.clientY;
+      dot.x = e.clientX;
+      dot.y = e.clientY;
       window.removeEventListener("mousemove", initCoords);
     };
     window.addEventListener("mousemove", initCoords);
@@ -226,6 +229,11 @@ export default function MagicCursor() {
       const ease = 0.15;
       cursor.x += (mouse.x - cursor.x) * ease;
       cursor.y += (mouse.y - cursor.y) * ease;
+
+      // Fast interpolation for the inner solid core dot to filter out mouse event jitter
+      const dotEase = 0.45;
+      dot.x += (mouse.x - dot.x) * dotEase;
+      dot.y += (mouse.y - dot.y) * dotEase;
 
       // Smooth custom cursor aura radius resizing
       cursor.radius += (cursor.targetRadius - cursor.radius) * ease;
@@ -264,7 +272,7 @@ export default function MagicCursor() {
         ? (light ? "rgba(109, 40, 217, 0.9)" : "rgba(168, 85, 247, 0.85)") 
         : (light ? "rgba(15, 23, 42, 0.8)" : "#ffffff");
       ctx.beginPath();
-      ctx.arc(mouse.x, mouse.y, isHovering ? 4.5 : 6, 0, Math.PI * 2);
+      ctx.arc(dot.x, dot.y, isHovering ? 4.5 : 6, 0, Math.PI * 2);
       ctx.fill();
 
       // 3. Update & Draw Particles

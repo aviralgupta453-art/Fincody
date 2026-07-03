@@ -2089,29 +2089,55 @@ const handleSaveCurrentPortfolio = (name: string) => {
     setTimeout(() => {
       setMultistageThinking("");
       
-      let replyText = "I have analyzed your request. Fincody AI model predicts a stable path. Let me know how I can adjust details.";
-      const query = text.toLowerCase();
+      let replyText = "";
+      const query = text.toLowerCase().trim();
 
       // Dashboard context extraction
-      const totalSipInvestments = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+      const totalSipInvestments = portfolio.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(quotes[item.symbol]?.price || item.avgBuyPrice || 0)), 0);
       const fdCount = fixedDeposits.length;
       
-      if (query.includes("car") || query.includes("lakh")) {
-        replyText = `Analyzing ₹15 Lakh car purchase. Based on your current Monthly Savings of ₹${monthlySavings.toLocaleString()} and Net Worth of ₹${netWorth.toLocaleString()}, you can afford it. However, your emergency buffer drops below 2 months. I suggest keeping the index fund SIP running at ₹${totalSipInvestments > 0 ? (totalSipInvestments/10).toFixed(0) : "5,000"}/month and deferring the purchase for 3 months to avoid equity dilution. [SIMULATION: CAR]`;
+      const netWorthFormatted = calculatedNetWorth.toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
+      const savingsFormatted = calculatedMonthlySavings.toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
+      const subSpendFormatted = monthlySubscriptionSpend.toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
+      const activeSubsCount = subscriptions.filter(s => s.status === "active").length;
+      const goalsCount = goals.length;
+      const totalGoalTarget = goals.reduce((acc, curr) => acc + curr.target, 0).toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
+      const totalGoalCurrent = goals.reduce((acc, curr) => acc + curr.current, 0).toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
+
+      if (query.includes("hello") || query.includes("hi ") || query.includes("hey")) {
+        replyText = `Hello! I am Jarvis, your Fincody AI Financial Co-pilot. I analyze your live Net Worth (${netWorthFormatted}), Monthly Savings (&apos;surplus&apos; of ${savingsFormatted}), and active subscriptions in real-time. Ask me anything about your investments, goal engines, or tax planning strategies!`;
+      } else if (query.includes("how does") && (query.includes("app") || query.includes("work") || query.includes("use"))) {
+        replyText = `Fincody is an AI-powered financial operating system. Here&apos;s what you can do:
+1. **Wealth Engine**: Monitor your live Net Worth (${netWorthFormatted}), Fixed Deposits, Gold, NPS, and Equities.
+2. **Goal Engine**: Simulate SIPs toward targets like Emergency Funds and Retirement.
+3. **Audit Subscriptions**: Automatically detect and cancel overlapping subscriptions (current spend: ${subSpendFormatted}/mo).
+4. **Secure Vault**: Upload tax, insurance, or asset documents for neural scanner optimization.`;
+      } else if (query.includes("car") || query.includes("lakh")) {
+        replyText = `Analyzing a ₹15 Lakh car purchase. Based on your current Monthly Savings of ${savingsFormatted} and Net Worth of ${netWorthFormatted}, you have the baseline capacity. However, your emergency cushion would dip. I suggest keeping your index fund SIP running and deferring the purchase for 3 months to avoid equity dilution. [SIMULATION: CAR]`;
       } else if (query.includes("mba") || query.includes("career") || query.includes("study")) {
-        replyText = `Simulating a ₹30 Lakh MBA compared to your current savings index. Projected post-graduation salary raises your annual compounding by 65%. Your Net Worth (currently ₹${netWorth.toLocaleString()}) is projected to rise by +₹1.48 Crores by Year 10. [SIMULATION: MBA]`;
-      } else if (query.includes("netflix") || query.includes("save") || query.includes("spotify") || query.includes("expense")) {
-        replyText = `Your active subscriptions total ${subscriptions.length} services, costing ₹${subscriptions.reduce((acc, s) => acc + s.price, 0)}/month. Canceling Netflix & Spotify saves ₹828/mo. If auto-invested in equity index fund, this accumulates to ₹1.9 Lakhs in 10 years and ₹28.9 Lakhs in 30 years.`;
-      } else if (query.includes("net worth") || query.includes("assets")) {
-        replyText = `Your current Net Worth is ₹${netWorth.toLocaleString()}. Active assets breakdown: Stocks & ETFs (₹${totalSipInvestments.toLocaleString()}), bank Fixed Deposits (${fdCount} accounts, totaling ₹${fixedDeposits.reduce((acc, f) => acc + f.principal, 0).toLocaleString()}), PPF balance (₹${ppfData.balance.toLocaleString()}), and NPS corpus (₹${npsData.corpus.toLocaleString()}).`;
+        replyText = `Simulating a ₹30 Lakh MBA compared to your current savings. Projected post-graduation salary raise is estimated to increase your compound savings by 65%. Your Net Worth is projected to rise by +₹1.48 Crores by Year 10. [SIMULATION: MBA]`;
+      } else if (query.includes("subscription") || query.includes("netflix") || query.includes("save") || query.includes("spotify") || query.includes("expense")) {
+        const expensiveSub = [...subscriptions].filter(s => s.status === "active").sort((a, b) => b.price - a.price)[0];
+        replyText = `Your active subscriptions total ${activeSubsCount} services, costing ${subSpendFormatted}/month. The most expensive is ${expensiveSub ? expensiveSub.name : "Adobe"} at ${expensiveSub ? format(expensiveSub.price) : "₹4,220"}/month. Canceling it saves ${expensiveSub ? format(expensiveSub.price) : "₹4,220"}/mo, which grows to over ₹2 Lakhs in 10 years if auto-invested in equities.`;
+      } else if (query.includes("net worth") || query.includes("assets") || query.includes("wealth")) {
+        replyText = `Your current live Net Worth is **${netWorthFormatted}**. Active assets breakdown: Stocks & ETFs (${format(totalSipInvestments + etfsTotalValue)}), Fixed Deposits (${fdCount} accounts, totaling ${format(fdsTotalValue)}), PPF balance (${format(ppfTotalValue)}), and NPS corpus (${format(npsData.corpus)}). We recommend maintaining a 20% liquid cushion.`;
       } else if (query.includes("insurance") || query.includes("vault")) {
-        replyText = "I found 3 insurance policies in your secure vault. Key alert: Your ICICI Auto Insurance renewal is coming up in August. There is a redundant coverage overlap in premium payouts. I suggest adjusting deductibles.";
+        replyText = "I found active policies in your secure vault. Alert: Your ICICI Auto Insurance renewal is coming up in August. There is a redundant coverage overlap in premium payouts. I suggest adjusting deductibles under your Fincody Insurance Engine.";
       } else if (query.includes("portfolio") || query.includes("stock") || query.includes("rebalance")) {
         const bestPerfSymbol = portfolio.length > 0 ? portfolio[0].symbol : "NIFTYBEES";
-        replyText = `Your stock portfolio has an active valuation of ₹${totalSipInvestments.toLocaleString()}. The top performer is ${bestPerfSymbol}. I recommend rebalancing 15% of your equities into fixed deposits to lock in the recent 7.25% banking rate and mitigate volatility.`;
-      } else if (query.includes("tax") || query.includes("nps") || query.includes("ppf")) {
-        replyText = `You can save up to ₹23,000 in taxes under Sec 80C by fully utilizing your NPS annual personal co-pay (currently at ₹${npsData.personalMonthly}/month) and maximizing your PPF contribution limit.`;
+        replyText = `Your stock portfolio has an active valuation of ${format(totalSipInvestments + etfsTotalValue)}. The top holding is ${bestPerfSymbol}. I recommend rebalancing 15% of your equities into Fixed Deposits (earning ${format(fdsTotalValue)} accrued interest) to lock in gains and mitigate volatility.`;
+      } else if (query.includes("tax") || query.includes("nps") || query.includes("ppf") || query.includes("80c")) {
+        replyText = `You can save up to ₹23,000 in taxes under Sec 80C by fully utilizing your NPS annual co-pay (currently at ${format(npsData.personalMonthly)}/month) and maximizing your PPF contribution limit (currently ${format(ppfData.balance)} total corpus).`;
+      } else if (query.includes("gold") || query.includes("metal")) {
+        replyText = `You have gold holdings with live valuation of ${format(goldTotalValue)}. Spot gold rate is currently ${format(spotGoldPrice)}/gram. Maintaining a 5-10% portfolio allocation in gold is recommended as a safe-haven hedge.`;
+      } else if (query.includes("goal") || query.includes("emergency") || query.includes("retirement")) {
+        replyText = `You are tracking ${goalsCount} financial goals (Total Target: ${totalGoalTarget}, Accumulated: ${totalGoalCurrent}). Your progress is at ${((goals.reduce((acc, c) => acc + c.current, 0) / (goals.reduce((acc, c) => acc + c.target, 0) || 1)) * 100).toFixed(0)}%. I suggest setting a monthly SIP of ${format(5000)} toward your emergency fund.`;
+      } else {
+        replyText = `I have analyzed your query ("${text}"). To optimize your current wealth of ${netWorthFormatted}, Fincody AI recommends automated subscription cleanups (active: ${activeSubsCount} services) and redirecting surplus cash (${savingsFormatted}/mo) into rebalanced Fixed Deposits or Index SIPs.`;
       }
+
+      // Escape single quotes for JSX representation safety
+      replyText = replyText.replace(/&apos;/g, "'");
 
       const aiMsg: Message = {
         sender: "ai",
@@ -2487,26 +2513,31 @@ const handlePredefinedQuestion = (q: string) => {
     );
   }
 
-  // Dynamically calculated financial metrics incorporating all assets & entries
-  const equitiesVal = portfolio.reduce((acc: number, curr: any) => acc + (curr.qty * (quotes[curr.symbol]?.price || curr.avgBuyPrice)), 0);
-  const fdsTotalValue = fixedDeposits.reduce((acc: number, curr: any) => {
-    const start = new Date(curr.startDate);
+  // Dynamically calculated financial metrics incorporating all assets & entries (safely protected from NaN values)
+  const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+  const fdsTotalValue = (fixedDeposits || []).reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate || new Date());
     const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-    const interest = curr.principal * (curr.interestRate / 100) * yearsElapsed;
-    return acc + curr.principal + interest;
+    const rate = parseFloat(curr.rate || curr.interestRate || 0);
+    const principal = parseFloat(curr.principal || 0);
+    const interest = principal * (rate / 100) * yearsElapsed;
+    return acc + principal + (isNaN(interest) ? 0 : interest);
   }, 0);
-  const ppfTotalValue = ppfData.balance;
-  const npsTotalValue = npsData.corpus;
-  const goldTotalValue = goldHoldings.reduce((acc: number, curr: any) => {
+  const ppfTotalValue = parseFloat(ppfData?.balance || 0);
+  const npsTotalValue = parseFloat(npsData?.corpus || 0);
+  const goldTotalValue = (goldHoldings || []).reduce((acc: number, curr: any) => {
     const livePrice = spotGoldPrice || 7420;
-    return acc + (curr.grams * livePrice);
+    const grams = parseFloat(curr.grams || 0);
+    return acc + (grams * livePrice);
   }, 0);
-  const etfsTotalValue = etfHoldings.reduce((acc: number, curr: any) => acc + (curr.units * (quotes[curr.symbol]?.price || curr.avgPrice)), 0);
-  const bondsTotalValue = bondHoldings.reduce((acc: number, curr: any) => {
-    const start = new Date(curr.startDate);
+  const etfsTotalValue = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+  const bondsTotalValue = (bondHoldings || []).reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate || new Date());
     const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-    const interest = curr.faceValue * (curr.couponRate / 100) * yearsElapsed;
-    return acc + curr.faceValue + interest;
+    const couponRate = parseFloat(curr.couponRate || 0);
+    const faceValue = parseFloat(curr.faceValue || 0);
+    const interest = faceValue * (couponRate / 100) * yearsElapsed;
+    return acc + faceValue + (isNaN(interest) ? 0 : interest);
   }, 0);
 
   const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue;
@@ -2993,15 +3024,15 @@ const handlePredefinedQuestion = (q: string) => {
                 exit={{ opacity: 0, y: 15 }}
                 className="flex flex-col gap-6"
               >
-                {/* Micro Widgets with interactive info tooltips */}
+                {/* Micro Widgets with inside-card flipping overlay tooltips to prevent overlap */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Net Worth Widget */}
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden group/card min-h-[125px]">
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
                         Net Worth
                         <button 
-                          onClick={() => setActiveTooltip(activeTooltip === "netWorth" ? null : "netWorth")}
+                          onClick={() => setActiveTooltip("netWorth")}
                           className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
                         >
                           <Info className="w-3.5 h-3.5" />
@@ -3020,20 +3051,20 @@ const handlePredefinedQuestion = (q: string) => {
                     <AnimatePresence>
                       {activeTooltip === "netWorth" && (
                         <motion.div 
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 z-50 p-4 rounded-2xl border border-blue-500/20 bg-slate-950/95 backdrop-blur flex flex-col justify-between text-[11px]"
                         >
-                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1">
                             <span className="font-bold text-white uppercase tracking-wider text-[9px]">Net Worth Crux</span>
-                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800">✕</button>
                           </div>
-                          <p className="text-slate-300 leading-normal">
-                            Aggregates baseline liquid savings (₹${baselineCash.toLocaleString()}) and active investments (₹${totalInvestmentValue.toLocaleString()}) from all linked assets.
+                          <p className="text-slate-300 leading-normal my-1">
+                            Sum of cash (₹${baselineCash.toLocaleString()}) and active assets (₹${totalInvestmentValue.toLocaleString()}: Equities, Gold, FDs, NPS, PPF, Bonds).
                           </p>
-                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
-                            Calculated real-time from: ${calculationStartDate}
+                          <div className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                            Calculated since: ${calculationStartDate}
                           </div>
                         </motion.div>
                       )}
@@ -3041,12 +3072,12 @@ const handlePredefinedQuestion = (q: string) => {
                   </div>
                   
                   {/* Monthly Savings Widget */}
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden group/card min-h-[125px]">
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
                         Monthly Savings
                         <button 
-                          onClick={() => setActiveTooltip(activeTooltip === "monthlySavings" ? null : "monthlySavings")}
+                          onClick={() => setActiveTooltip("monthlySavings")}
                           className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
                         >
                           <Info className="w-3.5 h-3.5" />
@@ -3063,20 +3094,20 @@ const handlePredefinedQuestion = (q: string) => {
                     <AnimatePresence>
                       {activeTooltip === "monthlySavings" && (
                         <motion.div 
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 z-50 p-4 rounded-2xl border border-blue-500/20 bg-slate-950/95 backdrop-blur flex flex-col justify-between text-[11px]"
                         >
-                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1">
                             <span className="font-bold text-white uppercase tracking-wider text-[9px]">Savings Formula</span>
-                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800">✕</button>
                           </div>
-                          <p className="text-slate-300 leading-normal">
+                          <p className="text-slate-300 leading-normal my-1">
                             Formula: <strong>Salary - EMIs - Other Expenses - Subscriptions</strong>.<br />
-                            Tracks surplus monthly income ready for capital rebalancing.
+                            Surplus wealth compounded in rebalanced assets.
                           </p>
-                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                          <div className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
                             Calculating starting: ${calculationStartDate}
                           </div>
                         </motion.div>
@@ -3085,12 +3116,12 @@ const handlePredefinedQuestion = (q: string) => {
                   </div>
 
                   {/* Active Subscriptions Widget */}
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden group/card min-h-[125px]">
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
                         Subscription Spend
                         <button 
-                          onClick={() => setActiveTooltip(activeTooltip === "subscriptions" ? null : "subscriptions")}
+                          onClick={() => setActiveTooltip("subscriptions")}
                           className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
                         >
                           <Info className="w-3.5 h-3.5" />
@@ -3107,19 +3138,19 @@ const handlePredefinedQuestion = (q: string) => {
                     <AnimatePresence>
                       {activeTooltip === "subscriptions" && (
                         <motion.div 
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 z-50 p-4 rounded-2xl border border-blue-500/20 bg-slate-950/95 backdrop-blur flex flex-col justify-between text-[11px]"
                         >
-                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
-                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Subscription Crux</span>
-                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Subscription Spend</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800">✕</button>
                           </div>
-                          <p className="text-slate-300 leading-normal">
-                            Aggregates monthly and annualized subscription rates ( Netflix, Spotify, Adobe) active in your vault.
+                          <p className="text-slate-300 leading-normal my-1">
+                            Total rolling spend across all active digital assets. Canceling unused seats recovers monthly liquid margins.
                           </p>
-                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                          <div className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
                             Calculated dynamically on rolling basis
                           </div>
                         </motion.div>
@@ -3128,12 +3159,12 @@ const handlePredefinedQuestion = (q: string) => {
                   </div>
 
                   {/* Goal Contributions Widget */}
-                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-visible group/card">
+                  <div className="glass-card p-5 rounded-2xl border border-[var(--border-color)] text-left relative overflow-hidden group/card min-h-[125px]">
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1.5">
                         Goal Contributions
                         <button 
-                          onClick={() => setActiveTooltip(activeTooltip === "goals" ? null : "goals")}
+                          onClick={() => setActiveTooltip("goals")}
                           className="p-0.5 rounded hover:bg-slate-800 text-slate-500 hover:text-white transition-colors cursor-pointer"
                         >
                           <Info className="w-3.5 h-3.5" />
@@ -3150,19 +3181,19 @@ const handlePredefinedQuestion = (q: string) => {
                     <AnimatePresence>
                       {activeTooltip === "goals" && (
                         <motion.div 
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute z-50 left-0 right-0 top-[110%] p-4 rounded-xl border border-blue-500/20 bg-slate-950/95 shadow-2xl backdrop-blur text-xs flex flex-col gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 z-50 p-4 rounded-2xl border border-blue-500/20 bg-slate-950/95 backdrop-blur flex flex-col justify-between text-[11px]"
                         >
-                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1.5">
-                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Goal Contributions</span>
-                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white">✕</button>
+                          <div className="flex justify-between items-center border-b border-blue-500/10 pb-1">
+                            <span className="font-bold text-white uppercase tracking-wider text-[9px]">Goal Balance</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-800">✕</button>
                           </div>
-                          <p className="text-slate-300 leading-normal">
-                            Aggregates cumulative capital contributed across emergency, automobile, and retirement goals.
+                          <p className="text-slate-300 leading-normal my-1">
+                            Accumulated value across all retirement, car, and emergency engine goals. Shows progress against targets.
                           </p>
-                          <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
+                          <div className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider border-t border-slate-900 pt-1">
                             Refreshed since initial goal creation dates
                           </div>
                         </motion.div>

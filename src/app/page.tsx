@@ -32,7 +32,8 @@ import {
   AlertTriangle
 ,
   Volume2,
-  VolumeX
+  VolumeX,
+  Bell
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -704,10 +705,10 @@ export default function Home() {
               onClick={() => {
                 if (user) {
                   setEditName(user.user_metadata?.full_name ?? "");
-                  setShowProfileModal(true);
                 } else {
-                  window.location.href = "/dashboard";
+                  setEditName("");
                 }
+                setShowProfileModal(true);
               }}
               className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
               title={user ? "View & Edit Profile" : "Sign In"}
@@ -733,6 +734,17 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-4">
             
+            {/* Alert Center Icon */}
+            <Link
+              href="/dashboard"
+              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all flex items-center justify-center relative"
+              aria-label="Alert Center"
+              title="Alert Center"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            </Link>
+
             {/* Theme Toggle Button */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -763,6 +775,15 @@ export default function Home() {
 
           {/* Mobile Menu Actions */}
           <div className="flex items-center gap-2 md:hidden">
+            <Link
+              href="/dashboard"
+              className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)] flex items-center justify-center relative"
+              aria-label="Alert Center"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            </Link>
+
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)]"
@@ -1527,88 +1548,123 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Profile Details & Edit Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
-            <button
-              type="button"
-              onClick={() => {
-                setShowProfileModal(false);
-                setProfileError("");
-                setProfileSuccess("");
-              }}
-              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+      {/* Profile Details & Edit Modal animated cleanly with Framer Motion */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center"
             >
-              <X className="w-4 h-4" />
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProfileModal(false);
+                  setProfileError("");
+                  setProfileSuccess("");
+                }}
+                className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
 
-            {/* Brand Logo Identity */}
-            <div className="flex justify-center mb-3">
-              <FincodyLogo variant="compact" />
-            </div>
-
-            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
-              {user?.user_metadata?.full_name 
-                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
-            </div>
-
-            <h3 className="text-sm font-black text-white mb-0.5">
-              Your Profile
-            </h3>
-            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
-              {user?.email ?? "no-email@fincody.com"}
-            </p>
-
-            {profileError && (
-              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
-                {profileError}
-              </div>
-            )}
-
-            {profileSuccess && (
-              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
-                {profileSuccess}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
-              <div>
-                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
-                />
+              {/* Brand Logo Identity */}
+              <div className="flex justify-center mb-3">
+                <FincodyLogo variant="compact" />
               </div>
 
-              <div className="flex flex-col gap-2">
-                <button
-                  type="submit"
-                  disabled={isSavingProfile}
-                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
-                >
-                  {isSavingProfile ? "Saving..." : "Save Changes"}
-                </button>
+              {user ? (
+                <>
+                  <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
+                    {user?.user_metadata?.full_name 
+                      ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                      : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
+                  </div>
 
-                {user && (
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                  <h3 className="text-sm font-black text-white mb-0.5">
+                    Your Profile
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+                    {user?.email ?? "no-email@fincody.com"}
+                  </p>
+
+                  {profileError && (
+                    <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
+                      {profileError}
+                    </div>
+                  )}
+
+                  {profileSuccess && (
+                    <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
+                      {profileSuccess}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Enter your name"
+                        className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="submit"
+                        disabled={isSavingProfile}
+                        className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                      >
+                        {isSavingProfile ? "Saving..." : "Save Changes"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                      >
+                        Log Out
+                      </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3">
+                    <User className="w-6 h-6" />
+                  </div>
+
+                  <h3 className="text-sm font-black text-white mb-0.5">
+                    Sign In
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mb-4 leading-normal">
+                    Sign in to your Fincody account from our secure dashboard vault.
+                  </p>
+
+                  <Link 
+                    href="/dashboard"
+                    onClick={() => setShowProfileModal(false)}
+                    className="w-full py-2.5 block text-center rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer shadow-lg shadow-blue-500/25"
                   >
-                    Log Out
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                    Go to Dashboard & Sign In
+                  </Link>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

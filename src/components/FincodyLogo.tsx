@@ -9,6 +9,7 @@ interface FincodyLogoProps {
 }
 
 export default function FincodyLogo({ variant = "desktop", className = "" }: FincodyLogoProps) {
+  const uniqueId = useRef("logo-" + Math.random().toString(36).substring(2, 9)).current;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [blink, setBlink] = useState(false);
@@ -142,11 +143,11 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         >
           {/* Gradients definitions */}
           <defs>
-            <linearGradient id="favDGrad" x1="0" y1="0" x2="0" y2="32">
+            <linearGradient id={`${uniqueId}-favDGrad`} x1="0" y1="0" x2="0" y2="32">
               <stop offset="0%" stopColor="#38BDF8" />
               <stop offset="100%" stopColor="#1E3A8A" />
             </linearGradient>
-            <linearGradient id="favYGrad" x1="0" y1="0" x2="0" y2="32">
+            <linearGradient id={`${uniqueId}-favYGrad`} x1="0" y1="0" x2="0" y2="32">
               <stop offset="0%" stopColor="#67E8F9" />
               <stop offset="100%" stopColor="#22D3EE" />
             </linearGradient>
@@ -155,7 +156,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           {/* D Loop */}
           <motion.path
             d="M6 6 H14 C19 6 22 9 22 14 C22 19 19 22 14 22 H6 V6 Z"
-            fill="url(#favDGrad)"
+            fill="url(`#${uniqueId}-favDGrad`)"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: premiumEase as any }}
@@ -195,7 +196,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           {/* Y Growth Arrow */}
           <motion.path
             d="M18 18 L22 14 L22 26"
-            stroke="url(#favYGrad)"
+            stroke="url(`#${uniqueId}-favYGrad`)"
             strokeWidth={2}
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
@@ -204,7 +205,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           />
           <motion.path
             d="M20 14 L22 14 L22 16"
-            stroke="url(#favYGrad)"
+            stroke="url(`#${uniqueId}-favYGrad`)"
             strokeWidth={2}
             strokeLinecap="round"
             initial={{ opacity: 0 }}
@@ -286,39 +287,39 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
         <defs>
           <style>{`
             .finco-letter {
-              fill: url(#fincoDarkGrad);
+              fill: url(#${uniqueId}-fincoDarkGrad);
               transition: fill 0.3s ease;
             }
             html.light .finco-letter {
-              fill: url(#fincoLightGrad);
+              fill: url(#${uniqueId}-fincoLightGrad);
             }
           `}</style>
 
           {/* Light Mode Gradient (Deep Navy) */}
-          <linearGradient id="fincoLightGrad" x1="0" y1="0" x2="100" y2="0">
+          <linearGradient id={`${uniqueId}-fincoLightGrad`} x1="0" y1="0" x2="100" y2="0">
             <stop offset="0%" stopColor="#0B1F4D" />
             <stop offset="100%" stopColor="#1E3A8A" />
           </linearGradient>
 
           {/* Dark Mode Gradient (Premium Silver-White blending into Ice Blue) */}
-          <linearGradient id="fincoDarkGrad" x1="0" y1="0" x2="100" y2="0">
+          <linearGradient id={`${uniqueId}-fincoDarkGrad`} x1="0" y1="0" x2="100" y2="0">
             <stop offset="0%" stopColor="#FFFFFF" />
             <stop offset="60%" stopColor="#F0F9FF" />
             <stop offset="100%" stopColor="#38BDF8" />
           </linearGradient>
 
-          <linearGradient id="dGrad" x1="0" y1="0" x2="0" y2="35">
+          <linearGradient id={`${uniqueId}-dGrad`} x1="0" y1="0" x2="0" y2="35">
             <stop offset="0%" stopColor="#38BDF8" />
             <stop offset="100%" stopColor="#60A5FA" />
           </linearGradient>
 
-          <linearGradient id="yGrad" x1="0" y1="0" x2="0" y2="35">
+          <linearGradient id={`${uniqueId}-yGrad`} x1="0" y1="0" x2="0" y2="35">
             <stop offset="0%" stopColor="#67E8F9" />
             <stop offset="100%" stopColor="#22D3EE" />
           </linearGradient>
 
           {/* Premium sweep shine gradient */}
-          <linearGradient id="shineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`${uniqueId}-shineGrad`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="35%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="50%" stopColor="#ffffff" stopOpacity="0.45" />
@@ -327,7 +328,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           </linearGradient>
 
           {/* Text Clip path for shine sweep overlay */}
-          <clipPath id="textClip">
+          <clipPath id={`${uniqueId}-textClip`}>
             <text
               x="5"
               y={isCompact ? "25" : "32"}
@@ -383,7 +384,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x="5"
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
+            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -403,7 +404,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "20" : "24"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
+            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -423,7 +424,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "29" : "35"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
+            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -443,7 +444,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "48" : "60"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
+            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -463,7 +464,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           <text
             x={isCompact ? "66" : "82"}
             y={isCompact ? "25" : "32"}
-            fill={themeMode === "light" ? "url(#fincoLightGrad)" : "url(#fincoDarkGrad)"}
+            fill={themeMode === "light" ? "url(`#${uniqueId}-fincoLightGrad`)" : "url(`#${uniqueId}-fincoDarkGrad`)"}
             fontSize={isCompact ? "20" : "26"}
             fontWeight="800"
             fontFamily="system-ui, -apple-system, sans-serif"
@@ -487,7 +488,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 87, 8 H 94 C 98.5, 8 101, 10.5 101, 15.5 C 101, 20.5 98.5, 23 94, 23 H 87 V 8 Z"
                 : "M 112, 10 H 121 C 127, 10 130, 13 130, 19.5 C 130, 26 127, 29 121, 29 H 112 V 10 Z"
             }
-            fill="url(#dGrad)"
+            fill="url(`#${uniqueId}-dGrad`)"
           />
 
           {/* Minimal Emoticon overlay inside counter (D loop gap is around x: 90-95 in compact, 116-123 in desktop) */}
@@ -546,7 +547,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 107, 8 L 112, 15.5 V 23"
                 : "M 137, 10 L 144, 19.5 V 29"
             }
-            stroke="url(#yGrad)"
+            stroke="url(`#${uniqueId}-yGrad`)"
             strokeWidth={isCompact ? 3.5 : 4.5}
             strokeLinecap="round"
             fill="none"
@@ -559,7 +560,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 112, 15.5 Q 116, 12 121, 5"
                 : "M 144, 19.5 Q 150, 15 156, 6"
             }
-            stroke="url(#yGrad)"
+            stroke="url(`#${uniqueId}-yGrad`)"
             strokeWidth={isCompact ? 3.5 : 4.5}
             strokeLinecap="round"
             fill="none"
@@ -579,7 +580,7 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
                 ? "M 117, 5 H 121 V 9"
                 : "M 151, 6 H 156 V 11"
             }
-            stroke="url(#yGrad)"
+            stroke="url(`#${uniqueId}-yGrad`)"
             strokeWidth={isCompact ? 2.5 : 3.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -648,8 +649,8 @@ export default function FincodyLogo({ variant = "desktop", className = "" }: Fin
           y="0"
           width="100"
           height={viewHeight}
-          fill="url(#shineGrad)"
-          clipPath="url(#textClip)"
+          fill="url(`#${uniqueId}-shineGrad`)"
+          clipPath="url(`#${uniqueId}-textClip`)"
           initial={{ x: -150 }}
           animate={{ x: viewWidth + 50 }}
           transition={{
