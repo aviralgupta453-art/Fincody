@@ -1629,6 +1629,12 @@ export default function Dashboard() {
       updatedLog.push(`Calculation start date set to ${calculationStartDate}`);
     }
 
+    // Persist manual entries to local storage so they remain permanently
+    persistData("manualSalary", manualSalary);
+    persistData("manualEMI", manualEMI);
+    persistData("manualOtherExpenses", manualOtherExpenses);
+    persistData("manualNetWorth", manualNetWorth);
+
     // Edit or append manual entry sheet without duplicating it
     setDocuments(prev => {
       const exists = prev.some(d => d.type === "MANUAL");
