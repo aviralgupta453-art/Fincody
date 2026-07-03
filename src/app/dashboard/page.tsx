@@ -4335,7 +4335,7 @@ const handlePredefinedQuestion = (q: string) => {
                 >
                   {/* 1. Investment Summary Strip */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="glass-card p-5 rounded-2xl border border-blue-500/15 bg-gradient-to-br from-blue-600/[0.05] to-indigo-500/[0.03] text-left relative overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.02)]">
+                    <div className="glass-card p-5 rounded-2xl border border-blue-500/30 bg-blue-950/30 dark:bg-blue-950/30 light:bg-blue-50/70 text-left relative overflow-hidden shadow-[0_8px_32px_rgba(59,130,246,0.08)]">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Value</div>
                       <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                         <RollingNumber value={totalInvestmentValue} decimals={2} />
@@ -4345,7 +4345,7 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
                     
-                    <div className="glass-card p-5 rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-emerald-600/[0.05] to-teal-500/[0.03] text-left shadow-[0_0_20px_rgba(16,185,129,0.02)]">
+                    <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 dark:bg-emerald-950/30 light:bg-emerald-50/70 text-left shadow-[0_8px_32px_rgba(16,185,129,0.08)]">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Return</div>
                       <div className={`text-3xl font-black mt-1 font-mono ${overallGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                         {overallGainLoss >= 0 ? "+" : ""}<RollingNumber value={overallGainLoss} decimals={2} />
@@ -4355,7 +4355,7 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
 
-                    <div className="glass-card p-5 rounded-2xl border border-amber-500/15 bg-gradient-to-br from-amber-600/[0.05] to-orange-500/[0.03] text-left shadow-[0_0_20px_rgba(245,158,11,0.02)]">
+                    <div className="glass-card p-5 rounded-2xl border border-amber-500/30 bg-amber-950/30 dark:bg-amber-950/30 light:bg-amber-50/70 text-left shadow-[0_8px_32px_rgba(245,158,11,0.08)]">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Interest Earned</div>
                       <div className="text-3xl font-black mt-1 text-[var(--text-color)] font-mono">
                         <RollingNumber value={fdsTotalInterest + bondsTotalInterest} />
@@ -4365,7 +4365,7 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
 
-                    <div className="glass-card p-5 rounded-2xl border border-purple-500/15 bg-gradient-to-br from-purple-600/[0.05] to-pink-500/[0.03] text-left shadow-[0_0_20px_rgba(168,85,247,0.02)]">
+                    <div className="glass-card p-5 rounded-2xl border border-purple-500/30 bg-purple-950/30 dark:bg-purple-950/30 light:bg-purple-50/70 text-left shadow-[0_8px_32px_rgba(168,85,247,0.08)]">
                       <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">Performer Audit</div>
                       <div className="text-lg font-black mt-1.5 text-emerald-500 truncate" title={bestPerformer.symbolOrName}>
                         ▲ {bestPerformer.symbolOrName} ({bestPerformer.pct >= 0 ? "+" : ""}{bestPerformer.pct.toFixed(1)}%)
