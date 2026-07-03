@@ -146,34 +146,79 @@ body {
   }
 }
 
-/* Accessibility contrast overrides for Light Mode */
-html.light .text-slate-600 {
-  color: #0c1a30 !important; /* Midnight Navy */
+/* Accessibility contrast overrides for Light Mode (Vibrant, high-contrast, grey-free styling) */
+html.light {
+  --bg-color: #ebf3fe; /* Vibrant cool-blue background */
+  --text-color: #020617; /* Carbon black */
+  --text-subtitle: #1e3a8a; /* Deep navy */
+  --border-color: rgba(37, 99, 235, 0.16);
+  --card-border: rgba(37, 99, 235, 0.1);
+  --glass-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.12);
 }
-html.light .text-slate-500 {
-  color: #1a365d !important; /* Deep Blue-Navy */
+
+/* Eliminate all grey text and replace with vibrant, legible blues/blacks */
+html.light .text-slate-900,
+html.light .text-zinc-900,
+html.light .text-gray-900,
+html.light .text-slate-800,
+html.light .text-zinc-800,
+html.light .text-gray-800 {
+  color: #020617 !important; /* Sharp carbon black */
 }
-html.light .text-slate-400 {
-  color: #2563eb !important; /* Royal Blue */
+
+html.light .text-slate-700,
+html.light .text-zinc-700,
+html.light .text-gray-700,
+html.light .text-slate-600,
+html.light .text-zinc-600,
+html.light .text-gray-600 {
+  color: #0f172a !important; /* Legible dark slate */
 }
-html.light .text-slate-300 {
-  color: #3b82f6 !important; /* Medium Blue */
-}
-html.light .text-slate-200 {
-  color: #60a5fa !important; /* Sky Blue */
-}
-html.light .text-slate-500\/80 {
-  color: #1a365d !important;
-}
-html.light .text-slate-400\/80 {
-  color: #2563eb !important;
-}
+
+html.light .text-slate-500,
+html.light .text-zinc-500,
+html.light .text-gray-500,
+html.light .text-slate-500\/80,
 html.light .text-slate-500\/60 {
-  color: #2563eb !important;
+  color: #1e3a8a !important; /* Deep Indigo Navy */
 }
+
+html.light .text-slate-400,
+html.light .text-zinc-400,
+html.light .text-gray-400,
+html.light .text-slate-400\/80,
 html.light .text-slate-400\/60 {
-  color: #3b82f6 !important;
+  color: #2563eb !important; /* Vibrant Royal Blue */
 }
+
+html.light .text-slate-300,
+html.light .text-zinc-300,
+html.light .text-gray-300,
 html.light .text-slate-300\/60 {
-  color: #2563eb !important;
+  color: #3b82f6 !important; /* Active Medium Blue */
+}
+
+html.light .text-slate-200,
+html.light .text-zinc-200,
+html.light .text-gray-200 {
+  color: #60a5fa !important; /* Vibrant Sky Blue */
+}
+
+/* Replace dull grey backgrounds with soft, transparent royal-blue overlays */
+html.light .bg-slate-900\/5,
+html.light .bg-slate-950\/5,
+html.light .bg-slate-900\/10,
+html.light .bg-slate-950\/10,
+html.light .bg-slate-950\/20,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-950\/40,
+html.light .bg-slate-950\/60 {
+  background-color: rgba(37, 99, 235, 0.05) !important;
+}
+
+/* Replace dark grey borders with bright contrast-blue boundaries */
+html.light .border-slate-800\/40,
+html.light .border-slate-800,
+html.light .border-slate-900 {
+  border-color: rgba(37, 99, 235, 0.16) !important;
 }

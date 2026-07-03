@@ -6167,14 +6167,15 @@ const handlePredefinedQuestion = (q: string) => {
         >
           {aiChatOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6 animate-pulse" />}
         </button>
+      </div>
 
-        <AnimatePresence>
-          {aiChatOpen && (
-                        <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="absolute bottom-20 right-0 w-[380px] sm:w-[420px] h-[600px] rounded-2xl border border-blue-500/20 bg-slate-950/80 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.15)] flex flex-col justify-between overflow-hidden text-left z-[99999]"
+      <AnimatePresence>
+        {aiChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="fixed bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-50"
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragHover(true);
@@ -6504,10 +6505,8 @@ const handlePredefinedQuestion = (q: string) => {
                 </button>
               </div>
             </motion.div>
-
           )}
         </AnimatePresence>
-      </div>
 
       {/* Manual Entry Modal */}
       {/* Interactive, creative Financial Health Score details page modal */}
