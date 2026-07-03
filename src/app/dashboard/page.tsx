@@ -4604,18 +4604,18 @@ const handlePredefinedQuestion = (q: string) => {
                                       className="flex justify-between items-start cursor-pointer hover:opacity-85 transition-opacity"
                                     >
                                       <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[var(--border-color)] flex items-center justify-center font-mono text-[9px] font-black text-slate-300">
+                                        <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[var(--border-color)] flex items-center justify-center font-sans text-xs font-bold text-slate-300">
                                           {item.symbol.substring(0, 4)}
                                         </div>
                                         <div className="text-left">
-                                          <span className="font-black text-xs text-white block font-mono hover:text-blue-400 transition-colors">{item.symbol}</span>
-                                          <span className="text-[9px] text-slate-500 font-extrabold block mt-0.5">{item.name}</span>
+                                          <span className="font-bold text-sm text-white block hover:text-blue-400 transition-colors">{item.symbol}</span>
+                                          <span className="text-xs text-slate-400 font-medium block mt-0.5">{item.name}</span>
                                         </div>
                                       </div>
 
                                       <div className="text-right">
-                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">Price / Value</span>
-                                        <span className="font-mono text-xs font-extrabold text-white mt-1 block">
+                                        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block">Price / Value</span>
+                                        <span className="font-sans text-xs font-bold text-white mt-0.5 block">
                                           <RollingNumber value={currentPrice} decimals={2} /> / <RollingNumber value={currentValue} decimals={2} />
                                         </span>
                                       </div>
@@ -4642,7 +4642,7 @@ const handlePredefinedQuestion = (q: string) => {
                                           e.stopPropagation();
                                           handleRemoveStock(item.symbol);
                                         }}
-                                        className="text-rose-500 hover:text-rose-400 font-bold p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[9px]"
+                                        className="text-rose-500 hover:text-rose-400 font-bold p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[10px]"
                                       >
                                         Remove Ticker
                                       </button>
@@ -4654,30 +4654,30 @@ const handlePredefinedQuestion = (q: string) => {
                                       className="grid grid-cols-3 gap-3 pt-3 border-t border-[var(--border-color)] items-end"
                                     >
                                       <div className="flex flex-col gap-1 text-left">
-                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Shares</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Shares</span>
                                         <input
                                           type="number"
                                           min="1"
                                           value={item.qty}
                                           onChange={(e) => handleUpdateHolding(item.symbol, parseInt(e.target.value) || 1, item.avgBuyPrice)}
-                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-mono text-center focus:outline-none focus:border-blue-500/30"
+                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-sans font-medium text-center focus:outline-none focus:border-blue-500/30"
                                         />
                                       </div>
 
                                       <div className="flex flex-col gap-1 text-left">
-                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Avg Cost ({activeCurrency.symbol})</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Avg Cost ({activeCurrency.symbol})</span>
                                         <input
                                           type="number"
                                           min="0"
                                           value={item.avgBuyPrice}
                                           onChange={(e) => handleUpdateHolding(item.symbol, item.qty, parseFloat(e.target.value) || 0)}
-                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-mono text-left focus:outline-none focus:border-blue-500/30"
+                                          className="w-full bg-slate-950/40 border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-white font-sans font-medium text-left focus:outline-none focus:border-blue-500/30"
                                         />
                                       </div>
 
                                       <div className="flex flex-col text-right">
-                                        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black">Total Returns</span>
-                                        <span className={`text-xs font-mono font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Total Returns</span>
+                                        <span className={`text-xs font-sans font-bold mt-1.5 ${totalReturn >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                                           {totalReturn >= 0 ? "+" : ""}<RollingNumber value={totalReturn} decimals={2} />
                                         </span>
                                       </div>
@@ -7023,10 +7023,12 @@ const handlePredefinedQuestion = (q: string) => {
                     <AreaChart 
                       data={selectedStockHistory}
                       onMouseMove={(state: any) => {
-                        if (state && state.activePayload && state.activePayload.length > 0) {
-                          const payload = state.activePayload[0].payload;
-                          setHoveredPrice(payload.price);
-                          setHoveredTime(payload.time);
+                        if (state && state.activeTooltipIndex !== undefined && selectedStockHistory) {
+                          const dataPoint = selectedStockHistory[state.activeTooltipIndex];
+                          if (dataPoint) {
+                            setHoveredPrice(dataPoint.price);
+                            setHoveredTime(dataPoint.time);
+                          }
                         }
                       }}
                       onMouseLeave={() => {
