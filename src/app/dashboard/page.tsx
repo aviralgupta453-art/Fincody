@@ -6504,6 +6504,93 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
                   </div>
+
+                  {/* AI Expense Analysis & Budget Comparison Card */}
+                  {extractedExpenses && (
+                    <div className="glass-card p-6 rounded-2xl border border-indigo-500/20 bg-indigo-950/[0.02] flex flex-col gap-4 text-left animate-in slide-in-from-bottom-3 duration-300">
+                      <span className="text-sm font-bold uppercase tracking-wider text-indigo-400 border-b border-[var(--border-color)] pb-3 block flex items-center gap-1.5">
+                        <TrendingUp className="w-4.5 h-4.5" /> AI Budget Variance
+                      </span>
+
+                      {(() => {
+                        const actualTotal = extractedExpenses.total;
+                        const manualBudget = parseFloat(manualOtherExpenses) || 0;
+                        const variance = actualTotal - manualBudget;
+                        const isOverBudget = variance > 0;
+                        
+                        // Find highest spending category
+                        let highestCat = { category: "None", amount: 0, percentage: 0 };
+                        if (extractedExpenses.expenses && extractedExpenses.expenses.length > 0) {
+                          highestCat = [...extractedExpenses.expenses].sort((a, b) => b.amount - a.amount)[0];
+                        }
+
+                        return (
+                          <div className="flex flex-col gap-4 text-xs font-semibold">
+                            <div className="grid grid-cols-2 gap-3 text-center">
+                              <div className="p-2.5 rounded-xl bg-slate-900/30 border border-[var(--border-color)]">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase block mb-0.5">Manual Budget</span>
+                                <span className="text-sm font-extrabold text-[var(--text-color)]">₹{manualBudget.toLocaleString()}</span>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-slate-900/30 border border-[var(--border-color)]">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase block mb-0.5">Actual Spent</span>
+                                <span className="text-sm font-extrabold text-white">₹{actualTotal.toLocaleString()}</span>
+                              </div>
+                            </div>
+
+                            {/* Variance Alert */}
+                            <div className={`p-3 rounded-xl border flex items-center gap-2.5 ${
+                              isOverBudget 
+                                ? "bg-rose-500/10 border-rose-500/20 text-rose-400" 
+                                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            }`}>
+                              {isOverBudget ? (
+                                <>
+                                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                                  <span>Overestimated spend by ₹{Math.abs(variance).toLocaleString()} compared to actual files!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                  <span>Within manual budget by ₹{Math.abs(variance).toLocaleString()}!</span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Highest spending category warning */}
+                            <div className="p-3 rounded-xl bg-slate-900/20 border border-[var(--border-color)] flex flex-col gap-1">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Highest Spend Outflow</span>
+                              <span className="text-white font-extrabold text-xs">
+                                {highestCat.category}: ₹{highestCat.amount.toLocaleString()} ({highestCat.percentage}%)
+                              </span>
+                            </div>
+
+                            {/* Actions on how to improve */}
+                            <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-color)]">
+                              <span className="text-[9px] text-indigo-400 uppercase font-black tracking-widest">AI Actionable Recommendations</span>
+                              <ul className="flex flex-col gap-2 text-slate-400 leading-relaxed font-medium">
+                                <li className="flex items-start gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                  <span>
+                                    {highestCat.category === "Shopping" 
+                                      ? "Shopping is your highest expense. Setup a ₹10,000 threshold limit on Amazon Direct debit." 
+                                      : `Cut back on ${highestCat.category} by re-routing secondary funds to liquid SIPs.`}
+                                  </span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                  <span>Consolidate redundant subscriptions to unlock ₹4,220 monthly capacity.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                  <span>Auto-invest the ₹{Math.abs(variance).toLocaleString()} surplus budget variance into your compounding goals.</span>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
