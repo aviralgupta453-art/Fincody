@@ -127,7 +127,6 @@ export default function CurrencyRibbon({ variant = "full" }: CurrencyRibbonProps
               >
                 {isActive && (
                   <motion.div 
-                    layoutId="activeRibbonOutlineCompact"
                     className="absolute inset-0 rounded-full border border-blue-400/35 pointer-events-none shadow-[0_0_12px_rgba(56,189,248,0.12)]"
                     animate={{ scale: [1, 1.04, 1], opacity: [0.7, 0.9, 0.7] }}
                     transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
@@ -208,7 +207,6 @@ export default function CurrencyRibbon({ variant = "full" }: CurrencyRibbonProps
                 {/* Active Outline Pulse Glow */}
                 {isActive && (
                   <motion.div 
-                    layoutId="activeRibbonOutline"
                     className="absolute inset-0 rounded-full border border-blue-400/35 pointer-events-none shadow-[0_0_12px_rgba(56,189,248,0.12)]"
                     animate={{ scale: [1, 1.04, 1], opacity: [0.7, 0.9, 0.7] }}
                     transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
