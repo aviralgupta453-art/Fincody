@@ -3293,15 +3293,7 @@ const handlePredefinedQuestion = (q: string) => {
                     <div className="text-xs text-emerald-500 mt-2 flex items-center gap-1.5 font-bold flex-wrap">
                       +14.2% <TrendingUp className="w-3.5 h-3.5" /> 
                       <span className="text-slate-500 font-semibold">
-                        As of {(() => {
-                          try {
-                            const date = new Date(calculationStartDate);
-                            if (isNaN(date.getTime())) return calculationStartDate;
-                            return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-                          } catch (e) {
-                            return calculationStartDate;
-                          }
-                        })()}
+                        As of {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                       </span>
                     </div>
 
