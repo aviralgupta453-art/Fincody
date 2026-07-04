@@ -1437,7 +1437,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-3xl mx-auto">
             {/* Free Tier */}
             <div className="p-6 md:p-8 rounded-2xl glass-card border border-[var(--border-color)] bg-slate-900/5 flex flex-col justify-between text-left relative">
               <div className="flex flex-col gap-4">
@@ -1497,36 +1497,6 @@ export default function Home() {
                 className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all mt-8 block"
               >
                 Upgrade to Pro
-              </Link>
-            </div>
-
-            {/* Elite Tier */}
-            <div className="p-6 md:p-8 rounded-2xl glass-card border border-[var(--border-color)] bg-slate-900/5 flex flex-col justify-between text-left relative">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[var(--text-color)]">Elite</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Advanced advisory services</p>
-                </div>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-[var(--text-color)]">
-                    <RollingNumber value={1999} />
-                  </span>
-                  <span className="text-sm text-slate-500 font-medium">/month</span>
-                </div>
-                <hr className="border-[var(--border-color)]" />
-                <ul className="flex flex-col gap-3 text-sm text-[var(--text-subtitle)] mt-2 font-semibold">
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Everything in Pro</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Hybrid AI + Human Advisor Consensus</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom Legal & Tax Optimizations</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Encrypted Vault Hardware Key Sync</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Priority Support Hotline</li>
-                </ul>
-              </div>
-              <Link 
-                href="/dashboard"
-                className="w-full text-center py-3 rounded-xl border border-[var(--border-color)] text-sm font-semibold hover:bg-slate-500/5 transition-colors mt-8 block"
-              >
-                Contact Sales
               </Link>
             </div>
           </div>
