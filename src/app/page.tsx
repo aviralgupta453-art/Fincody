@@ -712,33 +712,9 @@ export default function Home() {
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[var(--border-color)] backdrop-blur-md">
         <div className="max-w-none w-[97%] mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 group">
-              <FincodyLogo variant="desktop" />
-            </Link>
-
-            {/* Circular Profile Avatar (Always Visible) */}
-            <button
-              onClick={() => {
-                if (user) {
-                  setEditName(user.user_metadata?.full_name ?? "");
-                } else {
-                  setEditName("");
-                }
-                setShowProfileModal(true);
-              }}
-              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
-              title={user ? "View & Edit Profile" : "Sign In"}
-            >
-              {user ? (
-                user.user_metadata?.full_name 
-                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")
-              ) : (
-                <User className="w-4.5 h-4.5 text-white" />
-              )}
-            </button>
-          </div>
+          <Link href="/" className="flex items-center gap-2 group">
+            <FincodyLogo variant="desktop" />
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
@@ -771,23 +747,35 @@ export default function Home() {
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
 
-            {user ? (
-              <>
-                <button 
-                  onClick={handleSignOut}
-                  className="text-sm font-medium text-[var(--text-subtitle)] hover:text-rose-400 transition-colors cursor-pointer"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <Link 
-                href="/dashboard" 
-                className="text-sm font-medium text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors border border-[var(--border-color)] px-4 py-2 rounded-xl hover:bg-slate-500/10 transition-all"
-              >
-                Sign In
-              </Link>
-            )}
+            {/* Circular Profile Avatar (Always Visible in Header) */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setEditName(user.user_metadata?.full_name ?? "");
+                } else {
+                  setEditName("");
+                }
+                setShowProfileModal(true);
+              }}
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              title={user ? "View & Edit Profile" : "Sign In"}
+            >
+              {user ? (
+                user.user_metadata?.full_name 
+                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")
+              ) : (
+                <User className="w-4.5 h-4.5 text-white" />
+              )}
+            </button>
+
+            {/* Enter Dashboard Button */}
+            <Link 
+              href="/dashboard"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 hover:-translate-y-0.5 cursor-pointer"
+            >
+              Enter Dashboard
+            </Link>
           </div>
 
           {/* Mobile Menu Actions */}
@@ -807,6 +795,29 @@ export default function Home() {
             >
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
+
+            {/* Circular Profile Avatar on mobile header next to menu */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setEditName(user.user_metadata?.full_name ?? "");
+                } else {
+                  setEditName("");
+                }
+                setShowProfileModal(true);
+              }}
+              className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              title={user ? "View & Edit Profile" : "Sign In"}
+            >
+              {user ? (
+                user.user_metadata?.full_name 
+                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")
+              ) : (
+                <User className="w-4 h-4 text-white" />
+              )}
+            </button>
+
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors"
@@ -1565,123 +1576,86 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Profile Details & Edit Modal animated cleanly with Framer Motion */}
-      <AnimatePresence>
-        {showProfileModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center"
+      {/* Profile Details & Edit Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                setShowProfileModal(false);
+                setProfileError("");
+                setProfileSuccess("");
+              }}
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
             >
-              <button
-                type="button"
-                onClick={() => {
-                  setShowProfileModal(false);
-                  setProfileError("");
-                  setProfileSuccess("");
-                }}
-                className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <X className="w-4 h-4" />
+            </button>
 
-              {/* Brand Logo Identity */}
-              <div className="flex justify-center mb-3">
-                <FincodyLogo variant="compact" />
+            {/* Brand Logo Identity */}
+            <div className="flex justify-center mb-3">
+              <FincodyLogo variant="compact" />
+            </div>
+
+            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : (tempName ? tempName.slice(0, 1).toUpperCase() : "U"))}
+            </div>
+
+            <h3 className="text-sm font-black text-white mb-0.5">
+              {user ? "Your Profile" : "Profile Settings"}
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+              {user ? user.email : "no-email@fincody.com"}
+            </p>
+
+            {profileError && (
+              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
+                {profileError}
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
+                {profileSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
+                />
               </div>
 
-              {user ? (
-                <>
-                  <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
-                    {user?.user_metadata?.full_name 
-                      ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                      : (user?.email ? user.email.slice(0, 1).toUpperCase() : "U")}
-                  </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
 
-                  <h3 className="text-sm font-black text-white mb-0.5">
-                    Your Profile
-                  </h3>
-                  <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
-                    {user?.email ?? "no-email@fincody.com"}
-                  </p>
-
-                  {profileError && (
-                    <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
-                      {profileError}
-                    </div>
-                  )}
-
-                  {profileSuccess && (
-                    <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
-                      {profileSuccess}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Enter your name"
-                        className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <button
-                        type="submit"
-                        disabled={isSavingProfile}
-                        className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
-                      >
-                        {isSavingProfile ? "Saving..." : "Save Changes"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleSignOut}
-                        className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
-                      >
-                        Log Out
-                      </button>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3">
-                    <User className="w-6 h-6" />
-                  </div>
-
-                  <h3 className="text-sm font-black text-white mb-0.5">
-                    Sign In
-                  </h3>
-                  <p className="text-[10px] text-slate-400 mb-4 leading-normal">
-                    Sign in to your Fincody account from our secure dashboard vault.
-                  </p>
-
-                  <Link 
-                    href="/dashboard"
-                    onClick={() => setShowProfileModal(false)}
-                    className="w-full py-2.5 block text-center rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer shadow-lg shadow-blue-500/25"
-                  >
-                    Go to Dashboard & Sign In
-                  </Link>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                >
+                  Log Out
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -535,27 +535,47 @@ export default function LivePage() {
             <Link href="/#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</Link>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Theme Toggle Button */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all hidden md:block"
+              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all"
+              aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
-            <Link
+
+            {/* Circular Profile Avatar (Always Visible in Header) */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setEditName(user.user_metadata?.full_name ?? "");
+                } else {
+                  setEditName("");
+                }
+                setShowProfileModal(true);
+              }}
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              title={user ? "View & Edit Profile" : "Sign In"}
+            >
+              {user ? (
+                user.user_metadata?.full_name 
+                  ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                  : (user.email ? user.email.slice(0, 1).toUpperCase() : "U")
+              ) : (
+                <User className="w-4.5 h-4.5 text-white" />
+              )}
+            </button>
+
+            {/* Enter Dashboard Button (Desktop only) */}
+            <Link 
               href="/dashboard"
               className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white transition-all shadow-md shadow-blue-500/20 hidden md:block"
             >
               Enter Dashboard
             </Link>
 
-            {/* Mobile-only toggle button */}
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)] block md:hidden"
-            >
-              {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-            </button>
+            {/* Hamburger Button (Mobile only) */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors block md:hidden"
