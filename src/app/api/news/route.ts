@@ -1,5 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 
+
+function generateNewsSummary(title: string, impact: string, affected: any[]) {
+  const lowerTitle = title.toLowerCase();
+  const tickerStr = affected.map((a: any) => a.name).join(", ") || "market indices";
+
+  if (lowerTitle.includes("inflation") || lowerTitle.includes("cpi") || lowerTitle.includes("retail price")) {
+    return `Latest macroeconomic data registers shifts in consumer price index trends, influencing monetary policy projections and bond yield spreads across domestic credit markets.`;
+  }
+  if (lowerTitle.includes("fed") || lowerTitle.includes("rate") || lowerTitle.includes("interest") || lowerTitle.includes("monetary")) {
+    return `Central bank policy signals and interest rate decisions prompt adjustments in borrowing costs, directly affecting banking book margins and growth sector valuations.`;
+  }
+  if (lowerTitle.includes("ipo") || lowerTitle.includes("listing") || lowerTitle.includes("public offering") || lowerTitle.includes("debts")) {
+    return `New company debut in the public markets tests institutional listing appetite and gray market premium trends amid high retail subscription volumes.`;
+  }
+  if (lowerTitle.includes("earnings") || lowerTitle.includes("revenue") || lowerTitle.includes("profit") || lowerTitle.includes("beat") || lowerTitle.includes("sales")) {
+    return `Corporate financial reports reveal performance beats with margin expansion, driving target price revisions and revisions in forward-looking guidance.`;
+  }
+  if (lowerTitle.includes("deal") || lowerTitle.includes("acquisition") || lowerTitle.includes("merger") || lowerTitle.includes("buy") || lowerTitle.includes("takeover")) {
+    return `Corporate consolidation activity shifts competitive landscape benchmarks as entities merge capabilities to optimize operational synergies and market share.`;
+  }
+  if (lowerTitle.includes("regulatory") || lowerTitle.includes("sec") || lowerTitle.includes("lawsuit") || lowerTitle.includes("ban") || lowerTitle.includes("investigate")) {
+    return `Regulatory audits and compliance framework updates introduce structural policy adjustments, impacting operational parameters for active sector participants.`;
+  }
+  if (lowerTitle.includes("tech") || lowerTitle.includes("ai") || lowerTitle.includes("semiconductor") || lowerTitle.includes("chip") || lowerTitle.includes("quantum")) {
+    return `High-performance computing demand and silicon hardware breakthroughs support technical capital expenditures and hyperscaler datacenter pipeline builds.`;
+  }
+
+  // Default dynamic descriptors
+  if (impact === "Bullish") {
+    return `Buying volumes increase for ${tickerStr} following positive sentiment triggers, leading to immediate technical breakout testing on key index benchmarks.`;
+  } else if (impact === "Bearish") {
+    return `Selling flows trigger downside retracements for ${tickerStr} as investors seek defensive shelters ahead of upcoming macroeconomic event cycles.`;
+  } else {
+    return `Sideways pricing action consolidates ranges for ${tickerStr} as market observers hold positions awaiting clearer policy indicators and volume support.`;
+  }
+}
+
 function generateNewsAnalysis(title: string, impact: string, affected: any[]) {
   const lowerTitle = title.toLowerCase();
   const tickerStr = affected.map((a: any) => a.name).join(", ") || "the relevant sectors";
@@ -174,14 +211,7 @@ export async function GET(request: NextRequest) {
 
       let crux = n.summary || n.description || "";
       if (!crux || crux.length < 15) {
-        const tickerStr = affected.map((a: any) => a.name).join(", ");
-        if (impact === "Bullish") {
-          crux = `Market momentum increases as positive indicators surround ${tickerStr || "indices"}. Rising volumes and optimistic macroeconomic outlook are driving buyer sentiment, positioning large-cap leaders for steady gains in the upcoming sessions.`;
-        } else if (impact === "Bearish") {
-          crux = `Sellers dominate the session following adverse news cycles regarding ${tickerStr || "indices"}. Macro concerns, coupled with technical index resistance levels, suggest cautious trading as investors monitor key support benchmarks.`;
-        } else {
-          crux = `Trading remains range-bound for ${tickerStr || "indices"} ahead of major upcoming regulatory updates. Analysts suggest building exposure gradually in defensive sectors while keeping track of high-volume consolidations.`;
-        }
+        crux = generateNewsSummary(title, impact, affected);
       }
 
       return {

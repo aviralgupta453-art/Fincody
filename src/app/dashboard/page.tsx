@@ -2454,95 +2454,7 @@ Savings Recommendation:
     }, 2000);
   };
 
-  // Interactive projections simulation widget
-  const SimulationWidget = ({ type }: { type: string }) => {
-    // Slider values
-    const [sipAmt, setSipAmt] = useState(type === "MBA" ? 10000 : 5000);
-    const [sipYears, setSipYears] = useState(15);
-    
-    // Calculate dynamic projections
-    const monthlyRate = 0.12 / 12; // 12% annual rate
-    const totalMonths = sipYears * 12;
-    let futureVal = 0;
-    for (let i = 1; i <= totalMonths; i++) {
-      futureVal += sipAmt * Math.pow(1 + monthlyRate, totalMonths - i);
-    }
-    const principal = sipAmt * totalMonths;
-    const wealthGain = futureVal - principal;
 
-    const chartData = [];
-    for (let y = 1; y <= sipYears; y++) {
-      let yBal = 0;
-      const yMonths = y * 12;
-      for (let m = 1; m <= yMonths; m++) {
-        yBal += sipAmt * Math.pow(1 + monthlyRate, yMonths - m);
-      }
-      chartData.push({
-        year: `Yr ${y}`,
-        Principal: Math.round(sipAmt * yMonths),
-        Wealth: Math.round(yBal)
-      });
-    }
-
-    return (
-      <div className="p-4 rounded-xl border border-blue-500/10 bg-slate-950/40 mt-3 flex flex-col gap-3.5">
-        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block">📊 Fincody Wealth Simulator</span>
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-[10px] font-bold text-slate-400">
-            <span>${type === "MBA" ? "Monthly Savings Allocation" : "Monthly SIP Increment"}</span>
-            <span className="text-white font-mono">₹${sipAmt.toLocaleString()}</span>
-          </div>
-          <input
-            type="range"
-            min="1000"
-            max="25000"
-            step="1000"
-            value={sipAmt}
-            onChange={(e) => setSipAmt(parseInt(e.target.value))}
-            className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-          />
-        </div>
-        
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-[10px] font-bold text-slate-400">
-            <span>Simulation Tenure</span>
-            <span className="text-white font-mono">${sipYears} Years</span>
-          </div>
-          <input
-            type="range"
-            min="5"
-            max="30"
-            value={sipYears}
-            onChange={(e) => setSipYears(parseInt(e.target.value))}
-            className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-          />
-        </div>
-
-        <div className="h-28 w-full min-w-0 mt-1">
-          <ResponsiveContainer width="99%" height="100%">
-            <AreaChart data={chartData}>
-              <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
-              <YAxis stroke="#475569" fontSize={8} tickLine={false} axisLine={false} tickFormatter={(val) => val >= 100000 ? (val/100000).toFixed(1) + 'L' : val} />
-              <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} />
-              <Area type="monotone" dataKey="Wealth" stroke="#3b82f6" fillOpacity={0.06} strokeWidth={1.5} fill="#3b82f6" />
-              <Area type="monotone" dataKey="Principal" stroke="#64748b" fillOpacity={0.02} strokeWidth={1} fill="#64748b" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-center text-[10px] border-t border-blue-500/10 pt-2.5">
-          <div>
-            <span className="text-slate-500 font-semibold block">Total Invested</span>
-            <span className="font-bold text-white font-mono">₹${Math.round(principal).toLocaleString()}</span>
-          </div>
-          <div>
-            <span className="text-slate-500 font-semibold block">Projected Wealth</span>
-            <span className="font-bold text-emerald-500 font-mono">₹${Math.round(futureVal).toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-    );
-  };
 const handlePredefinedQuestion = (q: string) => {
     handleSendChat(q);
   };
@@ -7347,3 +7259,94 @@ const handlePredefinedQuestion = (q: string) => {
     </div>
   );
 }
+
+
+// Hoisted self-contained projections simulation widget
+const SimulationWidget = ({ type }: { type: string }) => {
+  // Slider values
+  const [sipAmt, setSipAmt] = useState(type === "MBA" ? 10000 : 5000);
+  const [sipYears, setSipYears] = useState(15);
+  
+  // Calculate dynamic projections
+  const monthlyRate = 0.12 / 12; // 12% annual rate
+  const totalMonths = sipYears * 12;
+  let futureVal = 0;
+  for (let i = 1; i <= totalMonths; i++) {
+    futureVal += sipAmt * Math.pow(1 + monthlyRate, totalMonths - i);
+  }
+  const principal = sipAmt * totalMonths;
+  const wealthGain = futureVal - principal;
+
+  const chartData = [];
+  for (let y = 1; y <= sipYears; y++) {
+    let yBal = 0;
+    const yMonths = y * 12;
+    for (let m = 1; m <= yMonths; m++) {
+      yBal += sipAmt * Math.pow(1 + monthlyRate, yMonths - m);
+    }
+    chartData.push({
+      year: `Yr ${y}`,
+      Principal: Math.round(sipAmt * yMonths),
+      Wealth: Math.round(yBal)
+    });
+  }
+
+  return (
+    <div className="p-4 rounded-xl border border-blue-500/10 bg-slate-950/40 mt-3 flex flex-col gap-3.5">
+      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block">📊 Fincody Wealth Simulator</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between text-[10px] font-bold text-slate-400">
+          <span>{type === "MBA" ? "Monthly Savings Allocation" : "Monthly SIP Increment"}</span>
+          <span className="text-white font-mono">₹{sipAmt.toLocaleString()}</span>
+        </div>
+        <input
+          type="range"
+          min="1000"
+          max="25000"
+          step="1000"
+          value={sipAmt}
+          onChange={(e) => setSipAmt(parseInt(e.target.value))}
+          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        />
+      </div>
+      
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between text-[10px] font-bold text-slate-400">
+          <span>Simulation Tenure</span>
+          <span className="text-white font-mono">{sipYears} Years</span>
+        </div>
+        <input
+          type="range"
+          min="5"
+          max="30"
+          value={sipYears}
+          onChange={(e) => setSipYears(parseInt(e.target.value))}
+          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        />
+      </div>
+
+      <div className="h-28 w-full min-w-0 mt-1">
+        <ResponsiveContainer width="99%" height="100%">
+          <AreaChart data={chartData}>
+            <XAxis dataKey="year" stroke="#475569" fontSize={8} tickLine={false} />
+            <YAxis stroke="#475569" fontSize={8} tickLine={false} axisLine={false} tickFormatter={(val) => val >= 100000 ? (val/100000).toFixed(1) + 'L' : val} />
+            <Tooltip contentStyle={{ fontSize: 9, background: "#0f172a", border: "1px solid #1e293b", color: "#f8fafc" }} />
+            <Area type="monotone" dataKey="Wealth" stroke="#3b82f6" fillOpacity={0.06} strokeWidth={1.5} fill="#3b82f6" />
+            <Area type="monotone" dataKey="Principal" stroke="#64748b" fillOpacity={0.02} strokeWidth={1} fill="#64748b" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-center text-[10px] border-t border-blue-500/10 pt-2.5">
+        <div>
+          <span className="text-slate-500 font-semibold block">Total Invested</span>
+          <span className="font-bold text-white font-mono">₹{Math.round(principal).toLocaleString()}</span>
+        </div>
+        <div>
+          <span className="text-slate-500 font-semibold block">Projected Wealth</span>
+          <span className="font-bold text-emerald-500 font-mono">₹{Math.round(futureVal).toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
