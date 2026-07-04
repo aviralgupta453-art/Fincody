@@ -769,13 +769,22 @@ export default function Home() {
               )}
             </button>
 
-            {/* Enter Dashboard Button */}
-            <Link 
-              href="/dashboard"
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 hover:-translate-y-0.5 cursor-pointer"
-            >
-              Enter Dashboard
-            </Link>
+            {/* Auth Dependent Navigation Buttons */}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/35 hover:-translate-y-0.5 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link 
+                href="/dashboard"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 hover:-translate-y-0.5 cursor-pointer"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Actions */}
@@ -1492,12 +1501,14 @@ export default function Home() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Automated Insurance Vault Review</li>
                 </ul>
               </div>
-              <Link 
-                href="/dashboard"
+              <a 
+                href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/mock-fincody-pro"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all mt-8 block"
               >
                 Upgrade to Pro
-              </Link>
+              </a>
             </div>
           </div>
         </div>

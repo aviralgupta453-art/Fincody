@@ -117,15 +117,15 @@ export async function GET(request: NextRequest) {
   let query = categoryQuery;
   if (country.toLowerCase() !== "global") {
     if (country.toLowerCase() === "india") {
-      query = "India Nifty Sensex Indian business finance Rupee RBI";
+      query = "Indian Markets";
     } else if (country.toLowerCase() === "usa") {
-      query = "US stocks Wall Street Fed Nasdaq SP500 inflation";
+      query = "US Markets";
     } else if (country.toLowerCase() === "europe") {
-      query = "Europe markets ECB Eurozone CAC DAX FTSE economy";
+      query = "European Markets";
     } else if (country.toLowerCase() === "japan") {
-      query = "Japan Nikkei Tokyo BOJ Yen corporate earnings";
+      query = "Nikkei";
     } else if (country.toLowerCase() === "asia") {
-      query = "Asia stock markets China Hang Seng Singapore trade";
+      query = "Asian Markets";
     }
   }
 

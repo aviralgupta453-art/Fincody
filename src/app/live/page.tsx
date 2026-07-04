@@ -508,7 +508,7 @@ export default function LivePage() {
   }, []);
 
   const filteredNews = newsFeed.filter((item) => {
-    const countryMatch = selectedCountry === "Global" || item.country === selectedCountry;
+    const countryMatch = selectedCountry === "Global" || item.country.toLowerCase() === selectedCountry.toLowerCase();
     const categoryMatch = selectedCategory === "Markets" || item.category === selectedCategory || item.category.toLowerCase() === selectedCategory.toLowerCase();
     return countryMatch && categoryMatch;
   });
