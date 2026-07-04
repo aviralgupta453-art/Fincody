@@ -892,6 +892,16 @@ export default function Dashboard() {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [extractedExpenses, setExtractedExpenses] = useState<any>(null);
+  const [userPlan, setUserPlan] = useState<"Free" | "Pro">("Free");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedPlan = localStorage.getItem("fincody_user_plan");
+      if (savedPlan === "Pro") {
+        setUserPlan("Pro");
+      }
+    }
+  }, []);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Manual Entry States
@@ -2941,13 +2951,19 @@ const handlePredefinedQuestion = (q: string) => {
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
 
+            {userPlan === "Pro" && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 border border-blue-400/30 text-[8px] font-black text-white uppercase tracking-widest shadow shadow-blue-500/20 animate-pulse shrink-0">
+                PRO
+              </span>
+            )}
+
             {/* Circular Profile Avatar (Always Visible in Header) */}
             <button
               onClick={() => {
                 setProfileEditName(user?.user_metadata?.full_name ?? "");
                 setShowProfileModal(true);
               }}
-              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20 shrink-0"
               title="View & Edit Profile"
             >
               {user?.user_metadata?.full_name 
@@ -3438,6 +3454,49 @@ const handlePredefinedQuestion = (q: string) => {
                     </AnimatePresence>
                   </div>
                 </div>
+
+                {/* Upgrade to Pro Banner (visible for Free users) */}
+                {userPlan === "Free" && (
+                  <div className="glass-card p-6 rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-950/20 via-slate-950 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left shadow-lg shadow-blue-500/5 animate-in slide-in-from-top-3 duration-300">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                        <Sparkles className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                          Unlock Fincody Pro
+                          <span className="px-1.5 py-0.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-[8px] font-black text-blue-400 uppercase tracking-widest">Upgrade</span>
+                        </h4>
+                        <p className="text-xs text-[var(--text-subtitle)] leading-relaxed mt-1 max-w-xl">
+                          Consolidate unlimited bank syncs, run high-fidelity future wealth sandbox simulations, and get priority AI financial advisory reports directly in your vault.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+                      <a 
+                        href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/mock-fincody-pro"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all text-center flex-1 sm:flex-initial cursor-pointer"
+                      >
+                        Upgrade to Pro (₹499/mo)
+                      </a>
+                      <button 
+                        onClick={() => {
+                          setUserPlan("Pro");
+                          localStorage.setItem("fincody_user_plan", "Pro");
+                          setNotifications(prev => [
+                            { id: Date.now(), text: "Fincody Pro: Subscription synchronized and activated successfully. Welcome to the elite tier!", unread: true },
+                            ...prev
+                          ]);
+                        }}
+                        className="px-4 py-3 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-[var(--text-color)] transition-all text-center flex-1 sm:flex-initial cursor-pointer"
+                      >
+                        Sync Purchase
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Net Worth Chart & Asset Allocation */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -7346,6 +7405,38 @@ const handlePredefinedQuestion = (q: string) => {
                 {profileSuccess}
               </div>
             )}
+
+                        <div className="mb-4 p-3 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-left flex justify-between items-center text-xs">
+              <div>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px] block mb-0.5">Plan Status</span>
+                <span className="font-extrabold text-white">{userPlan === "Pro" ? "Fincody Pro (Active)" : "Free Plan"}</span>
+              </div>
+              {userPlan === "Pro" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserPlan("Free");
+                    localStorage.setItem("fincody_user_plan", "Free");
+                    setNotifications(prev => [
+                      { id: Date.now(), text: "Fincody Pro: Subscription has been reset to Free plan.", unread: true },
+                      ...prev
+                    ]);
+                  }}
+                  className="px-2 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-[9px] font-bold text-rose-400 hover:bg-rose-500/25 transition-colors cursor-pointer"
+                >
+                  Downgrade
+                </button>
+              ) : (
+                <a
+                  href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/mock-fincody-pro"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-[9px] font-bold text-white shadow shadow-blue-500/10 transition-colors cursor-pointer text-center"
+                >
+                  Upgrade
+                </a>
+              )}
+            </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
               <div>
