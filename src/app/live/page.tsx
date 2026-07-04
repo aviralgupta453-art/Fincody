@@ -487,28 +487,71 @@ export default function LivePage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="hover:text-[var(--text-color)] transition-colors">Home</Link>
             <Link href="/live" className="text-blue-400 font-extrabold transition-colors">FinCody Live</Link>
-            <Link href="/#features" className="hover:text-[var(--text-color)] transition-colors">Features</Link>
+            <Link href="/#snapshot" className="hover:text-[var(--text-color)] transition-colors">Live Snapshot</Link>
             <Link href="/#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</Link>
-            <Link href="/#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</Link>
             <Link href="/#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</Link>
           </nav>
 
           <div className="flex items-center gap-4">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all"
+              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all hidden md:block"
             >
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
             <Link
               href="/dashboard"
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white transition-all shadow-md shadow-blue-500/20"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white transition-all shadow-md shadow-blue-500/20 hidden md:block"
             >
               Enter Dashboard
             </Link>
+
+            {/* Mobile-only toggle button */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)] block md:hidden"
+            >
+              {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            </button>
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-colors block md:hidden"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 left-0 w-full bg-[var(--bg-color)] border-b border-[var(--border-color)] p-6 flex flex-col gap-6 z-[999] backdrop-blur-lg md:hidden"
+          >
+            <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)] text-left">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Home</Link>
+              <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="text-blue-400 font-extrabold">FinCody Live</Link>
+              <Link href="/#snapshot" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Live Snapshot</Link>
+              <Link href="/#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</Link>
+              <Link href="/#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</Link>
+            </div>
+            <hr className="border-[var(--border-color)]" />
+            <div className="flex flex-col gap-3">
+              <Link 
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 shadow-lg shadow-blue-500/25"
+              >
+                Enter Dashboard
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="h-20" /> {/* Spacer */}
       <CurrencyRibbon />

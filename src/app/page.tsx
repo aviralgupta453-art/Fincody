@@ -744,7 +744,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
             <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
-
+            <Link href="/#snapshot" className="hover:text-[var(--text-color)] transition-colors">Live Snapshot</Link>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </nav>
@@ -831,7 +831,7 @@ export default function Home() {
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-white font-extrabold">Home</Link>
               <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">FinCody Live</Link>
-              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Alert Center</Link>
+              <Link href="/#snapshot" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Live Snapshot</Link>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</a>
             </div>
@@ -1029,7 +1029,7 @@ export default function Home() {
             </div>
 
             {/* Live Snapshot section below Launch Demo */}
-            <div className="w-full flex flex-col gap-4 mt-6 border-t border-slate-900/60 pt-6">
+            <div id="snapshot" className="w-full flex flex-col gap-4 mt-6 border-t border-slate-900/60 pt-6 scroll-mt-24">
               <div className="border-l-2 border-blue-500/20 pl-4 mb-3 text-left">
                 <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Live Snapshot</span>
                 <span className="text-xs text-slate-400 font-bold block mt-0.5">Real-time status updates</span>
