@@ -1605,6 +1605,9 @@ export default function Dashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset input value to allow uploading the same file multiple times
+    e.target.value = "";
+
     setUploadingDoc(true);
     setTimeout(() => {
       const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
@@ -1662,7 +1665,8 @@ export default function Dashboard() {
   };
 
   const handleBeginAnalysis = () => {
-    if (documents.length === 0) return;
+    const deviceDocs = documents.filter(d => d.type !== "MANUAL");
+    if (deviceDocs.length === 0) return;
     setIsAnalyzing(true);
 
     setNotifications(prev => [
@@ -1707,8 +1711,8 @@ export default function Dashboard() {
       persistData("subscriptions", updatedSubs);
 
       // Extract specific expenses based on uploaded files
-      const hasGpay = documents.some(doc => doc.name.toLowerCase().includes("gpay") || doc.name.toLowerCase().includes("monthly"));
-      const hasBank = documents.some(doc => doc.name.toLowerCase().includes("bank") || doc.name.toLowerCase().includes("statement") || doc.name.toLowerCase().includes("summary"));
+      const hasGpay = deviceDocs.some(doc => doc.name.toLowerCase().includes("gpay") || doc.name.toLowerCase().includes("monthly"));
+      const hasBank = deviceDocs.some(doc => doc.name.toLowerCase().includes("bank") || doc.name.toLowerCase().includes("statement") || doc.name.toLowerCase().includes("summary"));
 
       let parsedExpenses = [];
       let parsedTransactions = [];
@@ -1754,7 +1758,7 @@ export default function Dashboard() {
         expenses: parsedExpenses,
         transactions: parsedTransactions,
         total: totalAmount,
-        filesScanned: documents.map(d => d.name)
+        filesScanned: deviceDocs.map(d => d.name)
       });
 
       setIsAnalyzing(false);
@@ -6291,6 +6295,7 @@ const handlePredefinedQuestion = (q: string) => {
                           accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" 
                         />
                         <button
+                          type="button"
                           onClick={handleUploadDocument}
                           disabled={uploadingDoc}
                           className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-[var(--text-color)] transition-all cursor-pointer flex items-center gap-1.5"
@@ -6431,8 +6436,9 @@ const handlePredefinedQuestion = (q: string) => {
                       Trigger Fincody's neural scanner to read uploaded tax policies, salary payslips, and investments to automatically sync and update your entire financial profile.
                     </p>
                     <button
+                      type="button"
                       onClick={handleBeginAnalysis}
-                      disabled={isAnalyzing || documents.length === 0}
+                      disabled={isAnalyzing || documents.filter(d => d.type !== "MANUAL").length === 0}
                       className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-xs font-bold text-white shadow shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isAnalyzing ? (
@@ -6445,9 +6451,9 @@ const handlePredefinedQuestion = (q: string) => {
                         </>
                       )}
                     </button>
-                    {documents.length === 0 && (
+                    {documents.filter(d => d.type !== "MANUAL").length === 0 && (
                       <span className="text-[10px] text-amber-500 font-bold text-center block">
-                        Upload at least one document to start analysis
+                        Upload at least one statement from your device to start analysis
                       </span>
                     )}
                   </div>
