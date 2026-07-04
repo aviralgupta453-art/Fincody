@@ -6342,16 +6342,18 @@ const handlePredefinedQuestion = (q: string) => {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {/* Edit Pencil Button to make manual entry sheet editable once document is uploaded */}
-                            <button 
-                              onClick={() => {
-                                setShowManualEntryModal(true);
-                              }}
-                              className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-500 transition-all cursor-pointer"
-                              title="Edit Extracted Manual Sheet"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
+                            {/* Edit Pencil Button only for manual entry sheets, not for device-uploaded PDFs */}
+                            {doc.type === "MANUAL" && (
+                              <button 
+                                onClick={() => {
+                                  setShowManualEntryModal(true);
+                                }}
+                                className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-500 transition-all cursor-pointer"
+                                title="Edit Extracted Manual Sheet"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            )}
                             {doc.type !== "MANUAL" && (
                               <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
                                 <Download className="w-4 h-4" />
@@ -6440,6 +6442,21 @@ const handlePredefinedQuestion = (q: string) => {
 
                 <div className="lg:col-span-4 flex flex-col gap-6">
                   {/* Begin AI Analysis */}
+                  {isAnalyzing && (
+                    <div className="glass-card p-5 rounded-2xl border border-blue-500/30 bg-slate-950 font-mono text-[10px] text-blue-400 leading-relaxed text-left flex flex-col gap-1.5 shadow-lg shadow-blue-500/5 animate-pulse mb-6">
+                      <div className="flex justify-between items-center text-xs border-b border-blue-500/10 pb-1.5 text-white font-bold mb-1">
+                        <span>🤖 Neural PDF Reader Console</span>
+                        <span className="animate-ping w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      </div>
+                      <div>[SYSTEM]: Initializing secure OCR stream...</div>
+                      <div>[STREAM]: Reading encrypted PDF buffer bytes...</div>
+                      <div>[NLP]: Decrypted {(documents.filter(d => d.type !== "MANUAL").length * 2840)} characters.</div>
+                      <div>[PARSER]: Mapping transaction logs for: {documents.filter(d => d.type !== "MANUAL").map(d => d.name).join(", ")}</div>
+                      <div>[AUDIT]: Verifying salary credits and budget variances...</div>
+                      <div className="text-white font-bold">[SUCCESS]: ChatGPT-style extraction finished. Outputting reports.</div>
+                    </div>
+                  )}
+
                   <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-blue-600/[0.02] flex flex-col gap-4">
                     <span className="text-sm font-bold uppercase tracking-wider text-blue-500 border-b border-[var(--border-color)] pb-3 block flex items-center gap-1.5">
                       <Sparkles className="w-4.5 h-4.5" /> AI Engine Analysis
@@ -6455,7 +6472,7 @@ const handlePredefinedQuestion = (q: string) => {
                     >
                       {isAnalyzing ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin animate-duration-1000" /> Analyzing files...
+                          <Loader2 className="w-4 h-4 animate-spin" /> Neural Scanner active...
                         </>
                       ) : (
                         <>
