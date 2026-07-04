@@ -5,36 +5,31 @@ function generateNewsSummary(title: string, impact: string, affected: any[]) {
   const lowerTitle = title.toLowerCase();
   const tickerStr = affected.map((a: any) => a.name).join(", ") || "market indices";
 
+  let baseDesc = "";
   if (lowerTitle.includes("inflation") || lowerTitle.includes("cpi") || lowerTitle.includes("retail price")) {
-    return `Latest macroeconomic data registers shifts in consumer price index trends, influencing monetary policy projections and bond yield spreads across domestic credit markets.`;
-  }
-  if (lowerTitle.includes("fed") || lowerTitle.includes("rate") || lowerTitle.includes("interest") || lowerTitle.includes("monetary")) {
-    return `Central bank policy signals and interest rate decisions prompt adjustments in borrowing costs, directly affecting banking book margins and growth sector valuations.`;
-  }
-  if (lowerTitle.includes("ipo") || lowerTitle.includes("listing") || lowerTitle.includes("public offering") || lowerTitle.includes("debts")) {
-    return `New company debut in the public markets tests institutional listing appetite and gray market premium trends amid high retail subscription volumes.`;
-  }
-  if (lowerTitle.includes("earnings") || lowerTitle.includes("revenue") || lowerTitle.includes("profit") || lowerTitle.includes("beat") || lowerTitle.includes("sales")) {
-    return `Corporate financial reports reveal performance beats with margin expansion, driving target price revisions and revisions in forward-looking guidance.`;
-  }
-  if (lowerTitle.includes("deal") || lowerTitle.includes("acquisition") || lowerTitle.includes("merger") || lowerTitle.includes("buy") || lowerTitle.includes("takeover")) {
-    return `Corporate consolidation activity shifts competitive landscape benchmarks as entities merge capabilities to optimize operational synergies and market share.`;
-  }
-  if (lowerTitle.includes("regulatory") || lowerTitle.includes("sec") || lowerTitle.includes("lawsuit") || lowerTitle.includes("ban") || lowerTitle.includes("investigate")) {
-    return `Regulatory audits and compliance framework updates introduce structural policy adjustments, impacting operational parameters for active sector participants.`;
-  }
-  if (lowerTitle.includes("tech") || lowerTitle.includes("ai") || lowerTitle.includes("semiconductor") || lowerTitle.includes("chip") || lowerTitle.includes("quantum")) {
-    return `High-performance computing demand and silicon hardware breakthroughs support technical capital expenditures and hyperscaler datacenter pipeline builds.`;
+    baseDesc = "macroeconomic metrics show shift in price indexes.";
+  } else if (lowerTitle.includes("fed") || lowerTitle.includes("rate") || lowerTitle.includes("interest") || lowerTitle.includes("monetary")) {
+    baseDesc = "monetary guidelines prompt adjustments in borrowing yields.";
+  } else if (lowerTitle.includes("ipo") || lowerTitle.includes("listing") || lowerTitle.includes("public offering") || lowerTitle.includes("debts")) {
+    baseDesc = "listing debut tests grey market and retail subscription appetites.";
+  } else if (lowerTitle.includes("earnings") || lowerTitle.includes("revenue") || lowerTitle.includes("profit") || lowerTitle.includes("beat") || lowerTitle.includes("sales")) {
+    baseDesc = "corporate earnings reveal beats with target projections expanding.";
+  } else if (lowerTitle.includes("deal") || lowerTitle.includes("acquisition") || lowerTitle.includes("merger") || lowerTitle.includes("buy") || lowerTitle.includes("takeover")) {
+    baseDesc = "corporate consolidation shifts competitive sector benchmarks.";
+  } else if (lowerTitle.includes("regulatory") || lowerTitle.includes("sec") || lowerTitle.includes("lawsuit") || lowerTitle.includes("ban") || lowerTitle.includes("investigate")) {
+    baseDesc = "compliance audit framework introduces regulatory adjustments.";
+  } else if (lowerTitle.includes("tech") || lowerTitle.includes("ai") || lowerTitle.includes("semiconductor") || lowerTitle.includes("chip") || lowerTitle.includes("quantum")) {
+    baseDesc = "computing silicon breakthroughs spur hardware pipeline builds.";
+  } else if (impact === "Bullish") {
+    baseDesc = "purchasing volumes spark immediate technical index breakout testing.";
+  } else if (impact === "Bearish") {
+    baseDesc = "selling flows trigger defensive asset reallocations.";
+  } else {
+    baseDesc = "consolidated ranges capture low volume sideways price actions.";
   }
 
-  // Default dynamic descriptors
-  if (impact === "Bullish") {
-    return `Buying volumes increase for ${tickerStr} following positive sentiment triggers, leading to immediate technical breakout testing on key index benchmarks.`;
-  } else if (impact === "Bearish") {
-    return `Selling flows trigger downside retracements for ${tickerStr} as investors seek defensive shelters ahead of upcoming macroeconomic event cycles.`;
-  } else {
-    return `Sideways pricing action consolidates ranges for ${tickerStr} as market observers hold positions awaiting clearer policy indicators and volume support.`;
-  }
+  const cleanTitle = title.endsWith(".") ? title : title + ".";
+  return `${cleanTitle} This update adjusts sector parameters for ${tickerStr} as ${baseDesc}`;
 }
 
 function generateNewsAnalysis(title: string, impact: string, affected: any[]) {

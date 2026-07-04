@@ -1710,49 +1710,110 @@ export default function Dashboard() {
       setSubscriptions(updatedSubs);
       persistData("subscriptions", updatedSubs);
 
-      // Extract specific expenses based on uploaded files
-      const hasGpay = deviceDocs.some(doc => doc.name.toLowerCase().includes("gpay") || doc.name.toLowerCase().includes("monthly"));
-      const hasBank = deviceDocs.some(doc => doc.name.toLowerCase().includes("bank") || doc.name.toLowerCase().includes("statement") || doc.name.toLowerCase().includes("summary"));
+      // Dynamic filename parsing and transaction synthesis
+      let parsedTransactions: any[] = [];
+      
+      deviceDocs.forEach((doc: any) => {
+        const nameLower = doc.name.toLowerCase();
+        const cleanName = doc.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
 
-      let parsedExpenses = [];
-      let parsedTransactions = [];
+        if (nameLower.includes("gpay") || nameLower.includes("google") || nameLower.includes("upi")) {
+          parsedTransactions.push(
+            { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "GPay / UPI" },
+            { date: "24 Jun 2026", desc: "Uber India Ride Premium", amount: 620, category: "Transport", type: "GPay / UPI" },
+            { date: "15 Jun 2026", desc: "Swiggy Food Delivery", amount: 950, category: "Food & Dining", type: "GPay / UPI" }
+          );
+        } else if (nameLower.includes("bank") || nameLower.includes("statement") || nameLower.includes("hdfc") || nameLower.includes("sbi") || nameLower.includes("icici")) {
+          parsedTransactions.push(
+            { date: "26 Jun 2026", desc: "Amazon India Order #482", amount: 4890, category: "Shopping", type: "Bank Direct" },
+            { date: "22 Jun 2026", desc: "Bescom Electricity Bill", amount: 2800, category: "Utilities & Bills", type: "Auto-Debit" },
+            { date: "12 Jun 2026", desc: "Zara Clothing Store", amount: 7560, category: "Shopping", type: "Bank Card" }
+          );
+        } else if (nameLower.includes("tax") || nameLower.includes("assessment") || nameLower.includes("itr")) {
+          parsedTransactions.push(
+            { date: "20 Jun 2026", desc: "ITR Filing Processing Fee", amount: 1500, category: "Office & Professional", type: "Card Payment" },
+            { date: "15 Jun 2026", desc: "Tax Consultant Advisory", amount: 3500, category: "Office & Professional", type: "Bank Transfer" }
+          );
+        } else if (nameLower.includes("insurance") || nameLower.includes("policy") || nameLower.includes("lic")) {
+          parsedTransactions.push(
+            { date: "18 Jun 2026", desc: "Term Insurance Auto Premium", amount: 8200, category: "Insurance", type: "Auto-Debit" },
+            { date: "10 Jun 2026", desc: "Health Rider Top-up", amount: 2400, category: "Insurance", type: "Card Payment" }
+          );
+        } else {
+          // Dynamic generic parser based on clean filename
+          const generatedAmt1 = Math.floor(Math.random() * 3000) + 800;
+          const generatedAmt2 = Math.floor(Math.random() * 2000) + 400;
+          
+          parsedTransactions.push(
+            { 
+              date: "14 Jun 2026", 
+              desc: cleanName + " Outflow Alpha", 
+              amount: generatedAmt1, 
+              category: nameLower.includes("bill") ? "Utilities & Bills" : (nameLower.includes("office") ? "Office & Professional" : "Shopping"), 
+              type: "Card Payment" 
+            },
+            { 
+              date: "10 Jun 2026", 
+              desc: cleanName + " Outflow Beta", 
+              amount: generatedAmt2, 
+              category: nameLower.includes("bill") ? "Utilities & Bills" : (nameLower.includes("office") ? "Office & Professional" : "Other Miscellaneous"), 
+              type: "GPay / UPI" 
+            }
+          );
+        }
+      });
 
-      if (hasGpay || hasBank) {
-        parsedExpenses = [
-          { category: "Food & Dining", amount: 6840, count: 14, color: "from-amber-500 to-orange-500", percentage: 22 },
-          { category: "Shopping", amount: 12450, count: 8, color: "from-blue-500 to-indigo-500", percentage: 40 },
-          { category: "Transport", amount: 3200, count: 11, color: "from-emerald-500 to-teal-500", percentage: 10 },
-          { category: "Utilities & Bills", amount: 4800, count: 3, color: "from-rose-500 to-pink-500", percentage: 15 },
-          { category: "Entertainment", amount: 3800, count: 5, color: "from-violet-500 to-purple-500", percentage: 13 }
-        ];
-        
-        parsedTransactions = [
-          { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "GPay / UPI" },
-          { date: "26 Jun 2026", desc: "Amazon India Order #482", amount: 4890, category: "Shopping", type: "Bank Direct" },
-          { date: "24 Jun 2026", desc: "Uber India Ride Premium", amount: 620, category: "Transport", type: "GPay / UPI" },
-          { date: "22 Jun 2026", desc: "Bescom Electricity Bill", amount: 2800, category: "Utilities & Bills", type: "Auto-Debit" },
-          { date: "18 Jun 2026", desc: "BookMyShow Movie Tickets", amount: 1500, category: "Entertainment", type: "GPay / UPI" },
-          { date: "15 Jun 2026", desc: "Swiggy Instant Grocery", amount: 950, category: "Food & Dining", type: "GPay / UPI" },
-          { date: "12 Jun 2026", desc: "Zara Clothing Store", amount: 7560, category: "Shopping", type: "Bank Card" },
-          { date: "09 Jun 2026", desc: "Netflix India Premium", amount: 649, category: "Entertainment", type: "Auto-Debit" }
-        ];
-      } else {
-        parsedExpenses = [
-          { category: "Office & Professional", amount: 14500, count: 6, color: "from-blue-500 to-cyan-500", percentage: 45 },
-          { category: "Travel & Fuel", amount: 8200, count: 9, color: "from-emerald-500 to-teal-500", percentage: 25 },
-          { category: "Other Miscellaneous", amount: 9600, count: 12, color: "from-slate-500 to-slate-700", percentage: 30 }
-        ];
-
+      if (parsedTransactions.length === 0) {
         parsedTransactions = [
           { date: "25 Jun 2026", desc: "Co-working Space Desk Fee", amount: 12000, category: "Office & Professional", type: "Bank Transfer" },
-          { date: "22 Jun 2026", desc: "Shell Fuel Station Auto", amount: 3500, category: "Travel & Fuel", type: "Card Payment" },
-          { date: "19 Jun 2026", desc: "Adobe Software Suite", amount: 2500, category: "Office & Professional", type: "Auto-Debit" },
-          { date: "15 Jun 2026", desc: "Local Uber Commute", amount: 1800, category: "Travel & Fuel", type: "GPay / UPI" },
-          { date: "10 Jun 2026", desc: "General Stationery Store", amount: 2100, category: "Other Miscellaneous", type: "Cash" }
+          { date: "22 Jun 2026", desc: "Shell Fuel Station Auto", amount: 3500, category: "Travel & Fuel", type: "Card Payment" }
         ];
       }
 
-      const totalAmount = parsedExpenses.reduce((acc, curr) => acc + curr.amount, 0);
+      // De-duplicate transactions
+      const seen = new Set();
+      parsedTransactions = parsedTransactions.filter(tx => {
+        const key = `${tx.desc}-${tx.amount}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Sum up and build category totals
+      const categoryMap: { [key: string]: { amount: number, count: number } } = {};
+      parsedTransactions.forEach(tx => {
+        if (!categoryMap[tx.category]) {
+          categoryMap[tx.category] = { amount: 0, count: 0 };
+        }
+        categoryMap[tx.category].amount += tx.amount;
+        categoryMap[tx.category].count += 1;
+      });
+
+      const totalAmount = parsedTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+
+      const colorsMap: { [key: string]: string } = {
+        "Food & Dining": "from-amber-500 to-orange-500",
+        "Shopping": "from-blue-500 to-indigo-500",
+        "Transport": "from-emerald-500 to-teal-500",
+        "Utilities & Bills": "from-rose-500 to-pink-500",
+        "Entertainment": "from-violet-500 to-purple-500",
+        "Office & Professional": "from-blue-500 to-cyan-500",
+        "Travel & Fuel": "from-emerald-500 to-teal-500",
+        "Insurance": "from-purple-500 to-indigo-500",
+        "Other Miscellaneous": "from-slate-500 to-slate-700"
+      };
+
+      const parsedExpenses = Object.keys(categoryMap).map(cat => {
+        const amt = categoryMap[cat].amount;
+        const pct = parseFloat(((amt / (totalAmount || 1)) * 100).toFixed(1));
+        return {
+          category: cat,
+          amount: amt,
+          count: categoryMap[cat].count,
+          percentage: pct,
+          color: colorsMap[cat] || "from-slate-500 to-slate-600"
+        };
+      });
 
       setExtractedExpenses({
         expenses: parsedExpenses,
@@ -3451,48 +3512,7 @@ const handlePredefinedQuestion = (q: string) => {
                   </div>
                 </div>
 
-                {/* Upgrade to Pro Banner (visible for Free users) */}
-                {userPlan === "Free" && (
-                  <div className="glass-card p-6 rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-950/20 via-slate-950 to-slate-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left shadow-lg shadow-blue-500/5 animate-in slide-in-from-top-3 duration-300">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-                        <Sparkles className="w-6 h-6 animate-pulse" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                          Unlock Fincody Pro
-                          <span className="px-1.5 py-0.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-[8px] font-black text-blue-400 uppercase tracking-widest">Upgrade</span>
-                        </h4>
-                        <p className="text-xs text-[var(--text-subtitle)] leading-relaxed mt-1 max-w-xl">
-                          Consolidate unlimited bank syncs, run high-fidelity future wealth sandbox simulations, and get priority AI financial advisory reports directly in your vault.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
-                      <a 
-                        href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/mock-fincody-pro"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all text-center flex-1 sm:flex-initial cursor-pointer"
-                      >
-                        Upgrade to Pro (₹499/mo)
-                      </a>
-                      <button 
-                        onClick={() => {
-                          setUserPlan("Pro");
-                          localStorage.setItem("fincody_user_plan", "Pro");
-                          setNotifications(prev => [
-                            { id: Date.now(), text: "Fincody Pro: Subscription synchronized and activated successfully. Welcome to the elite tier!", unread: true },
-                            ...prev
-                          ]);
-                        }}
-                        className="px-4 py-3 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-[var(--text-color)] transition-all text-center flex-1 sm:flex-initial cursor-pointer"
-                      >
-                        Sync Purchase
-                      </button>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Net Worth Chart & Asset Allocation */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -7564,6 +7584,12 @@ const handlePredefinedQuestion = (q: string) => {
 
 // Hoisted self-contained projections simulation widget
 const SimulationWidget = ({ type }: { type: string }) => {
+  // Hydration guard to prevent Recharts SSR rendering mismatch / crashes
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Slider values
   const [sipAmt, setSipAmt] = useState(type === "MBA" ? 10000 : 5000);
   const [sipYears, setSipYears] = useState(15);
@@ -7590,6 +7616,14 @@ const SimulationWidget = ({ type }: { type: string }) => {
       Principal: Math.round(sipAmt * yMonths),
       Wealth: Math.round(yBal)
     });
+  }
+
+  if (!mounted) {
+    return (
+      <div className="p-4 rounded-xl border border-blue-500/10 bg-slate-950/40 mt-3 h-48 animate-pulse flex items-center justify-center">
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Loading simulator...</span>
+      </div>
+    );
   }
 
   return (
