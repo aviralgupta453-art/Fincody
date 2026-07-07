@@ -2392,6 +2392,44 @@ const handleSaveCurrentPortfolio = (name: string) => {
     return () => clearInterval(intervalId);
   }, [portfolio.map(p => p.symbol).join(",")]);
 
+  // Dynamically calculated financial metrics incorporating all assets & entries (safely protected from NaN values)
+  const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+  const fdsTotalValue = (fixedDeposits || []).reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate || new Date());
+    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+    const rate = parseFloat(curr.rate || curr.interestRate || 0);
+    const principal = parseFloat(curr.principal || 0);
+    const interest = principal * (rate / 100) * yearsElapsed;
+    return acc + principal + (isNaN(interest) ? 0 : interest);
+  }, 0);
+  const ppfTotalValue = parseFloat(ppfData?.balance || 0);
+  const npsTotalValue = parseFloat(npsData?.corpus || 0);
+  const goldTotalValue = (goldHoldings || []).reduce((acc: number, curr: any) => {
+    const livePrice = spotGoldPrice || 7420;
+    const grams = parseFloat(curr.grams || 0);
+    return acc + (grams * livePrice);
+  }, 0);
+  const etfsTotalValue = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+  const bondsTotalValue = (bondHoldings || []).reduce((acc: number, curr: any) => {
+    const start = new Date(curr.startDate || new Date());
+    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+    const couponRate = parseFloat(curr.couponRate || 0);
+    const faceValue = parseFloat(curr.faceValue || 0);
+    const interest = faceValue * (couponRate / 100) * yearsElapsed;
+    return acc + faceValue + (isNaN(interest) ? 0 : interest);
+  }, 0);
+
+  const mfTotalValue = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+  const mfTotalInvested = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
+  const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
+  const baselineCash = parseFloat(manualNetWorth) || 1200000;
+  const calculatedNetWorth = baselineCash + totalInvestmentValue;
+
+  const salaryVal = parseFloat(manualSalary) || 185000;
+  const emiVal = parseFloat(manualEMI) || 28000;
+  const otherExpVal = parseFloat(manualOtherExpenses) || 45000;
+  const calculatedMonthlySavings = Math.max(0, salaryVal - emiVal - otherExpVal - monthlySubscriptionSpend);
+
   // AI Chat Handlers
   const handleSendChat = async (text: string) => {
     if (!text.trim()) return;
@@ -2781,43 +2819,7 @@ const handlePredefinedQuestion = (q: string) => {
     );
   }
 
-  // Dynamically calculated financial metrics incorporating all assets & entries (safely protected from NaN values)
-  const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
-  const fdsTotalValue = (fixedDeposits || []).reduce((acc: number, curr: any) => {
-    const start = new Date(curr.startDate || new Date());
-    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-    const rate = parseFloat(curr.rate || curr.interestRate || 0);
-    const principal = parseFloat(curr.principal || 0);
-    const interest = principal * (rate / 100) * yearsElapsed;
-    return acc + principal + (isNaN(interest) ? 0 : interest);
-  }, 0);
-  const ppfTotalValue = parseFloat(ppfData?.balance || 0);
-  const npsTotalValue = parseFloat(npsData?.corpus || 0);
-  const goldTotalValue = (goldHoldings || []).reduce((acc: number, curr: any) => {
-    const livePrice = spotGoldPrice || 7420;
-    const grams = parseFloat(curr.grams || 0);
-    return acc + (grams * livePrice);
-  }, 0);
-  const etfsTotalValue = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
-  const bondsTotalValue = (bondHoldings || []).reduce((acc: number, curr: any) => {
-    const start = new Date(curr.startDate || new Date());
-    const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-    const couponRate = parseFloat(curr.couponRate || 0);
-    const faceValue = parseFloat(curr.faceValue || 0);
-    const interest = faceValue * (couponRate / 100) * yearsElapsed;
-    return acc + faceValue + (isNaN(interest) ? 0 : interest);
-  }, 0);
 
-  const mfTotalValue = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
-  const mfTotalInvested = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
-  const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
-  const baselineCash = parseFloat(manualNetWorth) || 1200000;
-  const calculatedNetWorth = baselineCash + totalInvestmentValue;
-
-  const salaryVal = parseFloat(manualSalary) || 185000;
-  const emiVal = parseFloat(manualEMI) || 28000;
-  const otherExpVal = parseFloat(manualOtherExpenses) || 45000;
-  const calculatedMonthlySavings = Math.max(0, salaryVal - emiVal - otherExpVal - monthlySubscriptionSpend);
   
   const calculatedGoalContributions = goals.reduce((acc: number, curr: any) => acc + curr.current, 0);
 
@@ -6785,7 +6787,7 @@ const handlePredefinedQuestion = (q: string) => {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-50"
+            className="fixed bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-50"
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragHover(true);
