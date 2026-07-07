@@ -1667,6 +1667,26 @@ export default function Dashboard() {
     }
   };
 
+  // Robust helper to extract numerical amounts from a transaction line
+  const parseAmountFromLine = (line: string): number | null => {
+    // 1. Try to find currency pattern first: e.g. ₹ 1,234.56 or 1234 INR or Rs 450
+    const currMatch = line.match(/(?:₹|inr|rs\.?|usd|\$)\s*([\d,]+(?:\.\d+)?)/i) || line.match(/([\d,]+(?:\.\d+)?)\s*(?:₹|inr|rs\.?|usd|\$)/i);
+    if (currMatch) {
+      const valStr = currMatch[1];
+      if (valStr) {
+        const val = parseFloat(valStr.replace(/,/g, ""));
+        if (!isNaN(val)) return val;
+      }
+    }
+    // 2. Fall back to finding any numbers between 10 and 999,999 (standard transaction amount)
+    const numMatch = line.match(/\b(\d{2,6}(?:\.\d+)?)\b/);
+    if (numMatch) {
+      const val = parseFloat(numMatch[1]);
+      if (!isNaN(val)) return val;
+    }
+    return null;
+  };
+
   const handleBeginAnalysis = () => {
     const deviceDocs = documents.filter(d => d.type !== "MANUAL");
     if (deviceDocs.length === 0) return;
@@ -1693,55 +1713,65 @@ export default function Dashboard() {
           const trimmed = line.trim();
           if (!trimmed) return;
 
-          // Parse income/salary
-          if (/salary|credit|payout|employer/i.test(trimmed) && !/debit|charge|fee/i.test(trimmed)) {
-            const match = trimmed.match(/(?:₹|inr|rs\.?)\s*(\d[\d,]*)/i) || trimmed.match(/(\d[\d,]*)\s*(?:₹|inr|rs\.?)/i) || trimmed.match(/\b(\d{5,6})\b/);
-            if (match) {
-              const val = parseFloat(match[1].replace(/,/g, ""));
-              if (val > totalSalary) totalSalary = val;
-            }
+          // Check if line contains transaction indicators or expense categories
+          const isExpense = /debit|charge|payment|withdrawn|spent|paid|purchase|fee|swiggy|zomato|uber|ola|amazon|flipkart|netflix|spotify|bescom|electricity|insurance|lic/i.test(trimmed);
+          const isIncome = /salary|credit|payout|employer|received|deposit/i.test(trimmed) && !/debit|charge|fee/i.test(trimmed);
+
+          const amt = parseAmountFromLine(trimmed);
+          if (amt === null || amt <= 0) return;
+
+          // Ignore standard calendar years to avoid false transaction parsing
+          if (amt === 2025 || amt === 2026) {
+            if (/year|date|2025|2026/i.test(trimmed)) return;
           }
 
-          // Parse tax
-          if (/tds|tax|income tax|gst/i.test(trimmed)) {
-            const match = trimmed.match(/(?:₹|inr|rs\.?)\s*(\d[\d,]*)/i) || trimmed.match(/(\d[\d,]*)\s*(?:₹|inr|rs\.?)/i) || trimmed.match(/\b(\d{3,5})\b/);
-            if (match) {
-              totalTax += parseFloat(match[1].replace(/,/g, ""));
+          if (isIncome) {
+            if (amt > totalSalary) totalSalary = amt;
+          } else if (isExpense) {
+            // Identify Category and clean description
+            let category = "Other Miscellaneous";
+            let desc = trimmed.substring(0, 40);
+            
+            if (/swiggy|zomato|restaurant|food|dining/i.test(trimmed)) {
+              category = "Food & Dining";
+              desc = "Restaurant Order Delivery";
+            } else if (/uber|ola|cab|auto|ride|transport|travel/i.test(trimmed)) {
+              category = "Transport";
+              desc = "Cab / Ride Travel Outflow";
+            } else if (/netflix|spotify|youtube|disney|prime/i.test(trimmed)) {
+              category = "Entertainment";
+              desc = "Streaming Subscription Renew";
+            } else if (/amazon|flipkart|myntra|zara|shopping/i.test(trimmed)) {
+              category = "Shopping";
+              desc = "E-Commerce Retail Purchase";
+            } else if (/bescom|electricity|power|water|internet|bill/i.test(trimmed)) {
+              category = "Utilities & Bills";
+              desc = "Utility Bill Payment";
+            } else if (/insurance|lic|hdfc life|premium/i.test(trimmed)) {
+              category = "Insurance";
+              desc = "Insurance Premium Auto-Debit";
+            } else if (/emi|loan|mortgage/i.test(trimmed)) {
+              category = "Utilities & Bills";
+              desc = "Loan EMI Installment";
             }
+
+            parsedTransactions.push({
+              date: "26 Jun 2026",
+              desc: desc.replace(/[^a-zA-Z0-9\s\-\₹\.\,\:\#\(\)]/g, "").trim(),
+              amount: amt,
+              category,
+              type: /gpay|upi/i.test(trimmed) ? "GPay / UPI" : "Card Payment"
+            });
           }
 
           // Parse investments
           if (/sip|mutual fund|parag parikh|axis|zerodha|fd|fixed deposit/i.test(trimmed)) {
-            const match = trimmed.match(/(?:₹|inr|rs\.?)\s*(\d[\d,]*)/i) || trimmed.match(/(\d[\d,]*)\s*(?:₹|inr|rs\.?)/i) || trimmed.match(/\b(\d{3,5})\b/);
-            if (match) {
-              totalInvestments += parseFloat(match[1].replace(/,/g, ""));
-            }
+            totalInvestments += amt;
           }
 
-          // Parse specific transactions
-          if (/swiggy|zomato|uber|ola|amazon|flipkart|netflix|spotify|bescom|electricity|insurance|lic/i.test(trimmed)) {
-            const match = trimmed.match(/(?:₹|inr|rs\.?)\s*(\d[\d,]*)/i) || trimmed.match(/(\d[\d,]*)\s*(?:₹|inr|rs\.?)/i) || trimmed.match(/\b(\d{2,5})\b/);
-            if (match) {
-              const amount = parseFloat(match[1].replace(/,/g, ""));
-              let category = "Other Miscellaneous";
-              if (/swiggy|zomato/i.test(trimmed)) category = "Food & Dining";
-              else if (/uber|ola/i.test(trimmed)) category = "Transport";
-              else if (/netflix|spotify/i.test(trimmed)) category = "Entertainment";
-              else if (/amazon|flipkart/i.test(trimmed)) category = "Shopping";
-              else if (/bescom|electricity/i.test(trimmed)) category = "Utilities & Bills";
-              else if (/insurance|lic/i.test(trimmed)) category = "Insurance";
-
-              let desc = trimmed.substring(0, 30);
-              if (desc.length === 30) desc += "...";
-
-              parsedTransactions.push({
-                date: "26 Jun 2026",
-                desc: desc.replace(/[^\w\s\₹\.\,\:\#]/g, ""),
-                amount,
-                category,
-                type: /gpay|upi/i.test(trimmed) ? "GPay / UPI" : "Card Payment"
-              });
-            }
+          // Parse tax
+          if (/tds|tax|income tax|gst/i.test(trimmed)) {
+            totalTax += amt;
           }
         });
       });
