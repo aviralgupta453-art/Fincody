@@ -339,23 +339,61 @@ export default function Home() {
     { name: "BTC-USD", price: 96420.00, change: 5.42, up: true }
   ]);
 
+  // Real-time stocks fetching helper from Yahoo Finance
+  const fetchRealTimeStocks = async () => {
+    const symbolsMap: Record<string, string> = {
+      "SENSEX": "^BSESN",
+      "NIFTY 50": "^NSEI",
+      "NASDAQ": "^IXIC",
+      "BTC-USD": "BTC-USD"
+    };
+
+    try {
+      const updated = await Promise.all(
+        liveStocks.map(async (s) => {
+          const sym = symbolsMap[s.name];
+          if (!sym) return s;
+          const res = await fetch(`/api/stock?action=quote&symbol=${encodeURIComponent(sym)}`);
+          if (!res.ok) return s;
+          const data = await res.json();
+          if (data && typeof data.price === "number") {
+            return {
+              name: s.name,
+              price: data.price,
+              change: data.changePercent ?? s.change,
+              up: (data.changePercent ?? 0) >= 0
+            };
+          }
+          return s;
+        })
+      );
+      setLiveStocks(updated);
+    } catch (e) {
+      console.error("Failed to fetch real-time stocks:", e);
+    }
+  };
+
   useEffect(() => {
-    const stockInterval = setInterval(() => {
+    // Initial fetch on mount
+    fetchRealTimeStocks();
+
+    // Poll live Yahoo Finance stocks from API every 20s
+    const apiInterval = setInterval(fetchRealTimeStocks, 20000);
+
+    // Micro-fluctuation timer for stocks and snapshot metrics to keep UI ticking
+    const tickInterval = setInterval(() => {
       setLiveStocks((prev) => 
         prev.map((s) => {
-          const delta = (Math.random() - 0.48) * (s.price * 0.0005);
+          const delta = (Math.random() - 0.5) * (s.price * 0.00008);
           const newPrice = s.price + delta;
-          const pct = ((delta / s.price) * 100);
           return {
             ...s,
             price: newPrice,
-            change: s.change + pct,
             up: delta >= 0
           };
         })
       );
 
-      // Fluctuate live snapshot metrics in sync with market updates to feel alive!
       setSnapshotNetWorth((prev) => {
         const pct = (Math.random() - 0.47) * 0.0002;
         return Math.round(prev * (1 + pct));
@@ -369,7 +407,11 @@ export default function Home() {
         return parseFloat((prev * (1 + pct)).toFixed(2));
       });
     }, 4000);
-    return () => clearInterval(stockInterval);
+
+    return () => {
+      clearInterval(apiInterval);
+      clearInterval(tickInterval);
+    };
   }, []);
 
 

@@ -6772,7 +6772,7 @@ const handlePredefinedQuestion = (q: string) => {
       </main>
 
       {/* Floating AI Chat Assistant Drawer */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-[99999]">
         <button
           onClick={() => setAiChatOpen(!aiChatOpen)}
           className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all"
@@ -6787,7 +6787,7 @@ const handlePredefinedQuestion = (q: string) => {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-50"
+            className="fixed bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[99999]"
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragHover(true);
