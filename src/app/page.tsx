@@ -29,11 +29,20 @@ import {
   Clock,
   BookOpen,
   Zap,
-  AlertTriangle
-,
+  AlertTriangle,
   Volume2,
   VolumeX,
-  Bell
+  Bell,
+  Send,
+  Upload,
+  ChevronDown,
+  Search,
+  Loader2,
+  CreditCard,
+  Coins,
+  Building,
+  FileText,
+  DollarSign
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -315,6 +324,268 @@ export default function Home() {
   const [activeArticle, setActiveArticle] = useState<any>(null);
   const [countdownString, setCountdownString] = useState("02:14:45");
   const [homeNews, setHomeNews] = useState(LIVE_NEWS_DATA);
+
+  // Alert Center Notifications Interfaces & States
+  interface FinancialNotification {
+    id: string;
+    category: string;
+    priority: "Critical" | "High" | "Medium" | "Low";
+    title: string;
+    description: string;
+    scheduledTime: string;
+    timeRemaining: string;
+    timeRemainingSecs: number;
+    status: "unread" | "read" | "completed";
+    section: "Critical" | "Today" | "Upcoming" | "Completed";
+    timeGroup: "Today" | "Tomorrow" | "This Week" | "Next Month" | "Completed";
+    logo?: string;
+  }
+
+  const [financialNotificationsOpen, setFinancialNotificationsOpen] = useState(false);
+  const [selectedNotifFilter, setSelectedNotifFilter] = useState<string | null>(null);
+  const [notifSearchQuery, setNotifSearchQuery] = useState("");
+  const [collapsedNotifGroups, setCollapsedNotifGroups] = useState<Record<string, boolean>>({});
+
+  const [financialNotifications, setFinancialNotifications] = useState<FinancialNotification[]>([
+    {
+      id: "notif-1",
+      category: "Bills",
+      priority: "Critical",
+      title: "Credit Card Bill Due Tomorrow",
+      description: "HDFC Bank Regalia card outstanding payment of ₹45,210 is due to avoid interest charges.",
+      scheduledTime: "Tomorrow • 10:00 AM",
+      timeRemaining: "Due in 18 Hours",
+      timeRemainingSecs: 18 * 3600,
+      status: "unread",
+      section: "Critical",
+      timeGroup: "Tomorrow",
+      logo: "HDFC Bank"
+    },
+    {
+      id: "notif-2",
+      category: "Subscriptions",
+      priority: "Medium",
+      title: "Netflix Renewal Today",
+      description: "Premium monthly renewal of ₹649 will auto-debit from your primary credit card.",
+      scheduledTime: "Today • 8:00 PM",
+      timeRemaining: "Due in 2 Hours",
+      timeRemainingSecs: 2 * 3600,
+      status: "unread",
+      section: "Today",
+      timeGroup: "Today",
+      logo: "Netflix"
+    },
+    {
+      id: "notif-3",
+      category: "Loans",
+      priority: "High",
+      title: "Home Loan EMI Due in 3 Days",
+      description: "ICICI Home Loan EMI debit of ₹32,500 scheduled on auto-pay.",
+      scheduledTime: "3 Days Remaining",
+      timeRemaining: "3 Days Remaining",
+      timeRemainingSecs: 3 * 24 * 3600,
+      status: "unread",
+      section: "Upcoming",
+      timeGroup: "This Week",
+      logo: "ICICI"
+    },
+    {
+      id: "notif-4",
+      category: "Taxes",
+      priority: "Critical",
+      title: "Income Tax Filing Deadline",
+      description: "FY 2025-26 final income tax submission deadline. Submit all asset disclosures.",
+      scheduledTime: "July 31 • 11:59 PM",
+      timeRemaining: "12 Days Remaining",
+      timeRemainingSecs: 12 * 24 * 3600,
+      status: "unread",
+      section: "Critical",
+      timeGroup: "Next Month",
+      logo: "IT Dept"
+    },
+    {
+      id: "notif-5",
+      category: "Investments",
+      priority: "Low",
+      title: "SIP Scheduled Tomorrow",
+      description: "SIP contribution of ₹10,000 for Parag Parikh Flexi Cap Fund will be triggered.",
+      scheduledTime: "Tomorrow • 9:00 AM",
+      timeRemaining: "Due in 15 Hours",
+      timeRemainingSecs: 15 * 3600,
+      status: "unread",
+      section: "Upcoming",
+      timeGroup: "Tomorrow",
+      logo: "Zerodha"
+    },
+    {
+      id: "notif-6",
+      category: "Markets",
+      priority: "Medium",
+      title: "Market Closing in 20 Minutes",
+      description: "NSE/BSE equities markets entering standard post-close sessions in 20 minutes.",
+      scheduledTime: "Today • 3:10 PM",
+      timeRemaining: "20 Minutes Remaining",
+      timeRemainingSecs: 20 * 60,
+      status: "unread",
+      section: "Today",
+      timeGroup: "Today",
+      logo: "NSE"
+    },
+    {
+      id: "notif-7",
+      category: "Income",
+      priority: "Low",
+      title: "Salary Credited",
+      description: "Monthly baseline corporate salary payout of ₹1,85,000 credited to savings account.",
+      scheduledTime: "Completed • Yesterday",
+      timeRemaining: "Processed",
+      timeRemainingSecs: -1,
+      status: "completed",
+      section: "Completed",
+      timeGroup: "Completed",
+      logo: "Fincody Corp"
+    }
+  ]);
+
+  const toggleNotifGroup = (group: string) => {
+    setCollapsedNotifGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  const handleMarkReadNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, status: "read" } : n))
+    );
+  };
+
+  const handleSnoozeNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, timeRemaining: "Snoozed for 1 hour", scheduledTime: "Snoozed" } : n))
+    );
+  };
+
+  const handleDismissNotif = (id: string) => {
+    setFinancialNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleCompleteNotif = (id: string) => {
+    setFinancialNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, status: "completed", section: "Completed", timeGroup: "Completed", timeRemaining: "Processed" } : n))
+    );
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Bills": return CreditCard;
+      case "Investments": return TrendingUp;
+      case "Subscriptions": return Coins;
+      case "Insurance": return Shield;
+      case "Loans": return Building;
+      case "Taxes": return FileText;
+      case "Income": return DollarSign;
+      case "Portfolio": return Activity;
+      case "Markets": return Compass;
+      default: return Bell;
+    }
+  };
+
+  // AI Chat Copilot States
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([
+    {
+      sender: "ai",
+      text: "Hello! I am Jarvis, your Fincody AI Financial Co-pilot. Ask me anything about investments, retirement planning, savings, or tax optimization!",
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+    }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [welcomeTitleIndex, setWelcomeTitleIndex] = useState(0);
+  const [hasAiMemory, setHasAiMemory] = useState(false);
+  const [multistageThinking, setMultistageThinking] = useState("");
+  const [dragHover, setDragHover] = useState(false);
+  const [scanAnimation, setScanAnimation] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking] = useState(false);
+
+  const welcomeTitles = [
+    "Your Personal AI Finance Coach",
+    "Investment Analyst",
+    "Budget Planner",
+    "Wealth Advisor",
+    "Tax Assistant",
+    "Financial Decision Engine"
+  ];
+
+  useEffect(() => {
+    const wInterval = setInterval(() => {
+      setWelcomeTitleIndex(prev => (prev + 1) % welcomeTitles.length);
+    }, 2500);
+    return () => clearInterval(wInterval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHasAiMemory(!!localStorage.getItem("fincody_ai_memory_home"));
+    }
+  }, []);
+
+  const handleSendChat = async (text: string) => {
+    if (!text.trim()) return;
+
+    const userMsg = {
+      sender: "user",
+      text,
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput("");
+    setIsTyping(true);
+
+    const queryLower = text.toLowerCase();
+    let steps = ["Reading request parameters...", "Synthesizing market context...", "Formulating copilot recommendation..."];
+    for (let i = 0; i < steps.length; i++) {
+      setMultistageThinking(steps[i]);
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    let replyText = "";
+    if (queryLower.includes("tax") || queryLower.includes("80c")) {
+      replyText = "You can save up to ₹46,800 in taxes under Section 80C and 80CCD(1B) by maximizing contributions to National Pension System (NPS) and Public Provident Fund (PPF). Currently, equity index fund lock-ins (ELSS) are also showing 14.2% annualized growth benchmarks.";
+    } else if (queryLower.includes("portfolio") || queryLower.includes("invest")) {
+      replyText = "Fincody Live Equities Monitor is currently tracking positive global indices. SENSEX and NIFTY 50 show strong momentum. I recommend allocating 60% of your investable income to low-cost Nifty 50 Index Funds, 20% to Gold ETFs as a hedge, and 20% to Fixed Deposits for stability.";
+    } else if (queryLower.includes("retire")) {
+      replyText = "To retire at age 45, you should build a retirement corpus equal to 30 times your annual expenses. If your monthly expenses are ₹50,000, you need a corpus of ₹1.8 Crores. Starting a monthly SIP of ₹25,000 growing at 12% CAGR achieves this target in roughly 15 years.";
+    } else if (queryLower.includes("saving") || queryLower.includes("budget")) {
+      replyText = "For optimum budgeting, follow the 50/30/20 rule: 50% for Needs (Rent, Utilities, Food), 30% for Wants (Dining, Travel), and 20% for Savings (SIP, Fixed Deposits). Fincody Pro provides automated spending tracking to categorize and alert you of savings leakages.";
+    } else {
+      replyText = `Welcome to Fincody! I've scanned your request "${text}". Fincody is your complete financial workspace, tracking live net worth, equities, fixed deposits, mutual funds, gold holdings, and tax recommendations in real-time. Enter the Dashboard to unlock fully personalized analysis!`;
+    }
+
+    const aiMsg = {
+      sender: "ai",
+      text: replyText,
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+    };
+
+    setChatMessages(prev => [...prev, aiMsg]);
+    setIsTyping(false);
+    setMultistageThinking("");
+
+    if (voiceMode && typeof window !== "undefined") {
+      try {
+        window.speechSynthesis.cancel();
+        const cleanMsg = replyText.replace(/[\*\#\_]/g, "");
+        const utterance = new SpeechSynthesisUtterance(cleanMsg);
+        setVoiceSpeaking(true);
+        utterance.onend = () => setVoiceSpeaking(false);
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
 
   useEffect(() => {
     const fetchHomeNews = async () => {
@@ -770,15 +1041,17 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-4">
             
             {/* Alert Center Icon */}
-            <Link
-              href="/dashboard"
-              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all flex items-center justify-center relative"
+            <button
+              onClick={() => setFinancialNotificationsOpen(true)}
+              className="p-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/10 text-[var(--text-subtitle)] hover:text-[var(--text-color)] transition-all flex items-center justify-center relative cursor-pointer"
               aria-label="Alert Center"
               title="Alert Center"
             >
               <Bell className="w-4.5 h-4.5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            </Link>
+              {financialNotifications.some(n => n.status === "unread") && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
 
             {/* Theme Toggle Button */}
             <button
@@ -831,14 +1104,16 @@ export default function Home() {
 
           {/* Mobile Menu Actions */}
           <div className="flex items-center gap-2 md:hidden">
-            <Link
-              href="/dashboard"
-              className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)] flex items-center justify-center relative"
+            <button
+              onClick={() => setFinancialNotificationsOpen(true)}
+              className="p-2 rounded-xl border border-[var(--border-color)] text-[var(--text-subtitle)] flex items-center justify-center relative cursor-pointer"
               aria-label="Alert Center"
             >
               <Bell className="w-4.5 h-4.5" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            </Link>
+              {financialNotifications.some(n => n.status === "unread") && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
 
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -1679,6 +1954,516 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Floating AI Chat Assistant Drawer */}
+      <div className="fixed bottom-20 sm:bottom-6 right-6 z-[99999]">
+        <button
+          onClick={() => setAiChatOpen(!aiChatOpen)}
+          className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        >
+          {aiChatOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6 animate-pulse" />}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {aiChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="fixed bottom-36 sm:bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[99999]"
+          >
+            {/* Animated Glowing AI Orb Header */}
+            <div className="h-20 border-b border-blue-500/10 flex items-center justify-between px-5 bg-slate-950/70 shrink-0 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+              
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="relative w-10 h-10 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md animate-pulse" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border border-dashed border-blue-500/40"
+                  />
+                  <motion.div
+                    animate={
+                      isTyping || multistageThinking
+                         ? { scale: [1, 1.15, 1], rotate: [0, 180, 360] }
+                         : voiceSpeaking
+                         ? { scale: [1, 1.25, 0.95, 1.15, 1] }
+                         : { scale: [1, 1.05, 1] }
+                    }
+                    transition={
+                      isTyping || multistageThinking
+                         ? { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                         : voiceSpeaking
+                         ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
+                         : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+                    }
+                    className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-[0_0_12px_rgba(59,130,246,0.5)] flex items-center justify-center relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent)]" />
+                    <Sparkles className="w-3.5 h-3.5 text-white/90" />
+                  </motion.div>
+                </div>
+                <div>
+                  <span className="font-bold text-white text-sm block tracking-wide flex items-center gap-1.5">
+                    FINCODY AI <span className="text-[8px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-extrabold px-1 py-0.5 rounded uppercase">Jarvis v2.0</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-bold block flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Command Center
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1 relative z-10">
+                {voiceMode && (
+                  <span className="text-[9px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded font-black mr-2 animate-pulse">
+                    Voice Active
+                  </span>
+                )}
+                <button 
+                  onClick={() => setAiChatOpen(false)}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages and Welcome Area */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 relative">
+              {chatMessages.length === 1 && (
+                <div className="py-6 text-center flex flex-col gap-4 border-b border-blue-500/5 bg-blue-600/[0.01] rounded-2xl p-4">
+                  {hasAiMemory && (
+                    <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[10px] text-indigo-400 text-left font-bold flex justify-between items-center mb-1">
+                      <span>🧠 Jarvis Memory: You asked about tax last week.</span>
+                      <button
+                        onClick={() => handleSendChat("Show me how to save ₹23,000 in taxes")}
+                        className="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold cursor-pointer"
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ repeat: Infinity, duration: 16, ease: "linear" }}
+                      className="absolute inset-0 rounded-full border border-dashed border-blue-500/20"
+                    />
+                    <motion.div
+                      animate={
+                        isTyping || multistageThinking
+                          ? { scale: [1, 1.2, 1], rotate: [0, 180, 360] }
+                          : voiceSpeaking
+                          ? { scale: [1, 1.3, 0.9, 1.2, 1] }
+                          : { scale: [1, 1.08, 1] }
+                      }
+                      transition={
+                        isTyping || multistageThinking
+                          ? { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                          : voiceSpeaking
+                          ? { repeat: Infinity, duration: 1, ease: "easeInOut" }
+                          : { repeat: Infinity, duration: 4, ease: "easeInOut" }
+                      }
+                      className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center"
+                    >
+                      <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                    </motion.div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">👋 Welcome to FINCODY AI</h3>
+                    <div className="h-6 overflow-hidden relative flex justify-center mt-1">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={welcomeTitleIndex}
+                          initial={{ y: 15, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -15, opacity: 0 }}
+                          transition={{ duration: 0.4 }}
+                          className="text-[10px] font-black tracking-wider uppercase bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent"
+                        >
+                          {welcomeTitles[welcomeTitleIndex]}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-2 max-w-[280px] mx-auto leading-relaxed">
+                      Securely reads your dashboard context, active goals, assets, and liabilities to guide your financial decisions.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 text-left mt-2">
+                    <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Proactive Co-Pilot Insights</span>
+                    {[
+                      { text: "💼 Save ₹23,000 in taxes using NPS & PPF", query: "Show me how to save ₹23,000 in taxes" },
+                      { text: "📊 Switch underperforming SIP to equity index fund", query: "Which of my SIPs is underperforming?" },
+                      { text: "💰 Increase monthly savings by ₹4,500", query: "Suggest how I can increase monthly savings" }
+                    ].map((card, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleSendChat(card.query)}
+                        className="p-3 rounded-xl border border-blue-500/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-blue-500/30 cursor-pointer flex items-center justify-between transition-all"
+                      >
+                        <span className="text-[10px] text-slate-300 font-semibold">{card.text}</span>
+                        <ArrowRight className="w-3 h-3 text-blue-400" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chat message bubbles */}
+              {chatMessages.map((msg, idx) => {
+                const isUser = msg.sender === "user";
+                return (
+                  <div 
+                    key={idx} 
+                    className={`flex gap-3 max-w-[90%] ${isUser ? "ml-auto flex-row-reverse" : ""}`}
+                  >
+                    <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-bold border ${
+                      isUser 
+                        ? "bg-slate-900 border-slate-800 text-slate-300" 
+                        : "bg-gradient-to-tr from-blue-600 to-indigo-500 border-blue-400/30 text-white shadow-md shadow-blue-500/10"
+                    }`}>
+                      {isUser ? "U" : <Sparkles className="w-3.5 h-3.5" />}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <div className={`p-3.5 rounded-2xl text-[11px] leading-relaxed border ${
+                        isUser 
+                          ? "bg-blue-600/90 border-blue-500/30 text-white rounded-tr-none" 
+                          : "bg-slate-900/80 border-blue-500/10 text-slate-200 rounded-tl-none"
+                      }`}>
+                        {msg.text}
+                      </div>
+                      <span className={`text-[9px] text-slate-500 font-bold px-1.5 ${isUser ? "text-right" : "text-left"}`}>
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Dynamic AI Multistage Thinking Pipeline */}
+              {isTyping && (
+                <div className="flex gap-3 max-w-[90%]">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white border border-blue-500/20 flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  </div>
+                  <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-slate-900/80 border border-blue-500/10 w-full">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest animate-pulse">
+                        {multistageThinking}
+                      </span>
+                    </div>
+                    <div className="space-y-2 mt-2">
+                      <div className="h-2 bg-slate-800 rounded-full w-full animate-pulse" />
+                      <div className="h-2 bg-slate-800 rounded-full w-5/6 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Chips Drawer */}
+            <div className="px-4 py-2 border-t border-blue-500/10 flex gap-2 overflow-x-auto shrink-0 bg-slate-950/40 scrollbar-none">
+              {[
+                { label: "📊 Analyze Portfolio", query: "Analyze portfolio yields" },
+                { label: "💰 Reduce Expenses", query: "How do I reduce monthly expenses?" },
+                { label: "📈 Better Yields", query: "Find better investment options" },
+                { label: "🎯 Retirement Plan", query: "Can I retire at 45?" }
+              ].map((action, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSendChat(action.query)}
+                  className="px-3 py-1.5 rounded-xl border border-blue-500/10 bg-slate-900/40 hover:bg-blue-600/10 hover:border-blue-500/30 text-[10px] font-bold text-slate-400 hover:text-white transition-all shrink-0 cursor-pointer"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Form Box */}
+            <div className="p-4 border-t border-blue-500/10 flex gap-2 shrink-0 bg-slate-950/60 relative">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !voiceMode;
+                  setVoiceMode(next);
+                  if (!next) {
+                    setVoiceSpeaking(false);
+                    try { window.speechSynthesis.cancel(); } catch (e) {}
+                  }
+                }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer ${
+                  voiceMode 
+                    ? "bg-indigo-600 border-indigo-400/30 text-white shadow shadow-indigo-500/20"
+                    : "bg-slate-900/50 border-blue-500/10 text-slate-400 hover:text-white"
+                }`}
+                title="Toggle Voice Mode"
+              >
+                <Activity className={`w-4 h-4 ${voiceMode ? "animate-pulse" : ""}`} />
+              </button>
+
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendChat(chatInput)}
+                placeholder={voiceMode ? "Speak or type details..." : "Ask FINCODY AI..."}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900/50 border border-blue-500/10 text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 transition-all text-white font-semibold"
+              />
+              <button
+                onClick={() => handleSendChat(chatInput)}
+                className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition-all shadow shadow-blue-500/20 cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Alert Center notifications drawer */}
+      <AnimatePresence>
+        {financialNotificationsOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setFinancialNotificationsOpen(false)}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[99998]"
+            />
+
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/90 border-l border-blue-500/15 backdrop-blur-xl shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
+            >
+              <div className="flex flex-col gap-5">
+                <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                      <Bell className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-white uppercase tracking-wider">Alert Center</h3>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Real-time Financial Events</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setFinancialNotificationsOpen(false)}
+                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/40 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center p-2 rounded-xl bg-slate-900/30 border border-blue-500/5 text-[10px] font-bold">
+                  <div className="py-1">
+                    <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Critical</span>
+                    <span className="text-red-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.priority === "Critical" && n.status !== "completed").length} pending</span>
+                  </div>
+                  <div className="py-1 border-x border-blue-500/5">
+                    <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Upcoming</span>
+                    <span className="text-blue-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.section === "Upcoming" && n.status !== "completed").length} pending</span>
+                  </div>
+                  <div className="py-1">
+                    <span className="text-slate-500 block uppercase text-[8px] tracking-wider">Completed</span>
+                    <span className="text-emerald-400 font-mono mt-0.5 block text-xs">{financialNotifications.filter(n => n.status === "completed").length} processed</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                  {["All", "Bills", "Investments", "Subscriptions", "Insurance", "Loans", "Taxes", "Income", "Portfolio", "Markets"].map((cat) => {
+                    const isSelected = selectedNotifFilter === cat || (cat === "All" && !selectedNotifFilter);
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedNotifFilter(cat === "All" ? null : cat)}
+                        className={`px-2.5 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                          isSelected 
+                            ? "bg-blue-600 border-blue-500 text-white shadow shadow-blue-500/10" 
+                            : "bg-slate-900/40 border-blue-500/5 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+                  <input
+                    type="text"
+                    value={notifSearchQuery}
+                    onChange={(e) => setNotifSearchQuery(e.target.value)}
+                    placeholder="Search alerts, bills, or dates..."
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900/40 border border-blue-500/5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                  />
+                  {notifSearchQuery && (
+                    <button onClick={() => setNotifSearchQuery("")} className="absolute right-3 top-2.5 text-slate-500 hover:text-white">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto max-h-[58vh] scrollbar-none flex flex-col gap-4">
+                  {(() => {
+                    const filtered = financialNotifications.filter(n => {
+                      const matchCat = !selectedNotifFilter || n.category === selectedNotifFilter;
+                      const matchSearch = !notifSearchQuery || n.title.toLowerCase().includes(notifSearchQuery.toLowerCase()) || n.description.toLowerCase().includes(notifSearchQuery.toLowerCase());
+                      return matchCat && matchSearch;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center text-center py-12 text-slate-500">
+                          <span className="text-4xl animate-bounce mb-3">🎉</span>
+                          <span className="text-sm font-black text-white uppercase tracking-wider block">You're all caught up!</span>
+                          <p className="text-xs text-slate-500 mt-1 max-w-xs leading-normal">
+                            No financial alerts at the moment. Everything looks up to date.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    const groups: Record<string, FinancialNotification[]> = {
+                      "Today": [],
+                      "Tomorrow": [],
+                      "This Week": [],
+                      "Next Month": [],
+                      "Completed": []
+                    };
+
+                    filtered.forEach(n => {
+                      if (n.status === "completed") {
+                        groups["Completed"].push(n);
+                      } else {
+                        groups[n.timeGroup].push(n);
+                      }
+                    });
+
+                    return Object.keys(groups).map(grp => {
+                      const list = groups[grp];
+                      if (list.length === 0) return null;
+                      const isCollapsed = collapsedNotifGroups[grp];
+
+                      return (
+                        <div key={grp} className="flex flex-col gap-2">
+                          <button
+                            onClick={() => toggleNotifGroup(grp)}
+                            className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-blue-500/5 pb-1 cursor-pointer"
+                          >
+                            <span>{grp} ({list.length})</span>
+                            {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </button>
+
+                          {!isCollapsed && (
+                            <div className="flex flex-col gap-2.5">
+                              {list.map(n => {
+                                const CatIcon = getCategoryIcon(n.category);
+                                const isUnread = n.status === "unread";
+                                const priorityColor = n.priority === "Critical" 
+                                  ? "border-l-4 border-l-red-500" 
+                                  : n.priority === "High" 
+                                    ? "border-l-4 border-l-orange-500"
+                                    : n.priority === "Medium"
+                                      ? "border-l-4 border-l-yellow-500"
+                                      : "border-l-4 border-l-emerald-500";
+
+                                return (
+                                  <div
+                                    key={n.id}
+                                    className={`p-3.5 rounded-xl border bg-slate-900/10 hover:bg-slate-900/30 transition-all flex flex-col gap-3 relative overflow-hidden group ${priorityColor} ${
+                                      isUnread ? "border-blue-500/25 bg-blue-500/[0.02]" : "border-blue-500/5"
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start gap-3">
+                                      <div className="flex gap-2.5 items-start">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-800/40 flex items-center justify-center text-slate-400 mt-0.5">
+                                          <CatIcon className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                          <h4 className="text-xs font-black text-white leading-snug">
+                                            {n.title}
+                                          </h4>
+                                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed font-semibold">
+                                            {n.description}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      {n.logo && (
+                                        <span className="text-[8px] font-black uppercase text-slate-500 bg-slate-900 border border-blue-500/5 px-1.5 py-0.5 rounded shrink-0">
+                                          {n.logo}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase font-mono tracking-wider">
+                                      <span>📅 {n.scheduledTime}</span>
+                                      <span className={n.priority === "Critical" ? "text-red-400" : "text-blue-400"}>
+                                        ⏳ {n.timeRemaining}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex gap-1.5 justify-end border-t border-blue-500/5 pt-2">
+                                      {isUnread && (
+                                        <button
+                                          onClick={() => handleMarkReadNotif(n.id)}
+                                          className="px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-wider cursor-pointer"
+                                        >
+                                          Mark Read
+                                        </button>
+                                      )}
+                                      {n.status !== "completed" && (
+                                        <>
+                                          <button
+                                            onClick={() => handleSnoozeNotif(n.id)}
+                                            className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-wider cursor-pointer"
+                                          >
+                                            Snooze
+                                          </button>
+                                          <button
+                                            onClick={() => handleCompleteNotif(n.id)}
+                                            className="px-2.5 py-1 rounded bg-emerald-600/15 hover:bg-emerald-600 text-[9px] font-black text-emerald-400 hover:text-white uppercase tracking-wider cursor-pointer"
+                                          >
+                                            Mark Paid
+                                          </button>
+                                        </>
+                                      )}
+                                      <button
+                                        onClick={() => handleDismissNotif(n.id)}
+                                        className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[9px] font-black text-rose-400 uppercase tracking-wider cursor-pointer"
+                                      >
+                                        Dismiss
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
