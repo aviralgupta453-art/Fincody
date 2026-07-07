@@ -542,15 +542,47 @@ export default function Home() {
     setChatInput("");
     setIsTyping(true);
 
-    const queryLower = text.toLowerCase();
-    let steps = ["Reading request parameters...", "Synthesizing market context...", "Formulating copilot recommendation..."];
+    const query = text.trim();
+    const queryLower = query.toLowerCase();
+    
+    let steps = ["Analyzing query intent...", "Scanning finance knowledge base...", "Generating co-pilot response..."];
     for (let i = 0; i < steps.length; i++) {
       setMultistageThinking(steps[i]);
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     let replyText = "";
-    if (queryLower.includes("tax") || queryLower.includes("80c")) {
+    if (queryLower.includes("what is stock") || queryLower.includes("what is a stock") || queryLower.includes("what are stocks") || queryLower.includes("equity") || queryLower.includes("shares") || queryLower.includes("share market")) {
+      replyText = "A **stock** (also known as equity or share) represents fractional ownership in a corporation. When you buy a stock, you own a tiny piece of that company's assets and earnings. Stocks are bought/sold on exchanges (like NSE, BSE, NASDAQ) and grow via price appreciation or dividends. Over long horizons, equities historically outperform inflation and fixed income, yielding average annual returns of 12-15%.";
+    } 
+    else if (queryLower.includes("mutual fund") || queryLower.includes("what is mutual fund") || queryLower.includes("what are mutual funds") || queryLower.includes("index fund")) {
+      replyText = "A **mutual fund** is an investment vehicle that pools money from multiple investors to purchase a diversified portfolio of stocks, bonds, or other securities. Managed by professional fund managers, they offer instant diversification, lower risk, and expert management. **Index Funds** are a passive subset that mimic a market index (like Nifty 50 or S&P 500), offering ultra-low expense ratios and matching market returns.";
+    } 
+    else if (queryLower.includes("fixed deposit") || queryLower.includes("what is fd") || queryLower.includes("fixed deposits") || queryLower.includes("what is fixed deposit")) {
+      replyText = "A **Fixed Deposit (FD)** is a safe financial instrument offered by banks where you deposit money for a fixed tenure at a guaranteed interest rate. Unlike market-linked investments (stocks/mutual funds), FDs offer 100% capital protection and fixed returns. Currently, major banks offer 6.5% to 7.8% annual interest. They are ideal for emergency funds and capital preservation.";
+    }
+    else if (queryLower.includes("ppf") || queryLower.includes("public provident fund")) {
+      replyText = "The **Public Provident Fund (PPF)** is a government-backed, long-term tax savings scheme in India. It features a 15-year lock-in period with a current interest rate of 7.1% (compounded annually). It offers the prestigious EEE (Exempt-Exempt-Exempt) tax status: contributions, interest earned, and maturity proceeds are all 100% tax-exempt under Section 80C.";
+    }
+    else if (queryLower.includes("nps") || queryLower.includes("national pension system")) {
+      replyText = "The **National Pension System (NPS)** is a voluntary, long-term retirement savings scheme. It is market-linked, allowing allocations to Equity, Corporate Bonds, and Government Securities. NPS offers additional tax benefits up to ₹50,000 under Sec 80CCD(1B), on top of the standard ₹1.5 Lakh limit under Sec 80C. At age 60, up to 60% can be withdrawn tax-free, and 40% goes into an annuity.";
+    }
+    else if (queryLower.includes("gold") || queryLower.includes("sovereign gold bond") || queryLower.includes("sgb")) {
+      replyText = "**Gold** is a traditional safe-haven asset that acts as a hedge against inflation and economic uncertainty. You can invest via Physical Gold, Gold ETFs, or **Sovereign Gold Bonds (SGBs)**. SGBs are government-backed securities denominated in grams of gold, offering a 2.5% annual interest payout on the initial investment amount and complete capital gains tax exemption at maturity.";
+    }
+    else if (queryLower.includes("dividend") || queryLower.includes("what is dividend")) {
+      replyText = "A **dividend** is a distribution of a portion of a company's earnings to its shareholders, usually determined by the board of directors. It is paid out regularly (quarterly or annually) as cash or additional stock. High-dividend-yield stocks and mutual funds are popular strategies for generating passive income cash flows.";
+    }
+    else if (queryLower.includes("net worth") || queryLower.includes("what is net worth")) {
+      replyText = "Your **Net Worth** is the total value of all your assets (what you own: cash, stocks, property, gold, FDs) minus all your liabilities (what you owe: home loans, credit cards, personal loans). It is the single most important metric to track financial health. Fincody dynamically aggregates all your assets and liabilities to calculate your live Net Worth automatically.";
+    }
+    else if (queryLower.includes("inflation") || queryLower.includes("what is inflation")) {
+      replyText = "**Inflation** is the rate at which the general level of prices for goods and services rises, eroding purchasing power. If inflation is 6%, ₹100 today will only buy ₹94 worth of goods next year. To preserve wealth, you must invest in assets like equities or gold that generate returns exceeding the inflation rate.";
+    }
+    else if (queryLower.includes("sip") || queryLower.includes("what is sip") || queryLower.includes("systematic investment plan")) {
+      replyText = "A **Systematic Investment Plan (SIP)** is a method of investing a fixed sum of money regularly (typically monthly) into a mutual fund. SIPs leverage **Rupee Cost Averaging**—buying more units when prices are low and fewer when prices are high—eliminating the need to time the market, and compounding wealth steadily over time.";
+    }
+    else if (queryLower.includes("tax") || queryLower.includes("80c")) {
       replyText = "You can save up to ₹46,800 in taxes under Section 80C and 80CCD(1B) by maximizing contributions to National Pension System (NPS) and Public Provident Fund (PPF). Currently, equity index fund lock-ins (ELSS) are also showing 14.2% annualized growth benchmarks.";
     } else if (queryLower.includes("portfolio") || queryLower.includes("invest")) {
       replyText = "Fincody Live Equities Monitor is currently tracking positive global indices. SENSEX and NIFTY 50 show strong momentum. I recommend allocating 60% of your investable income to low-cost Nifty 50 Index Funds, 20% to Gold ETFs as a hedge, and 20% to Fixed Deposits for stability.";
@@ -559,7 +591,14 @@ export default function Home() {
     } else if (queryLower.includes("saving") || queryLower.includes("budget")) {
       replyText = "For optimum budgeting, follow the 50/30/20 rule: 50% for Needs (Rent, Utilities, Food), 30% for Wants (Dining, Travel), and 20% for Savings (SIP, Fixed Deposits). Fincody Pro provides automated spending tracking to categorize and alert you of savings leakages.";
     } else {
-      replyText = `Welcome to Fincody! I've scanned your request "${text}". Fincody is your complete financial workspace, tracking live net worth, equities, fixed deposits, mutual funds, gold holdings, and tax recommendations in real-time. Enter the Dashboard to unlock fully personalized analysis!`;
+      replyText = `That is an excellent financial question about **"${query}"**. 
+
+In professional wealth management, this concept is key to optimizing your portfolio. To manage this effectively, we recommend:
+1. **Diversification**: Spread risk across uncorrelated assets (Equities, FDs, Gold).
+2. **Tax Shielding**: Maximize deductions using government schemes (Sec 80C, PPF, NPS).
+3. **Compound Growth**: Reinvest dividends and interest to leverage compounding over long horizons.
+
+For fully personalized co-pilot advice, please enter your details in the **Dashboard** panel.`;
     }
 
     const aiMsg = {
@@ -1956,10 +1995,14 @@ export default function Home() {
       )}
 
       {/* Floating AI Chat Assistant Drawer */}
-      <div className="fixed bottom-20 sm:bottom-6 right-6 z-[99999]">
+      <div className="fixed bottom-20 sm:bottom-6 right-6 z-[9999999] pointer-events-auto">
         <button
-          onClick={() => setAiChatOpen(!aiChatOpen)}
-          className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          onClick={() => {
+            console.log("Home chatbot button clicked! Current state:", aiChatOpen, "Setting to:", !aiChatOpen);
+            setAiChatOpen(!aiChatOpen);
+          }}
+          className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer relative"
+          style={{ pointerEvents: 'auto' }}
         >
           {aiChatOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6 animate-pulse" />}
         </button>
@@ -1971,7 +2014,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="fixed bottom-36 sm:bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[99999]"
+            className="fixed bottom-36 sm:bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[9999999]"
           >
             {/* Animated Glowing AI Orb Header */}
             <div className="h-20 border-b border-blue-500/10 flex items-center justify-between px-5 bg-slate-950/70 shrink-0 relative overflow-hidden">
@@ -2246,7 +2289,7 @@ export default function Home() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/90 border-l border-blue-500/15 backdrop-blur-xl shadow-2xl p-6 overflow-y-auto z-[99999] text-left flex flex-col justify-between"
+              className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/90 border-l border-blue-500/15 backdrop-blur-xl shadow-2xl p-6 overflow-y-auto z-[9999999] text-left flex flex-col justify-between"
             >
               <div className="flex flex-col gap-5">
                 <div className="flex justify-between items-center border-b border-blue-500/10 pb-4">
