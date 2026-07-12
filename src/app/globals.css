@@ -148,12 +148,15 @@ body {
 
 /* Accessibility contrast overrides for Light Mode (Vibrant, high-contrast, grey-free styling) */
 html.light {
-  --bg-color: #ebf3fe; /* Vibrant cool-blue background */
-  --text-color: #020617; /* Carbon black */
-  --text-subtitle: #1e293b; /* Readable dark slate */
-  --border-color: rgba(37, 99, 235, 0.16);
-  --card-border: rgba(37, 99, 235, 0.12);
-  --glass-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.12);
+  --bg-color: #f6f5f0; /* Premium warm ivory paper background */
+  --text-color: #1c1917; /* Legible warm stone-black */
+  --text-subtitle: #44403c; /* Stone 700 secondary text */
+  --card-bg: #fffefc; /* Pure warm-white solid card background */
+  --card-border: rgba(217, 119, 6, 0.14); /* Soft warm amber-gold border */
+  --border-color: rgba(217, 119, 6, 0.18);
+  --glass-shadow: 0 10px 30px -10px rgba(120, 53, 4, 0.08); /* Warm shadow */
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
 }
 
 /* Eliminate all white/light text on light backgrounds and replace with readable carbon black */
@@ -232,21 +235,32 @@ html.light .text-gray-200 {
   color: #475569 !important; /* Slate 600 */
 }
 
-/* Replace dull grey backgrounds with soft, transparent royal-blue overlays */
+/* Replace dull grey backgrounds with soft, transparent warm-amber/honey overlays */
 html.light .bg-slate-900\/5,
 html.light .bg-slate-950\/5,
 html.light .bg-slate-900\/10,
 html.light .bg-slate-950\/10,
+html.light .bg-slate-950\/15,
 html.light .bg-slate-950\/20,
 html.light .bg-slate-900\/50,
 html.light .bg-slate-950\/40,
 html.light .bg-slate-950\/60 {
-  background-color: rgba(37, 99, 235, 0.05) !important;
+  background-color: rgba(217, 119, 6, 0.05) !important;
 }
 
-/* Replace dark grey borders with bright contrast-blue boundaries */
+/* Ensure drawers, sidebar panels, and full modals use solid warm paper-white instead of dark slate-gray */
+html.light .bg-slate-950,
+html.light [class*="bg-slate-950/9"],
+html.light [class*="bg-slate-950/8"],
+html.light .bg-slate-900,
+html.light [class*="bg-slate-900/9"],
+html.light [class*="bg-slate-900/8"] {
+  background-color: #fffefc !important;
+}
+
+/* Replace dark grey borders with bright, warm contrast-amber boundaries */
 html.light .border-slate-800\/40,
 html.light .border-slate-800,
 html.light .border-slate-900 {
-  border-color: rgba(37, 99, 235, 0.16) !important;
+  border-color: rgba(217, 119, 6, 0.16) !important;
 }
