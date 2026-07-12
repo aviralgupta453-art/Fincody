@@ -1072,7 +1072,6 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="text-white font-extrabold transition-colors">Home</Link>
             <Link href="/live" className="hover:text-[var(--text-color)] transition-colors">FinCody Live</Link>
-            <Link href="/#snapshot" className="hover:text-[var(--text-color)] transition-colors">Live Snapshot</Link>
             <a href="#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </nav>
@@ -1207,7 +1206,6 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-white font-extrabold">Home</Link>
               <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">FinCody Live</Link>
-              <Link href="/#snapshot" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Live Snapshot</Link>
               <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</a>
               <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</a>
             </div>
@@ -1404,95 +1402,7 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
               </Link>
             </div>
 
-            {/* Live Snapshot section below Launch Demo */}
-            <div id="snapshot" className="w-full flex flex-col gap-4 mt-6 border-t border-slate-900/60 pt-6 scroll-mt-24">
-              <div className="border-l-2 border-blue-500/20 pl-4 mb-3 text-left">
-                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Live Snapshot</span>
-                <span className="text-xs text-slate-400 font-bold block mt-0.5">Real-time status updates</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {/* Net Worth Card (Large & Creative) */}
-                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col gap-2 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Net Worth</span>
-                    <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Active</span>
-                  </div>
-                  <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left group-hover:text-emerald-400 transition-colors">
-                    <RollingNumber value={snapshotNetWorth} />
-                  </span>
-                  <div className="w-full h-10 mt-2 opacity-80">
-                    <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
-                      <path d="M0 25 Q15 20, 30 12 T60 18 T90 2 T100 5" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M0 25 Q15 20, 30 12 T60 18 T90 2 T100 5 L100 30 L0 30 Z" fill="url(#snapshotNetWorthGrad)" opacity="0.1" />
-                      <defs>
-                        <linearGradient id="snapshotNetWorthGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#10b981" />
-                          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                </div>
 
-                {/* Portfolio Card (Large & Creative) */}
-                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col gap-2 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Portfolio Valuation</span>
-                    <span className="text-[9px] text-blue-400 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">▲ +1.17%</span>
-                  </div>
-                  <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left group-hover:text-blue-400 transition-colors">
-                    <RollingNumber value={snapshotPortfolio} />
-                  </span>
-                  <div className="w-full h-10 mt-2 opacity-80">
-                    <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
-                      <path d="M0 22 Q20 10, 40 25 T80 5 T100 2" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M0 22 Q20 10, 40 25 T80 5 T100 2 L100 30 L0 30 Z" fill="url(#snapshotPortfolioGrad)" opacity="0.1" />
-                      <defs>
-                        <linearGradient id="snapshotPortfolioGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" />
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Health Score Card (Large & Creative) */}
-                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col justify-between gap-3 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Financial Health Score</span>
-                    <span className="text-[9px] text-indigo-400 font-bold bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">Excellent</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left">
-                      {snapshotHealthScore}%
-                    </span>
-                    <div className="w-10 h-10 relative flex items-center justify-center">
-                      <svg className="w-10 h-10 transform -rotate-90">
-                        <circle cx="20" cy="20" r="15" stroke="rgba(255,255,255,0.05)" strokeWidth="2.5" fill="transparent" />
-                        <circle cx="20" cy="20" r="15" stroke="#3b82f6" strokeWidth="2.5" fill="transparent" strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 * (1 - snapshotHealthScore / 100)} className="transition-all duration-1000" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Monthly Savings Card (Large & Creative) */}
-                <div className="group relative p-5 rounded-2xl border border-slate-900/80 bg-slate-950/40 backdrop-blur-md flex flex-col justify-between gap-3 hover:border-blue-500/20 hover:bg-slate-900/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest block text-left">Monthly Savings Goal</span>
-                    <span className="text-[9px] text-purple-400 font-bold bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">87% Achieved</span>
-                  </div>
-                  <div className="flex flex-col gap-2 mt-1">
-                    <span className="text-3xl font-black text-white font-mono leading-none tracking-tight block text-left">
-                      <RollingNumber value={snapshotSavings} />
-                    </span>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden mt-1">
-                      <div className="bg-purple-500 h-full rounded-full transition-all duration-1000" style={{ width: "87%" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
                     </motion.div>
 
           {/* ================= RIGHT COLUMN (25% news & tickers) ================= */}
@@ -1871,8 +1781,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
       </section>
 
       {/* Footer */}
-      <footer className="pt-10 pb-6 px-6 border-t border-[var(--border-color)] bg-slate-950/20 text-slate-500 text-sm">
-        <div className="max-w-none w-[97%] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <footer className="pt-10 pb-6 px-6 border-t border-[var(--border-color)] bg-slate-950/20 text-slate-500 text-sm relative">
+        <div className="max-w-none w-[97%] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div className="flex flex-col gap-4 text-left">
             <Link href="/" className="flex items-center gap-2">
               <FincodyLogo variant="desktop" />
@@ -1888,14 +1798,7 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             <a href="#simulator" className="hover:text-[var(--text-color)] transition-colors">Simulator</a>
             <a href="#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</a>
           </div>
-          <div className="flex flex-col gap-3 text-left">
-            <h4 className="font-bold text-[var(--text-color)] text-xs uppercase tracking-wider">Resources</h4>
-            <a href="#" className="hover:text-[var(--text-color)] transition-colors">Documentation</a>
-            <a href="#" className="hover:text-[var(--text-color)] transition-colors">API Reference</a>
-            <Link href="/admin" className="hover:text-[var(--text-color)] transition-colors font-semibold text-blue-400">Admin Sign Up</Link>
-            <a href="#" className="hover:text-[var(--text-color)] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[var(--text-color)] transition-colors">Terms of Service</a>
-          </div>
+
           <div className="flex flex-col gap-3 text-left">
             <h4 className="font-bold text-[var(--text-color)] text-xs uppercase tracking-wider">Security</h4>
             <div className="flex items-center gap-2 text-slate-400">
@@ -1994,8 +1897,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
         </div>
       )}
 
-      {/* Floating AI Chat Assistant Drawer */}
-      <div className="fixed bottom-20 sm:bottom-6 right-6 z-[9999999] pointer-events-auto">
+      {/* Static AI Chat Assistant Drawer (positioned absolute near footer to scroll with content) */}
+      <div className="absolute bottom-24 right-6 sm:right-12 z-[9999999] pointer-events-auto">
         <button
           onClick={() => {
             console.log("Home chatbot button clicked! Current state:", aiChatOpen, "Setting to:", !aiChatOpen);
@@ -2014,7 +1917,7 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="fixed bottom-36 sm:bottom-24 right-6 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[9999999]"
+            className="absolute bottom-40 right-6 sm:right-12 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[9999999]"
           >
             {/* Animated Glowing AI Orb Header */}
             <div className="h-20 border-b border-blue-500/10 flex items-center justify-between px-5 bg-slate-950/70 shrink-0 relative overflow-hidden">

@@ -530,7 +530,6 @@ export default function LivePage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--text-subtitle)]">
             <Link href="/" className="hover:text-[var(--text-color)] transition-colors">Home</Link>
             <Link href="/live" className="text-blue-400 font-extrabold transition-colors">FinCody Live</Link>
-            <Link href="/#snapshot" className="hover:text-[var(--text-color)] transition-colors">Live Snapshot</Link>
             <Link href="/#demo" className="hover:text-[var(--text-color)] transition-colors">AI Demo</Link>
             <Link href="/#pricing" className="hover:text-[var(--text-color)] transition-colors">Pricing</Link>
           </nav>
@@ -598,7 +597,6 @@ export default function LivePage() {
             <div className="flex flex-col gap-4 text-base font-medium text-[var(--text-subtitle)] text-left">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Home</Link>
               <Link href="/live" onClick={() => setMobileMenuOpen(false)} className="text-blue-400 font-extrabold">FinCody Live</Link>
-              <Link href="/#snapshot" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Live Snapshot</Link>
               <Link href="/#demo" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">AI Demo</Link>
               <Link href="/#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--text-color)]">Pricing</Link>
             </div>
