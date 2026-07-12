@@ -150,13 +150,41 @@ body {
 html.light {
   --bg-color: #ebf3fe; /* Vibrant cool-blue background */
   --text-color: #020617; /* Carbon black */
-  --text-subtitle: #1e3a8a; /* Deep navy */
+  --text-subtitle: #1e293b; /* Readable dark slate */
   --border-color: rgba(37, 99, 235, 0.16);
-  --card-border: rgba(37, 99, 235, 0.1);
+  --card-border: rgba(37, 99, 235, 0.12);
   --glass-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.12);
 }
 
-/* Eliminate all grey text and replace with vibrant, legible blues/blacks */
+/* Eliminate all white/light text on light backgrounds and replace with readable carbon black */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6,
+html.light p,
+html.light td,
+html.light th,
+html.light label,
+html.light .glass-card .text-white,
+html.light .glass-card .text-slate-100,
+html.light .glass-card .text-slate-200,
+html.light .glass-card .text-slate-300,
+html.light .glass-panel .text-white,
+html.light .glass-panel .text-slate-100,
+html.light .glass-panel .text-slate-200,
+html.light .glass-panel .text-slate-300,
+html.light footer .text-white {
+  color: #020617 !important;
+}
+
+/* Ensure general text-white classes become carbon black, except on dark solid buttons and badges */
+html.light .text-white:not(button):not(a):not(.bg-blue-600):not(.bg-indigo-600):not(.bg-emerald-600):not(.bg-purple-600):not(.bg-rose-500):not(.bg-red-500):not(.bg-gradient-to-r):not(.bg-gradient-to-tr):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-purple-"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-green-"]) {
+  color: #020617 !important;
+}
+
+/* Map grey/slate classes to high-contrast legible slate and indigo navy tones */
 html.light .text-slate-900,
 html.light .text-zinc-900,
 html.light .text-gray-900,
@@ -180,7 +208,7 @@ html.light .text-zinc-500,
 html.light .text-gray-500,
 html.light .text-slate-500\/80,
 html.light .text-slate-500\/60 {
-  color: #1e3a8a !important; /* Deep Indigo Navy */
+  color: #1e293b !important; /* Readable dark slate */
 }
 
 html.light .text-slate-400,
@@ -188,20 +216,20 @@ html.light .text-zinc-400,
 html.light .text-gray-400,
 html.light .text-slate-400\/80,
 html.light .text-slate-400\/60 {
-  color: #2563eb !important; /* Vibrant Royal Blue */
+  color: #334155 !important; /* Slate 700 */
 }
 
 html.light .text-slate-300,
 html.light .text-zinc-300,
 html.light .text-gray-300,
 html.light .text-slate-300\/60 {
-  color: #3b82f6 !important; /* Active Medium Blue */
+  color: #475569 !important; /* Slate 600 */
 }
 
 html.light .text-slate-200,
 html.light .text-zinc-200,
 html.light .text-gray-200 {
-  color: #60a5fa !important; /* Vibrant Sky Blue */
+  color: #475569 !important; /* Slate 600 */
 }
 
 /* Replace dull grey backgrounds with soft, transparent royal-blue overlays */
