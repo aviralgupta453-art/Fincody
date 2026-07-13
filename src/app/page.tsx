@@ -2096,8 +2096,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
 
       {/* Profile Details & Edit Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-[290px] glass-card rounded-2xl border border-blue-500/20 p-5 shadow-2xl relative bg-slate-950/95 text-center animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[99999999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl p-5 shadow-2xl relative text-center animate-in zoom-in-95 duration-200">
             <button
               type="button"
               onClick={() => {
