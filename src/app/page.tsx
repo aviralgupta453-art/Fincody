@@ -872,6 +872,16 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
   }, []);
   const [tempName, setTempName] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [userPlan, setUserPlan] = useState<"Free" | "Pro">("Free");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedPlan = localStorage.getItem("fincody_user_plan");
+      if (savedPlan === "Pro" || savedPlan === "Free") {
+        setUserPlan(savedPlan);
+      }
+    }
+  }, []);
   useEffect(() => {
     if (typeof window !== "undefined") {
       document.body.style.overflow = showProfileModal ? "hidden" : "unset";
@@ -1377,6 +1387,12 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             >
               {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
+
+            {userPlan === "Pro" && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 border border-blue-400/30 text-[8px] font-black text-white uppercase tracking-widest shadow shadow-blue-500/20 animate-pulse shrink-0">
+                PRO
+              </span>
+            )}
 
             {/* Circular Profile Avatar (Always Visible in Header) */}
             <button
@@ -2139,6 +2155,71 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
                 {profileSuccess}
               </div>
             )}
+
+            {/* Plan Status card synchronized with dashboard */}
+            <div className="mb-4 p-3 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-left flex justify-between items-center text-xs">
+              <div>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px] block mb-0.5">Plan Status</span>
+                <span className="font-extrabold text-[var(--text-color)]">{userPlan === "Pro" ? "Fincody Pro (Active)" : "Free Plan"}</span>
+              </div>
+              {userPlan === "Pro" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserPlan("Free");
+                    localStorage.setItem("fincody_user_plan", "Free");
+                    setFinancialNotifications(prev => [
+                      {
+                        id: "notif-system-" + Date.now(),
+                        category: "System",
+                        priority: "Low",
+                        title: "Fincody Pro Deactivated",
+                        description: "Subscription reset to Free plan.",
+                        scheduledTime: "Just Now",
+                        timeRemaining: "Just Now",
+                        timeRemainingSecs: 0,
+                        status: "unread",
+                        section: "Today",
+                        timeGroup: "Today",
+                        logo: "System"
+                      },
+                      ...prev
+                    ]);
+                  }}
+                  className="px-2 py-1 rounded bg-rose-600/10 border border-rose-500/20 text-[9px] font-black text-rose-400 hover:bg-rose-600 hover:text-white uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserPlan("Pro");
+                    localStorage.setItem("fincody_user_plan", "Pro");
+                    setFinancialNotifications(prev => [
+                      {
+                        id: "notif-system-" + Date.now(),
+                        category: "System",
+                        priority: "Medium",
+                        title: "Upgraded to Pro!",
+                        description: "Subscription upgraded successfully. Premium active.",
+                        scheduledTime: "Just Now",
+                        timeRemaining: "Just Now",
+                        timeRemainingSecs: 0,
+                        status: "unread",
+                        section: "Today",
+                        timeGroup: "Today",
+                        logo: "System"
+                      },
+                      ...prev
+                    ]);
+                  }}
+                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-[9px] font-black text-white uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
               <div>
