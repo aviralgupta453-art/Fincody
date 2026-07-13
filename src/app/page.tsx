@@ -1073,7 +1073,10 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
 
       {/* Profile Details & Edit Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[99999999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999999 }}
+          className="p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+        >
           <div className="w-full max-w-[290px] glass-card rounded-2xl p-5 shadow-2xl relative text-center animate-in zoom-in-95 duration-200">
             <button
               type="button"
@@ -1547,11 +1550,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             {/* Circular Profile Avatar (Always Visible in Header) */}
             <button
               onClick={() => {
-                if (user) {
-                  setEditName(user.user_metadata?.full_name ?? "");
-                } else {
-                  setEditName("");
-                }
+                const initialName = user?.user_metadata?.full_name || tempName || "";
+                setEditName(initialName);
                 setShowProfileModal(true);
               }}
               className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
@@ -1607,11 +1607,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             {/* Circular Profile Avatar on mobile header next to menu */}
             <button
               onClick={() => {
-                if (user) {
-                  setEditName(user.user_metadata?.full_name ?? "");
-                } else {
-                  setEditName("");
-                }
+                const initialName = user?.user_metadata?.full_name || tempName || "";
+                setEditName(initialName);
                 setShowProfileModal(true);
               }}
               className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center transition-all shadow-md shadow-blue-500/20 hover:scale-105 cursor-pointer border border-blue-400/20"
