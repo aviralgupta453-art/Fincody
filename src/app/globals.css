@@ -51,6 +51,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -58,6 +60,7 @@ body {
   color: var(--text-color);
   font-family: var(--font-geist-sans), sans-serif;
   overflow-x: hidden;
+  overflow-y: visible; /* Prevents body from rendering a second vertical scrollbar */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
