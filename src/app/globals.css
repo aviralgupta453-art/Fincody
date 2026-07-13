@@ -245,7 +245,7 @@ html.light .bg-slate-950\/20,
 html.light .bg-slate-900\/50,
 html.light .bg-slate-950\/40,
 html.light .bg-slate-950\/60 {
-  background-color: rgba(59, 130, 246, 0.05) !important;
+  background-color: #e2eaf8 !important; /* Soft warm periwinkle-blue pastel card/box */
 }
 
 /* Ensure drawers, sidebar panels, and full modals use solid pure white instead of dark slate-gray */
@@ -263,4 +263,23 @@ html.light .border-slate-800\/40,
 html.light .border-slate-800,
 html.light .border-slate-900 {
   border-color: rgba(59, 130, 246, 0.16) !important;
+}
+/* Override light text color classes in light mode to dark, high-contrast equivalents */
+html.light .text-emerald-400 {
+  color: #047857 !important; /* Premium dark emerald green */
+}
+html.light .text-blue-400 {
+  color: #1d4ed8 !important; /* Premium dark royal blue */
+}
+html.light .text-indigo-400 {
+  color: #4338ca !important; /* Premium Indigo 700 */
+}
+html.light .text-rose-400 {
+  color: #be123c !important; /* Premium Rose 700 */
+}
+html.light .text-emerald-500 {
+  color: #059669 !important;
+}
+html.light .text-blue-500 {
+  color: #2563eb !important;
 }

@@ -1049,39 +1049,7 @@ export default function LivePage() {
                   </div>
                 </div>
 
-                {/* News Intelligence Graph */}
-                <div className="glass-card p-5 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">News Intelligence Graph</h4>
-                    <p className="text-[9px] text-slate-500">Macro relationship analyzer</p>
-                  </div>
 
-                  <div className="relative h-48 w-full border border-blue-500/5 rounded-lg bg-slate-950/50 overflow-hidden flex items-center justify-center">
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                      <line x1="50%" y1="50%" x2="20%" y2="25%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="80%" y2="25%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="20%" y2="75%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                      <line x1="50%" y1="50%" x2="80%" y2="75%" stroke="#3b82f6" strokeWidth={1} strokeDasharray="3" />
-                    </svg>
-
-                    <div className="absolute w-20 h-20 rounded-full bg-blue-600/10 border-2 border-blue-500 flex items-center justify-center text-center p-1.5 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10">
-                      <span className="text-[9px] font-black text-white leading-normal uppercase">Sensex 90K Landmark</span>
-                    </div>
-
-                    <div className="absolute top-4 left-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">Reliance (18%)</span>
-                    </div>
-                    <div className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">Nifty Target</span>
-                    </div>
-                    <div className="absolute bottom-4 left-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">India Inflows</span>
-                    </div>
-                    <div className="absolute bottom-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-blue-500/20 text-center hover:scale-105 transition-transform cursor-pointer">
-                      <span className="text-[8px] font-black text-slate-300 block uppercase">IT Resurgence</span>
-                    </div>
-                  </div>
-                </div>
 
                 {/* similarity calendar */}
                 <div className="glass-card p-4 rounded-xl border border-blue-500/10 bg-slate-900/10 flex flex-col gap-4">
