@@ -1897,8 +1897,8 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
         </div>
       )}
 
-      {/* Static AI Chat Assistant Drawer (positioned absolute near footer to scroll with content) */}
-      <div className="absolute bottom-24 right-6 sm:right-12 z-[9999999] pointer-events-auto">
+      {/* Floating AI Chat Assistant Drawer (positioned fixed to float dynamically as in the dashboard) */}
+      <div className="fixed bottom-20 sm:bottom-6 right-6 sm:right-12 z-[9999999] pointer-events-auto">
         <button
           onClick={() => {
             console.log("Home chatbot button clicked! Current state:", aiChatOpen, "Setting to:", !aiChatOpen);
@@ -1917,7 +1917,7 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="absolute bottom-40 right-6 sm:right-12 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[9999999]"
+            className="fixed bottom-36 sm:bottom-24 right-6 sm:right-12 w-[320px] sm:w-[420px] h-[580px] max-h-[72vh] sm:max-h-[580px] rounded-2xl border border-blue-500/20 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_35px_rgba(59,130,246,0.25)] flex flex-col justify-between overflow-hidden text-left z-[9999999]"
           >
             {/* Animated Glowing AI Orb Header */}
             <div className="h-20 border-b border-blue-500/10 flex items-center justify-between px-5 bg-slate-950/70 shrink-0 relative overflow-hidden">
