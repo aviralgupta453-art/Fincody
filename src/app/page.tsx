@@ -1071,6 +1071,156 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
       <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500/10 dark:bg-indigo-500/10 light:bg-indigo-500/5 blur-[130px] pointer-events-none transition-all duration-300" />
       <div className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/5 light:bg-emerald-500/2 blur-[120px] pointer-events-none transition-all duration-300" />
 
+      {/* Profile Details & Edit Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[99999999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[290px] glass-card rounded-2xl p-5 shadow-2xl relative text-center animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                setShowProfileModal(false);
+                setProfileError("");
+                setProfileSuccess("");
+              }}
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Brand Logo Identity */}
+            <div className="flex justify-center mb-3">
+              <FincodyLogo variant="compact" />
+            </div>
+
+            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
+              {user?.user_metadata?.full_name 
+                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
+                : (user?.email ? user.email.slice(0, 1).toUpperCase() : (tempName ? tempName.slice(0, 1).toUpperCase() : "U"))}
+            </div>
+
+            <h3 className="text-sm font-black text-white mb-0.5">
+              {user ? "Your Profile" : "Profile Settings"}
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
+              {user ? user.email : "no-email@fincody.com"}
+            </p>
+
+            {profileError && (
+              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
+                {profileError}
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
+                {profileSuccess}
+              </div>
+            )}
+
+            {/* Plan Status card synchronized with dashboard */}
+            <div className="mb-4 p-3 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-left flex justify-between items-center text-xs">
+              <div>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px] block mb-0.5">Plan Status</span>
+                <span className="font-extrabold text-[var(--text-color)]">{userPlan === "Pro" ? "Fincody Pro (Active)" : "Free Plan"}</span>
+              </div>
+              {userPlan === "Pro" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserPlan("Free");
+                    localStorage.setItem("fincody_user_plan", "Free");
+                    setFinancialNotifications(prev => [
+                      {
+                        id: "notif-system-" + Date.now(),
+                        category: "System",
+                        priority: "Low",
+                        title: "Fincody Pro Deactivated",
+                        description: "Subscription reset to Free plan.",
+                        scheduledTime: "Just Now",
+                        timeRemaining: "Just Now",
+                        timeRemainingSecs: 0,
+                        status: "unread",
+                        section: "Today",
+                        timeGroup: "Today",
+                        logo: "System"
+                      },
+                      ...prev
+                    ]);
+                  }}
+                  className="px-2 py-1 rounded bg-rose-600/10 border border-rose-500/20 text-[9px] font-black text-rose-400 hover:bg-rose-600 hover:text-white uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserPlan("Pro");
+                    localStorage.setItem("fincody_user_plan", "Pro");
+                    setFinancialNotifications(prev => [
+                      {
+                        id: "notif-system-" + Date.now(),
+                        category: "System",
+                        priority: "Medium",
+                        title: "Upgraded to Pro!",
+                        description: "Subscription upgraded successfully. Premium active.",
+                        scheduledTime: "Just Now",
+                        timeRemaining: "Just Now",
+                        timeRemainingSecs: 0,
+                        status: "unread",
+                        section: "Today",
+                        timeGroup: "Today",
+                        logo: "System"
+                      },
+                      ...prev
+                    ]);
+                  }}
+                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-[9px] font-black text-white uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
+                >
+                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
+                >
+                  Log Out
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
+
+
       {/* Floating AI Chat Assistant Drawer (positioned fixed to float dynamically as in the dashboard) */}
       <div className="fixed bottom-20 sm:bottom-6 right-6 sm:right-12 z-[9999999] pointer-events-auto">
         <button
@@ -2109,154 +2259,6 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
           <span>&copy; {new Date().getFullYear()} Fincody Inc. All rights reserved.</span>
         </div>
       </footer>
-
-      {/* Profile Details & Edit Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-[99999999] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-[290px] glass-card rounded-2xl p-5 shadow-2xl relative text-center animate-in zoom-in-95 duration-200">
-            <button
-              type="button"
-              onClick={() => {
-                setShowProfileModal(false);
-                setProfileError("");
-                setProfileSuccess("");
-              }}
-              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Brand Logo Identity */}
-            <div className="flex justify-center mb-3">
-              <FincodyLogo variant="compact" />
-            </div>
-
-            <div className="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 mx-auto mb-3 font-black text-lg">
-              {user?.user_metadata?.full_name 
-                ? user.user_metadata.full_name.slice(0, 1).toUpperCase() 
-                : (user?.email ? user.email.slice(0, 1).toUpperCase() : (tempName ? tempName.slice(0, 1).toUpperCase() : "U"))}
-            </div>
-
-            <h3 className="text-sm font-black text-white mb-0.5">
-              {user ? "Your Profile" : "Profile Settings"}
-            </h3>
-            <p className="text-[10px] text-slate-400 mb-4 truncate max-w-full">
-              {user ? user.email : "no-email@fincody.com"}
-            </p>
-
-            {profileError && (
-              <div className="mb-3.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-400 text-left">
-                {profileError}
-              </div>
-            )}
-
-            {profileSuccess && (
-              <div className="mb-3.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 text-left">
-                {profileSuccess}
-              </div>
-            )}
-
-            {/* Plan Status card synchronized with dashboard */}
-            <div className="mb-4 p-3 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-left flex justify-between items-center text-xs">
-              <div>
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px] block mb-0.5">Plan Status</span>
-                <span className="font-extrabold text-[var(--text-color)]">{userPlan === "Pro" ? "Fincody Pro (Active)" : "Free Plan"}</span>
-              </div>
-              {userPlan === "Pro" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserPlan("Free");
-                    localStorage.setItem("fincody_user_plan", "Free");
-                    setFinancialNotifications(prev => [
-                      {
-                        id: "notif-system-" + Date.now(),
-                        category: "System",
-                        priority: "Low",
-                        title: "Fincody Pro Deactivated",
-                        description: "Subscription reset to Free plan.",
-                        scheduledTime: "Just Now",
-                        timeRemaining: "Just Now",
-                        timeRemainingSecs: 0,
-                        status: "unread",
-                        section: "Today",
-                        timeGroup: "Today",
-                        logo: "System"
-                      },
-                      ...prev
-                    ]);
-                  }}
-                  className="px-2 py-1 rounded bg-rose-600/10 border border-rose-500/20 text-[9px] font-black text-rose-400 hover:bg-rose-600 hover:text-white uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserPlan("Pro");
-                    localStorage.setItem("fincody_user_plan", "Pro");
-                    setFinancialNotifications(prev => [
-                      {
-                        id: "notif-system-" + Date.now(),
-                        category: "System",
-                        priority: "Medium",
-                        title: "Upgraded to Pro!",
-                        description: "Subscription upgraded successfully. Premium active.",
-                        scheduledTime: "Just Now",
-                        timeRemaining: "Just Now",
-                        timeRemainingSecs: 0,
-                        status: "unread",
-                        section: "Today",
-                        timeGroup: "Today",
-                        logo: "System"
-                      },
-                      ...prev
-                    ]);
-                  }}
-                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-[9px] font-black text-white uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Upgrade
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-left">
-              <div>
-                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full bg-slate-900 border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-semibold"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button
-                  type="submit"
-                  disabled={isSavingProfile}
-                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer disabled:opacity-55"
-                >
-                  {isSavingProfile ? "Saving..." : "Save Changes"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="w-full py-2 rounded-xl border border-[var(--border-color)] text-[10px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-all uppercase tracking-wider cursor-pointer"
-                >
-                  Log Out
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-
 
       {/* Alert Center notifications drawer */}
       <AnimatePresence>
