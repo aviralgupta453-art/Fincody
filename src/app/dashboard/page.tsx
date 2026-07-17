@@ -692,7 +692,7 @@ export default function Dashboard() {
           return updated;
         });
         // Update net worth
-        const totalVal = pendingAssetsToSync.mutualFunds.reduce((acc: number, f: any) => acc + f.currentVal, 0);
+        const totalVal = pendingAssetsToSync.mutualFunds.reduce((acc: number, f: any) => acc + (f.current || f.currentVal || 0), 0);
         setNetWorth(prev => {
           const next = prev + totalVal;
           persistData("netWorth", next);
@@ -1451,7 +1451,11 @@ export default function Dashboard() {
   const [endYear, setEndYear] = useState(2040);
 
   // Live Portfolio Tracker States
-  const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [portfolio, setPortfolio] = useState<any[]>([
+    { symbol: "AAPL", name: "Apple Inc.", qty: 15, avgBuyPrice: 180 },
+    { symbol: "MSFT", name: "Microsoft Corporation", qty: 10, avgBuyPrice: 350 },
+    { symbol: "TSLA", name: "Tesla Inc.", qty: 20, avgBuyPrice: 200 }
+  ]);
   const [quotes, setQuotes] = useState<Record<string, any>>({});
   const [stockSearchQuery, setStockSearchQuery] = useState("");
   const [stockSearchResults, setStockSearchResults] = useState<any[]>([]);
@@ -1929,7 +1933,9 @@ export default function Dashboard() {
 
     // Combine manual net worth cash entries with live investments
     const manualNetWorthNum = parseFloat(manualNetWorth) || 0;
-    const resolvedNetWorth = manualNetWorthNum > 0 ? (manualNetWorthNum + parentTotalInvestmentValue) : (netWorth || parentTotalInvestmentValue);
+    const resolvedNetWorth = manualNetWorthNum > 0 
+      ? (manualNetWorthNum + parentTotalInvestmentValue) 
+      : (netWorth > 0 ? netWorth : parentTotalInvestmentValue);
     
     let netWorthVal = resolvedNetWorth / 100000; 
     let baseWorth = resolvedNetWorth / 100000;
@@ -1945,13 +1951,13 @@ export default function Dashboard() {
     // Determine compound growth rate using weighted portfolio yield average
     let weightedReturn = 0.08; 
     if (parentTotalInvestmentValue > 0) {
-      const stockReturn = parentEquitiesVal * 0.15;
-      const mfReturn = (mutualFunds || []).reduce((acc, f) => acc + (f.current * ((f.xirr || 15) / 100)), 0);
+      const stockReturn = parentEquitiesVal * 0.15; // Equities CAGR based on 10-year historical return averages (~15%)
+      const mfReturn = (mutualFunds || []).reduce((acc, f) => acc + (f.current * ((f.xirr || 14) / 100)), 0); // Mutual Funds return based on 10-year CAGR (~14%)
       const etfReturn = parentEtfsVal * 0.12;
-      const fdReturn = (fixedDeposits || []).reduce((acc, f) => acc + (f.principal * ((f.rate || 7) / 100)), 0);
+      const fdReturn = (fixedDeposits || []).reduce((acc, f) => acc + (f.principal * ((f.rate || 7.25) / 100)), 0);
       const ppfReturn = parentPpfVal * 0.071;
       const npsReturn = parentNpsVal * 0.10;
-      const goldReturn = parentGoldVal * 0.11;
+      const goldReturn = parentGoldVal * 0.11; // Gold return based on 10-year CAGR (~11%)
       const bondReturn = parentBondsVal * 0.085;
       
       const totalReturnSum = stockReturn + mfReturn + etfReturn + fdReturn + ppfReturn + npsReturn + goldReturn + bondReturn;
@@ -1962,16 +1968,23 @@ export default function Dashboard() {
 
     const totalYears = Math.max(1, endYear - startYear + 1);
 
-    for (let i = 0; i < totalYears; i++) {
+    // Push the current present date starting point first (uncompounded)
+    data.push({
+      name: `${startYear}`,
+      "Standard": Math.round(baseWorth),
+      "Fincody Projections": Math.round(netWorthVal)
+    });
+
+    for (let i = 1; i < totalYears; i++) {
       const yearLabel = startYear + i;
 
       // Base Case (Using actual monthly surplus savings rate)
       const baseSavingsRate = sal > 0 ? (actualMonthlySavings / sal) : 0.25;
-      const baseSavings = (monthlyIncome * 12) * Math.pow(growth, i) * baseSavingsRate;
+      const baseSavings = (monthlyIncome * 12) * Math.pow(growth, i - 1) * baseSavingsRate;
       baseWorth = (baseWorth + baseSavings) * growth;
 
       // Simulated Case
-      const simulatedIncome = (monthlyIncome * 12) * Math.pow(1 + (simSalaryRate / 100), i);
+      const simulatedIncome = (monthlyIncome * 12) * Math.pow(1 + (simSalaryRate / 100), i - 1);
       let simulatedSavings = simulatedIncome * (simSavingsRate / 100);
 
       if (simMba > 0) {
@@ -2259,7 +2272,11 @@ export default function Dashboard() {
             name: data.details["Fund Name"] || "Parag Parikh Flexi Cap Fund",
             units: unitsNum,
             nav: navNum,
+            current: currentValNum,
             currentVal: currentValNum,
+            invested: Math.round(currentValNum * 0.8),
+            xirr: 14,
+            house: data.details["Fund Name"]?.split(" ")[0] || "Parag Parikh",
             category: "Equity - Flexi Cap"
           });
         } else if (data.docType === "Insurance" || data.docType === "Insurance Policy") {
