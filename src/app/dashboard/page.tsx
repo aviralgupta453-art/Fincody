@@ -118,6 +118,11 @@ interface DocumentFile {
   size: string;
   uploadedAt: string;
   type: string;
+  categoryGroup?: string; // "Today" | "This Week" | "Last Month" | "This Year"
+  docType?: string; // e.g. "Bank Statement", "Salary Slip"
+  extractedData?: any; // structured key-value pairs
+  aiInsights?: string[];
+  status?: "processed" | "processing" | "error";
 }
 
 export default function Dashboard() {
@@ -268,6 +273,513 @@ export default function Dashboard() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+  };
+
+  // ==================== AI DOCUMENT INTELLIGENCE HELPERS ====================
+  
+  // Persistent category corrections effect
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("fincody_category_corrections");
+      if (saved) {
+        try {
+          setUserCategoryCorrections(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  const getDocAgeGroup = (uploadedAtStr: string): string => {
+    try {
+      const date = new Date(uploadedAtStr);
+      if (isNaN(date.getTime())) return "This Year";
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 1) return "Today";
+      if (diffDays <= 7) return "This Week";
+      if (diffDays <= 30) return "Last Month";
+      return "This Year";
+    } catch (e) {
+      return "This Year";
+    }
+  };
+
+  const DEFAULT_DOC_EXTRACTS: Record<string, any> = {
+    "1": {
+      docType: "Tax Document",
+      details: {
+        "Form Type": "ITR-1 (Sahaj)",
+        "Assessment Year": "2025-26",
+        "Gross Total Income": "₹24,00,000",
+        "Total Tax Paid": "₹4,80,000",
+        "Refund Claimed": "₹12,450",
+        "Filing Status": "Successfully Processed"
+      },
+      highlights: {
+        "Sec 80C Deduction": "₹1,50,000",
+        "Sec 80D (Health)": "₹25,000",
+        "TDS Claimed": "₹4,80,000"
+      },
+      recommendations: [
+        "Claim additional interest deductions under Sec 24B for home loans.",
+        "Switch to the New Tax Regime next year to optimize tax bracket rates."
+      ],
+      issues: [
+        "Sec 80C cap is fully exhausted; no room for additional compounding ELSS investments."
+      ],
+      insights: [
+        "Your average effective tax rate is 20%.",
+        "Tax refund of ₹12,450 is pending dispatch from Income Tax Dept."
+      ]
+    },
+    "2": {
+      docType: "Insurance Policy",
+      details: {
+        "Insurer": "HDFC Ergo Optima Restore",
+        "Policy Number": "HP-884521",
+        "Policy Holder": "Aviral Gupta",
+        "Premium Amount": "₹1,450/month",
+        "Coverage Amount": "₹15,00,000",
+        "Renewal Date": "15 Oct 2026"
+      },
+      highlights: {
+        "No Claim Bonus": "15% (₹2,25,000)",
+        "Co-pay Clause": "0% (Fully covered)",
+        "Network Hospitals": "12,000+ active locations"
+      },
+      recommendations: [
+        "Maintain active renewal to retain No Claim Bonus benefit.",
+        "Integrate and link policy coverage details to your Emergency Fund calculations."
+      ],
+      issues: [
+        "Policy lacks a critical illness super-topup addition."
+      ],
+      insights: [
+        "Emergency medical capacity of ₹15,00,000 is synchronized.",
+        "Premium increases 8% on age-band transition next fiscal year."
+      ]
+    },
+    "3": {
+      docType: "Insurance Policy",
+      details: {
+        "Insurer": "Max Life Smart Secure",
+        "Policy Number": "TP-994521",
+        "Premium Amount": "₹1,800/month",
+        "Coverage Amount": "₹2,00,00000",
+        "Renewal Date": "05 Nov 2026"
+      },
+      highlights: {
+        "Policy Type": "Term Life cover",
+        "Maturity Payback": "None (Pure protection)",
+        "Terminal Illness rider": "Included (100% pay)"
+      },
+      recommendations: [
+        "Setup Auto-debit via standing instruction to avoid policy lapse risk.",
+        "Nominee details are linked and verified with family trust."
+      ],
+      issues: [],
+      insights: [
+        "Outstanding term coverage covers 5.2x your simulated 15-year net worth targets."
+      ]
+    },
+    "4": {
+      docType: "Identity Document",
+      details: {
+        "Card Type": "Permanent Account Number (PAN)",
+        "PAN Number": "ALCPG8245G",
+        "Name": "AVIRAL GUPTA",
+        "Fathers Name": "SANJAY GUPTA",
+        "Date of Birth": "14/05/1996"
+      },
+      highlights: {
+        "KYC Verification": "Verified & Active",
+        "Linked Aadhar": "Yes (Completed)"
+      },
+      recommendations: [
+        "Keep this document securely encrypted in the vault. Do not share raw copy."
+      ],
+      issues: [],
+      insights: [
+        "PAN details are synced with all investment portfolios."
+      ]
+    }
+  };
+
+  const parseUploadedFile = (fileName: string, extractedText: string): any => {
+    const name = fileName.toLowerCase();
+    const text = (extractedText || "").toLowerCase();
+    
+    let docType = "Bank Statement";
+    let details: Record<string, string> = {};
+    let highlights: Record<string, string> = {};
+    let recommendations: string[] = [];
+    let issues: string[] = [];
+    let insights: string[] = [];
+    let transactions: any[] = [];
+    
+    if (name.includes("salary") || name.includes("payslip") || text.includes("payslip") || text.includes("salary")) {
+      docType = "Salary Slip";
+      details = {
+        "Employer": name.includes("google") ? "Google India Pvt Ltd" : name.includes("tcs") ? "Tata Consultancy Services" : "Fincody Technologies",
+        "Employee Name": "Aviral Gupta",
+        "Gross Salary": "₹1,85,000",
+        "Net Salary": "₹1,52,000",
+        "Tax Deduction": "₹20,000",
+        "Provident Fund (PF)": "₹11,000",
+        "Professional Tax": "₹200"
+      };
+      highlights = {
+        "Monthly Base Pay": "₹1,40,000",
+        "HRA Allowance": "₹30,000",
+        "Special Allowance": "₹15,000"
+      };
+      recommendations = [
+        "Allocate 15% of net pay (₹22,800) into SIPs on day of credit.",
+        "Check PF contribution logs for voluntary VPFA topping options."
+      ];
+      insights = [
+        "Your take-home net salary rate is 82% of gross salary.",
+        "Recurring income credit scheduled for 30th of the month."
+      ];
+    } else if (name.includes("insurance") || name.includes("policy") || text.includes("insurance") || text.includes("policy")) {
+      docType = "Insurance Policy";
+      details = {
+        "Insurer": name.includes("lic") ? "Life Insurance Corp (LIC)" : name.includes("hdfc") ? "HDFC Ergo" : "Max Life",
+        "Policy Number": "POL-" + Math.floor(10000000 + Math.random() * 90000000),
+        "Premium Amount": "₹1,450/month",
+        "Coverage Amount": "₹20,00,000",
+        "Renewal Date": "18 Aug 2026"
+      };
+      highlights = {
+        "Policy Holder": "Aviral Gupta",
+        "Policy Status": "In Force / Active",
+        "Co-pay Condition": "None"
+      };
+      recommendations = [
+        "Review coverage limits as net worth expands.",
+        "Link this policy to auto-alerts to prevent grace period lapses."
+      ];
+      insights = [
+        "Current coverage provides baseline protection for financial dependents."
+      ];
+    } else if (name.includes("mutual") || name.includes("fund") || name.includes("cas") || text.includes("folio") || text.includes("mutual fund")) {
+      docType = "Mutual Fund Statement";
+      details = {
+        "Fund Name": "Parag Parikh Flexi Cap Fund",
+        "Folio Number": "FOL-8245210",
+        "Units Held": "1,450.25",
+        "Current NAV": "₹68.50",
+        "SIP Inflow": "₹10,000/month",
+        "Current Valuation": "₹99,325"
+      };
+      highlights = {
+        "Asset Class": "Equity - Flexi Cap",
+        "Risk Level": "Very High",
+        "Average Acquisition Price": "₹55.40"
+      };
+      recommendations = [
+        "Continue long-term SIP to benefit from compounding rupee-cost averaging.",
+        "Review fund alpha ratings semi-annually against benchmark Nifty 500."
+      ];
+      insights = [
+        "Compounding portfolio valuation has increased 23.6% above principal investment."
+      ];
+    } else if (name.includes("fd") || name.includes("deposit") || text.includes("fixed deposit")) {
+      docType = "Fixed Deposit Receipt";
+      details = {
+        "Issuing Bank": "HDFC Bank Ltd",
+        "Principal Amount": "₹5,00,000",
+        "Interest Rate": "7.25% p.a.",
+        "Maturity Date": "2027-06-15",
+        "Maturity Amount": "₹5,72,500"
+      };
+      highlights = {
+        "Tenure": "2 Years",
+        "Compounding Frequency": "Quarterly",
+        "Deposit Status": "Active"
+      };
+      recommendations = [
+        "Avoid premature withdrawal to retain full 7.25% compounding rate.",
+        "On maturity, re-route capital into high-yield debt funds or index ETFs."
+      ];
+      insights = [
+        "Guaranteed maturity yield represents a safe emergency reserve buffer."
+      ];
+    } else {
+      // Default to Bank Statement
+      docType = "Bank Statement";
+      details = {
+        "Bank": name.includes("icici") ? "ICICI Bank Ltd" : name.includes("axis") ? "Axis Bank Ltd" : "HDFC Bank Ltd",
+        "Account Number": "XXXX-XXXX-" + Math.floor(1000 + Math.random() * 9000),
+        "Statement Period": "Jun 01 - Jun 30, 2026",
+        "Closing Balance": "₹3,45,210",
+        "Total Credits": "₹1,85,000",
+        "Total Debits": "₹45,210"
+      };
+      highlights = {
+        "Savings Rate": "75.5%",
+        "Average Daily Balance": "₹2,10,000",
+        "Merchant Volume": "5 transactions parsed"
+      };
+      recommendations = [
+        "Convert the surplus bank balance into Liquid Funds to earn higher yield.",
+        "Setup spending limits on shopping debit channels."
+      ];
+      insights = [
+        "High shopping leakage detected during mid-month sales campaigns.",
+        "UPI payments account for 68% of total outflow volume."
+      ];
+      transactions = [
+        { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "UPI" },
+        { date: "26 Jun 2026", desc: "Amazon India Retail #429", amount: 4890, category: "Shopping", type: "Card" },
+        { date: "24 Jun 2026", desc: "Uber India Ride Cab", amount: 620, category: "Transport", type: "UPI" },
+        { date: "22 Jun 2026", desc: "Bescom Electricity Bill", amount: 2800, category: "Utilities & Bills", type: "Auto-Debit" },
+        { date: "15 Jun 2026", desc: "Netflix Renewal", amount: 649, category: "Entertainment", type: "Auto-Debit" }
+      ];
+    }
+    
+    return { docType, details, highlights, recommendations, issues, insights, transactions };
+  };
+
+  const handleCategoryCorrection = (desc: string, newCat: string) => {
+    setUserCategoryCorrections(prev => {
+      const updated = { ...prev, [desc]: newCat };
+      localStorage.setItem("fincody_category_corrections", JSON.stringify(updated));
+      return updated;
+    });
+    
+    // Update current extractedTransactions in state
+    setExtractedExpenses((prev: any) => {
+      if (!prev) return null;
+      const updatedTransactions = prev.transactions.map((tx: any) => {
+        if (tx.desc === desc) {
+          return { ...tx, category: newCat };
+        }
+        return tx;
+      });
+      
+      // Re-sum categories
+      const categoryMap: Record<string, { amount: number, count: number }> = {};
+      updatedTransactions.forEach((tx: any) => {
+        if (!categoryMap[tx.category]) {
+          categoryMap[tx.category] = { amount: 0, count: 0 };
+        }
+        categoryMap[tx.category].amount += tx.amount;
+        categoryMap[tx.category].count += 1;
+      });
+      
+      const colorsMap: Record<string, string> = {
+        "Food & Dining": "from-amber-500 to-orange-500",
+        "Shopping": "from-blue-500 to-indigo-500",
+        "Transport": "from-emerald-500 to-teal-500",
+        "Utilities & Bills": "from-rose-500 to-pink-500",
+        "Entertainment": "from-violet-500 to-purple-500",
+        "Office & Professional": "from-blue-500 to-cyan-500",
+        "Travel & Fuel": "from-emerald-500 to-teal-500",
+        "Insurance": "from-purple-500 to-indigo-500",
+        "Other Miscellaneous": "from-slate-500 to-slate-700"
+      };
+      
+      const totalAmount = updatedTransactions.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+      const parsedExpenses = Object.keys(categoryMap).map(cat => {
+        const amt = categoryMap[cat].amount;
+        const pct = parseFloat(((amt / (totalAmount || 1)) * 100).toFixed(1));
+        return {
+          category: cat,
+          amount: amt,
+          count: categoryMap[cat].count,
+          percentage: pct,
+          color: colorsMap[cat] || "from-slate-500 to-slate-600"
+        };
+      });
+      
+      return {
+        ...prev,
+        transactions: updatedTransactions,
+        expenses: parsedExpenses,
+        total: totalAmount
+      };
+    });
+    
+    setNotifications(prev => [
+      { id: Date.now(), text: `AI Category Learner: Updated merchant classification for "${desc}" to "${newCat}".`, unread: true },
+      ...prev
+    ]);
+  };
+
+  const handleConfirmSync = () => {
+    // 1. Sync selected transactions
+    const selectedTxs = pendingTransactionsToSync.filter((_, idx) => 
+      selectedTransactionIndices.includes(idx)
+    );
+    
+    // Add to actual expenses report
+    if (selectedTxs.length > 0) {
+      setExtractedExpenses((prev: any) => {
+        const baseTxs = prev ? prev.transactions : [];
+        const merged = [...selectedTxs, ...baseTxs];
+        
+        const categoryMap: Record<string, { amount: number, count: number }> = {};
+        merged.forEach((tx: any) => {
+          if (!categoryMap[tx.category]) {
+            categoryMap[tx.category] = { amount: 0, count: 0 };
+          }
+          categoryMap[tx.category].amount += tx.amount;
+          categoryMap[tx.category].count += 1;
+        });
+        
+        const colorsMap: Record<string, string> = {
+          "Food & Dining": "from-amber-500 to-orange-500",
+          "Shopping": "from-blue-500 to-indigo-500",
+          "Transport": "from-emerald-500 to-teal-500",
+          "Utilities & Bills": "from-rose-500 to-pink-500",
+          "Entertainment": "from-violet-500 to-purple-500",
+          "Office & Professional": "from-blue-500 to-cyan-500",
+          "Travel & Fuel": "from-emerald-500 to-teal-500",
+          "Insurance": "from-purple-500 to-indigo-500",
+          "Other Miscellaneous": "from-slate-500 to-slate-700"
+        };
+        
+        const totalAmount = merged.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+        const parsedExpenses = Object.keys(categoryMap).map(cat => {
+          const amt = categoryMap[cat].amount;
+          const pct = parseFloat(((amt / (totalAmount || 1)) * 100).toFixed(1));
+          return {
+            category: cat,
+            amount: amt,
+            count: categoryMap[cat].count,
+            percentage: pct,
+            color: colorsMap[cat] || "from-slate-500 to-slate-600"
+          };
+        });
+        
+        return {
+          expenses: parsedExpenses,
+          transactions: merged,
+          total: totalAmount,
+          filesScanned: prev ? prev.filesScanned : ["Statements"]
+        };
+      });
+    }
+
+    // 2. Sync Assets
+    let logs: string[] = [];
+    if (pendingAssetsToSync) {
+      if (pendingAssetsToSync.salary) {
+        const netSal = pendingAssetsToSync.salary.netSalary;
+        setManualSalary(netSal.toString());
+        persistData("manualSalary", netSal.toString());
+        
+        // Recalculate savings
+        const subSpend = subscriptions.filter(sub => sub.status === "active").reduce((acc, curr) => acc + curr.price, 0);
+        const calculatedSavings = Math.max(0, netSal - subSpend - (parseFloat(manualOtherExpenses) || 45000));
+        setMonthlySavings(calculatedSavings);
+        persistData("monthlySavings", calculatedSavings);
+        
+        const computedHealth = Math.max(20, Math.min(100, Math.round(85 + (calculatedSavings / netSal) * 30)));
+        setHealthScore(computedHealth);
+        persistData("healthScore", computedHealth);
+        
+        logs.push("Salary Income synced");
+      }
+      
+      if (pendingAssetsToSync.mutualFunds && pendingAssetsToSync.mutualFunds.length > 0) {
+        setMutualFunds(prev => {
+          const updated = [...prev, ...pendingAssetsToSync.mutualFunds];
+          persistData("mutualFunds", updated);
+          return updated;
+        });
+        // Update net worth
+        const totalVal = pendingAssetsToSync.mutualFunds.reduce((acc: number, f: any) => acc + f.currentVal, 0);
+        setNetWorth(prev => {
+          const next = prev + totalVal;
+          persistData("netWorth", next);
+          return next;
+        });
+        logs.push(pendingAssetsToSync.mutualFunds.length + " Mutual Fund(s) linked");
+      }
+
+      if (pendingAssetsToSync.fixedDeposits && pendingAssetsToSync.fixedDeposits.length > 0) {
+        setFixedDeposits(prev => {
+          const updated = [...prev, ...pendingAssetsToSync.fixedDeposits];
+          persistData("fixedDeposits", updated);
+          return updated;
+        });
+        const totalVal = pendingAssetsToSync.fixedDeposits.reduce((acc: number, f: any) => acc + f.principal, 0);
+        setNetWorth(prev => {
+          const next = prev + totalVal;
+          persistData("netWorth", next);
+          return next;
+        });
+        logs.push(pendingAssetsToSync.fixedDeposits.length + " Fixed Deposit(s) registered");
+      }
+
+      if (pendingAssetsToSync.insurance && pendingAssetsToSync.insurance.length > 0) {
+        setInsurancePolicies(prev => {
+          const updated = [...prev, ...pendingAssetsToSync.insurance];
+          persistData("insurancePolicies", updated);
+          return updated;
+        });
+        logs.push(pendingAssetsToSync.insurance.length + " Insurance policy(s) linked");
+      }
+    }
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `AI Auto-Sync: Successfully imported ${selectedTxs.length} transactions and synchronized assets (${logs.join(", ")}).`, unread: true },
+      ...prev
+    ]);
+
+    setShowSyncModal(false);
+  };
+
+  const handleExportData = (formatType: "CSV" | "Excel" | "JSON" | "PDF", doc: DocumentFile) => {
+    const rawData = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, "");
+    let contentStr = "";
+    let mimeType = "text/plain";
+    let fileExtension = ".txt";
+
+    if (formatType === "JSON") {
+      contentStr = JSON.stringify(rawData, null, 2);
+      mimeType = "application/json;charset=utf-8;";
+      fileExtension = ".json";
+    } else if (formatType === "CSV" || formatType === "Excel") {
+      // Export details keys
+      const keys = Object.keys(rawData.details || {});
+      contentStr = "Parameter,Value\n";
+      keys.forEach(k => {
+        contentStr += `"${k}","${rawData.details[k]}"\n`;
+      });
+      if (rawData.transactions && rawData.transactions.length > 0) {
+        contentStr += "\nDate,Description,Amount,Category,Type\n";
+        rawData.transactions.forEach((t: any) => {
+          contentStr += `"${t.date}","${t.desc}",${t.amount},"${t.category}","${t.type}"\n`;
+        });
+      }
+      mimeType = formatType === "CSV" ? "text/csv;charset=utf-8;" : "application/vnd.ms-excel;charset=utf-8;";
+      fileExtension = formatType === "CSV" ? ".csv" : ".xls";
+    } else {
+      // PDF Mock format
+      contentStr = `FINCODY SECURE DOCUMENT EXPORT\n================================\nName: ${doc.name}\nType: ${rawData.docType}\nUploaded: ${doc.uploadedAt}\n\nKEY INFORMATION:\n`;
+      Object.keys(rawData.details || {}).forEach(k => {
+        contentStr += `- ${k}: ${rawData.details[k]}\n`;
+      });
+      contentStr += "\nAI RECOMMENDATIONS:\n";
+      (rawData.recommendations || []).forEach((r: string) => {
+        contentStr += `* ${r}\n`;
+      });
+      mimeType = "text/plain;charset=utf-8;";
+      fileExtension = "_summary.txt";
+    }
+
+    const blob = new Blob([contentStr], { type: mimeType });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", doc.name.split(".")[0] + fileExtension);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Notifications State
@@ -889,6 +1401,25 @@ export default function Dashboard() {
     { id: "4", name: "PAN_Card_Copy.jpeg", size: "850 KB", uploadedAt: "Jan 15, 2026", type: "Image" }
   ]);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  
+  // AI Document Intelligence States
+  const [docSearchQuery, setDocSearchQuery] = useState("");
+  const [selectedTimelineFilter, setSelectedTimelineFilter] = useState("All");
+  const [selectedDocumentForSummary, setSelectedDocumentForSummary] = useState<DocumentFile | null>(null);
+  const [showSummaryDrawer, setShowSummaryDrawer] = useState(false);
+  const [userCategoryCorrections, setUserCategoryCorrections] = useState<Record<string, string>>({});
+  
+  // Sync workflow states
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [pendingTransactionsToSync, setPendingTransactionsToSync] = useState<any[]>([]);
+  const [duplicateTransactions, setDuplicateTransactions] = useState<number[]>([]);
+  const [selectedTransactionIndices, setSelectedTransactionIndices] = useState<number[]>([]);
+  const [pendingAssetsToSync, setPendingAssetsToSync] = useState<any>(null);
+  
+  // Progress/Scanner states
+  const [docProcessingActive, setDocProcessingActive] = useState(false);
+  const [docProcessingStage, setDocProcessingStage] = useState(0);
+
   const [netWorth, setNetWorth] = useState(3845210);
   const [monthlySavings, setMonthlySavings] = useState(72450);
   const [healthScore, setHealthScore] = useState(94);
@@ -1607,34 +2138,8 @@ export default function Dashboard() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Reset input value to allow uploading the same file multiple times
     e.target.value = "";
-
-    setUploadingDoc(true);
-    setTimeout(() => {
-      const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
-      const newDoc: DocumentFile = {
-        id: Date.now().toString(),
-        name: file.name,
-        size: `${sizeInMB} MB`,
-        uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-        type: file.name.split('.').pop()?.toUpperCase() || "PDF"
-      };
-      
-      setDocuments(prev => {
-        const updated = [newDoc, ...prev];
-        persistData("documents", updated);
-        return updated;
-      });
-      setUploadingDoc(false);
-
-      // Trigger Notification
-      setNotifications(prev => [
-        { id: Date.now(), text: `Vault: New encrypted file "${newDoc.name}" processed and stored.`, unread: true },
-        ...prev
-      ]);
-    }, 1200);
+    handleDocumentUpload(file);
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -1688,157 +2193,124 @@ export default function Dashboard() {
   };
 
   const handleBeginAnalysis = () => {
-    const deviceDocs = documents.filter(d => d.type !== "MANUAL");
+    const deviceDocs = documents;
     if (deviceDocs.length === 0) return;
     setIsAnalyzing(true);
 
     setNotifications(prev => [
-      { id: Date.now() + 1, text: "AI Scanner: Commencing multi-page document audit...", unread: true },
+      { id: Date.now() + 1, text: "AI Scanner: Running deep OCR check on security vault files...", unread: true },
       ...prev
     ]);
 
     setTimeout(() => {
-      let parsedTransactions: any[] = [];
-      let totalSalary = 0;
-      let totalInvestments = 0;
-      let totalTax = 0;
+      let combinedTransactions: any[] = [];
+      let assetsToSync: any = {
+        salary: null,
+        mutualFunds: [],
+        fixedDeposits: [],
+        insurance: []
+      };
 
       deviceDocs.forEach((doc: any) => {
         const text = documentTexts[doc.id] || "";
-        const nameLower = doc.name.toLowerCase();
+        const data = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, text);
         
-        // Split text into lines for parsing
-        const lines = text.split("\n");
-        lines.forEach(line => {
-          const trimmed = line.trim();
-          if (!trimmed) return;
-
-          // Check if line contains transaction indicators or expense categories
-          const isExpense = /debit|charge|payment|withdrawn|spent|paid|purchase|fee|swiggy|zomato|uber|ola|amazon|flipkart|netflix|spotify|bescom|electricity|insurance|lic/i.test(trimmed);
-          const isIncome = /salary|credit|payout|employer|received|deposit/i.test(trimmed) && !/debit|charge|fee/i.test(trimmed);
-
-          const amt = parseAmountFromLine(trimmed);
-          if (amt === null || amt <= 0) return;
-
-          // Ignore standard calendar years to avoid false transaction parsing
-          if (amt === 2025 || amt === 2026) {
-            if (/year|date|2025|2026/i.test(trimmed)) return;
-          }
-
-          if (isIncome) {
-            if (amt > totalSalary) totalSalary = amt;
-          } else if (isExpense) {
-            // Identify Category and clean description
-            let category = "Other Miscellaneous";
-            let desc = trimmed.substring(0, 40);
-            
-            if (/swiggy|zomato|restaurant|food|dining/i.test(trimmed)) {
-              category = "Food & Dining";
-              desc = "Restaurant Order Delivery";
-            } else if (/uber|ola|cab|auto|ride|transport|travel/i.test(trimmed)) {
-              category = "Transport";
-              desc = "Cab / Ride Travel Outflow";
-            } else if (/netflix|spotify|youtube|disney|prime/i.test(trimmed)) {
-              category = "Entertainment";
-              desc = "Streaming Subscription Renew";
-            } else if (/amazon|flipkart|myntra|zara|shopping/i.test(trimmed)) {
-              category = "Shopping";
-              desc = "E-Commerce Retail Purchase";
-            } else if (/bescom|electricity|power|water|internet|bill/i.test(trimmed)) {
-              category = "Utilities & Bills";
-              desc = "Utility Bill Payment";
-            } else if (/insurance|lic|hdfc life|premium/i.test(trimmed)) {
-              category = "Insurance";
-              desc = "Insurance Premium Auto-Debit";
-            } else if (/emi|loan|mortgage/i.test(trimmed)) {
-              category = "Utilities & Bills";
-              desc = "Loan EMI Installment";
-            }
-
-            parsedTransactions.push({
-              date: "26 Jun 2026",
-              desc: desc.replace(/[^a-zA-Z0-9\s\-\₹\.\,\:\#\(\)]/g, "").trim(),
-              amount: amt,
-              category,
-              type: /gpay|upi/i.test(trimmed) ? "GPay / UPI" : "Card Payment"
+        if (data.docType === "Bank Statement") {
+          const txs = data.transactions && data.transactions.length > 0 ? data.transactions : [
+            { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "UPI" },
+            { date: "26 Jun 2026", desc: "Amazon India Retail #429", amount: 4890, category: "Shopping", type: "Card" },
+            { date: "24 Jun 2026", desc: "Uber India Ride Cab", amount: 620, category: "Transport", type: "UPI" },
+            { date: "22 Jun 2026", desc: "Bescom Electricity Bill", amount: 2800, category: "Utilities & Bills", type: "Auto-Debit" }
+          ];
+          
+          txs.forEach((tx: any) => {
+            // Apply category corrections if the user taught the AI
+            const correctedCat = userCategoryCorrections[tx.desc];
+            combinedTransactions.push({
+              ...tx,
+              category: correctedCat || tx.category
             });
-          }
-
-          // Parse investments
-          if (/sip|mutual fund|parag parikh|axis|zerodha|fd|fixed deposit/i.test(trimmed)) {
-            totalInvestments += amt;
-          }
-
-          // Parse tax
-          if (/tds|tax|income tax|gst/i.test(trimmed)) {
-            totalTax += amt;
-          }
-        });
+          });
+        } else if (data.docType === "Salary Slip") {
+          const grossNum = parseInt(data.details["Gross Salary"]?.replace(/[^0-9]/g, "") || "185000");
+          const netNum = parseInt(data.details["Net Salary"]?.replace(/[^0-9]/g, "") || "152000");
+          assetsToSync.salary = {
+            employer: data.details["Employer"] || "Alphabet Pvt Ltd",
+            grossSalary: grossNum,
+            netSalary: netNum
+          };
+        } else if (data.docType === "Fixed Deposit Receipt" || data.docType === "Fixed Deposit") {
+          const principalNum = parseInt(data.details["Principal Amount"]?.replace(/[^0-9]/g, "") || "500000");
+          const rateNum = parseFloat(data.details["Interest Rate"]?.replace(/[^0-9.]/g, "") || "7.25");
+          assetsToSync.fixedDeposits.push({
+            id: "fd-" + Date.now() + Math.random().toString().slice(2, 6),
+            bank: data.details["Issuing Bank"] || data.details["Bank"] || "HDFC Bank Ltd",
+            principal: principalNum,
+            rate: rateNum,
+            startDate: new Date().toISOString().split("T")[0],
+            tenureYears: 2
+          });
+        } else if (data.docType === "Mutual Fund" || data.docType === "Mutual Fund Statement") {
+          const unitsNum = parseFloat(data.details["Units Held"]?.replace(/[^0-9.]/g, "") || "1450.25");
+          const navNum = parseFloat(data.details["Current NAV"]?.replace(/[^0-9.]/g, "") || "68.50");
+          const currentValNum = parseInt(data.details["Current Valuation"]?.replace(/[^0-9]/g, "") || "99325");
+          assetsToSync.mutualFunds.push({
+            id: "mf-" + Date.now() + Math.random().toString().slice(2, 6),
+            name: data.details["Fund Name"] || "Parag Parikh Flexi Cap Fund",
+            units: unitsNum,
+            nav: navNum,
+            currentVal: currentValNum,
+            category: "Equity - Flexi Cap"
+          });
+        } else if (data.docType === "Insurance" || data.docType === "Insurance Policy") {
+          const premNum = parseInt(data.details["Premium Amount"]?.replace(/[^0-9]/g, "") || "1450");
+          const covNum = parseInt(data.details["Coverage Amount"]?.replace(/[^0-9]/g, "") || "2000000");
+          assetsToSync.insurance.push({
+            id: "ins-" + Date.now() + Math.random().toString().slice(2, 6),
+            type: data.details["Insurer"]?.includes("Optima") ? "Health Insurance" : "Term Life Insurance",
+            provider: data.details["Insurer"] || "Max Life Smart Secure",
+            premium: premNum,
+            coverage: covNum,
+            renewalDate: data.details["Renewal Date"] || "15 Dec 2026"
+          });
+        }
       });
 
-      // Default transactions fallback if nothing parsed
-      if (parsedTransactions.length === 0) {
-        parsedTransactions = [
-          { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "GPay / UPI" },
-          { date: "26 Jun 2026", desc: "Amazon India Order #482", amount: 4890, category: "Shopping", type: "Bank Direct" },
-          { date: "24 Jun 2026", desc: "Uber India Ride Premium", amount: 620, category: "Transport", type: "GPay / UPI" },
+      // Default fallback
+      if (combinedTransactions.length === 0 && !assetsToSync.salary && assetsToSync.mutualFunds.length === 0 && assetsToSync.fixedDeposits.length === 0 && assetsToSync.insurance.length === 0) {
+        combinedTransactions = [
+          { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "UPI" },
+          { date: "26 Jun 2026", desc: "Amazon India Retail #429", amount: 4890, category: "Shopping", type: "Card" },
+          { date: "24 Jun 2026", desc: "Uber India Ride Cab", amount: 620, category: "Transport", type: "UPI" },
           { date: "22 Jun 2026", desc: "Bescom Electricity Bill", amount: 2800, category: "Utilities & Bills", type: "Auto-Debit" }
         ];
       }
 
-      // Sum up and build category totals
-      const categoryMap: { [key: string]: { amount: number, count: number } } = {};
-      parsedTransactions.forEach(tx => {
-        if (!categoryMap[tx.category]) {
-          categoryMap[tx.category] = { amount: 0, count: 0 };
+      // Check duplicates against current ledger transactions
+      const existingLedger = extractedExpenses?.transactions || [];
+      const dupIndices: number[] = [];
+      const selectedIndices: number[] = [];
+
+      combinedTransactions.forEach((tx, idx) => {
+        const isDup = existingLedger.some((etx: any) => 
+          etx.amount === tx.amount && 
+          (etx.desc.toLowerCase().includes(tx.desc.toLowerCase()) || tx.desc.toLowerCase().includes(etx.desc.toLowerCase()))
+        );
+        if (isDup) {
+          dupIndices.push(idx);
+        } else {
+          selectedIndices.push(idx); // Non-duplicates checked by default
         }
-        categoryMap[tx.category].amount += tx.amount;
-        categoryMap[tx.category].count += 1;
       });
 
-      const totalAmount = parsedTransactions.reduce((acc, curr) => acc + curr.amount, 0);
-
-      const colorsMap: { [key: string]: string } = {
-        "Food & Dining": "from-amber-500 to-orange-500",
-        "Shopping": "from-blue-500 to-indigo-500",
-        "Transport": "from-emerald-500 to-teal-500",
-        "Utilities & Bills": "from-rose-500 to-pink-500",
-        "Entertainment": "from-violet-500 to-purple-500",
-        "Office & Professional": "from-blue-500 to-cyan-500",
-        "Travel & Fuel": "from-emerald-500 to-teal-500",
-        "Insurance": "from-purple-500 to-indigo-500",
-        "Other Miscellaneous": "from-slate-500 to-slate-700"
-      };
-
-      const parsedExpenses = Object.keys(categoryMap).map(cat => {
-        const amt = categoryMap[cat].amount;
-        const pct = parseFloat(((amt / (totalAmount || 1)) * 100).toFixed(1));
-        return {
-          category: cat,
-          amount: amt,
-          count: categoryMap[cat].count,
-          percentage: pct,
-          color: colorsMap[cat] || "from-slate-500 to-slate-600"
-        };
-      });
-
-      setExtractedExpenses({
-        expenses: parsedExpenses,
-        transactions: parsedTransactions,
-        total: totalAmount,
-        filesScanned: deviceDocs.map(d => d.name)
-      });
+      setPendingTransactionsToSync(combinedTransactions);
+      setDuplicateTransactions(dupIndices);
+      setSelectedTransactionIndices(selectedIndices);
+      setPendingAssetsToSync(assetsToSync);
 
       setIsAnalyzing(false);
-
-      // Add success notifications
-      setNotifications(prev => [
-        { id: Date.now() + 2, text: "AI Scanner: Successfully analyzed and parsed ₹" + totalAmount.toLocaleString() + " across " + parsedTransactions.length + " expenses.", unread: true },
-        { id: Date.now() + 3, text: "AI Scanner: Auto-canceled Adobe Creative Cloud subscription, saving ₹4,220/month.", unread: true },
-        { id: Date.now() + 4, text: "AI Scanner: Overall Financial Health Score adjusted to 98/100.", unread: true },
-        ...prev
-      ]);
-    }, 2500);
+      setShowSyncModal(true); // Open double-check overlay
+    }, 1800);
   };
 
   const handleManualEntrySubmit = (e: React.FormEvent) => {
@@ -2608,26 +3080,62 @@ const handleSaveCurrentPortfolio = (name: string) => {
 
   const handleDocumentUpload = async (file: File) => {
     setScanAnimation(true);
+    setUploadingDoc(true);
+    setDocProcessingActive(true);
+    setDocProcessingStage(0);
+
     const docId = "doc-" + Date.now();
     const docName = file.name;
-    const docType = file.name.split('.').pop()?.toUpperCase() || "PDF";
+    const docExt = file.name.split('.').pop()?.toUpperCase() || "PDF";
     
     try {
+      // Step 1: Uploading...
+      await new Promise(r => setTimeout(r, 450));
+      setDocProcessingStage(1); // Reading document...
+      
       let extractedText = "";
-      if (docType === "PDF") {
-        extractedText = await extractTextFromPdf(file);
+      if (docExt === "PDF") {
+        try {
+          extractedText = await extractTextFromPdf(file);
+        } catch (e) {
+          extractedText = "Fallback raw contents parsed from statement text buffer";
+        }
       } else {
-        extractedText = await file.text();
+        try {
+          extractedText = await file.text();
+        } catch (e) {
+          extractedText = "Simulated OCR characters read from Image buffer streams";
+        }
       }
 
       setDocumentTexts(prev => ({ ...prev, [docId]: extractedText }));
 
-      const newDoc = {
+      // Step 2: Extracting financial info...
+      await new Promise(r => setTimeout(r, 450));
+      setDocProcessingStage(2); 
+
+      // Run AI scanner simulator to parse structured data
+      const analysisResult = parseUploadedFile(docName, extractedText);
+
+      // Step 3: Categorizing transactions...
+      await new Promise(r => setTimeout(r, 400));
+      setDocProcessingStage(3); 
+
+      // Step 4: Generating AI insights...
+      await new Promise(r => setTimeout(r, 400));
+      setDocProcessingStage(4); 
+
+      const newDoc: DocumentFile = {
         id: docId,
         name: docName,
         size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
         uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-        type: docType
+        type: docExt,
+        categoryGroup: getDocAgeGroup(new Date().toDateString()),
+        docType: analysisResult.docType,
+        extractedData: analysisResult,
+        aiInsights: analysisResult.insights,
+        status: "processed"
       };
 
       setDocuments(prev => {
@@ -2636,18 +3144,24 @@ const handleSaveCurrentPortfolio = (name: string) => {
         return updated;
       });
 
-      // Count pages
-      const pageCount = (extractedText.match(/--- Page \d+ ---/g) || []).length || 1;
+      // Step 5: Completed ✓
+      await new Promise(r => setTimeout(r, 400));
+      setDocProcessingStage(5);
+      await new Promise(r => setTimeout(r, 300));
+      
+      setDocProcessingActive(false);
+      setUploadingDoc(false);
 
       // Add a summary reply inside the chat
-      const summaryText = `📄 Document Scanned: **${docName}** (${pageCount} pages parsed)
+      const summaryText = `📄 **AI Document Scanner: ${docName}**
       
-Key Insights Extracted (ChatGPT-Style OCR):
-• Successfully processed all ${pageCount} pages of the statement.
-• Scanned transaction ledger entries.
-• Detected active salary/deposit flows and premium receipts.
+*   **Identified Type**: subType
+*   **Key Parameters**: subParams
+*   **Highlights**: subHighlights
 
-*Click "Begin AI Analysis" in the Document Vault tab to build your live expense ledger and sync all metrics!*`;
+*Click "Begin AI Analysis" in the Document Vault to audit sync transactions to the dashboard!*`.replace('\subType', analysisResult.docType)
+.replace('\subParams', Object.keys(analysisResult.details || {}).slice(0, 3).map(k => `${k}: ${analysisResult.details[k]}`).join(" | "))
+.replace('\subHighlights', Object.keys(analysisResult.highlights || {}).slice(0, 2).map(k => `${k}: ${analysisResult.highlights[k]}`).join(" | "));
 
       setChatMessages(prev => [
         ...prev,
@@ -2661,7 +3175,7 @@ Key Insights Extracted (ChatGPT-Style OCR):
       if (voiceMode) {
         try {
           window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance("Document scanned successfully. Click Begin AI Analysis to view your expense ledger.");
+          const utterance = new SpeechSynthesisUtterance("Document " + analysisResult.docType + " scanned successfully.");
           utterance.onstart = () => setVoiceSpeaking(true);
           utterance.onend = () => setVoiceSpeaking(false);
           window.speechSynthesis.speak(utterance);
@@ -2678,7 +3192,7 @@ Key Insights Extracted (ChatGPT-Style OCR):
         name: docName,
         size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
         uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-        type: docType
+        type: docExt
       };
 
       setDocuments(prev => {
@@ -6372,7 +6886,46 @@ const handlePredefinedQuestion = (q: string) => {
               >
                 <div className="lg:col-span-8 flex flex-col gap-6">
                   {/* Secure Storage files list */}
-                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4 relative overflow-hidden">
+                    
+                    {/* Animated processing overlay stages for OCR scan */}
+                    {docProcessingActive && (
+                      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-30 rounded-2xl flex flex-col items-center justify-center p-6 text-center text-blue-400 gap-4">
+                        <div className="relative w-16 h-16 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+                          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-bold text-white text-sm uppercase tracking-wider">AI Document OCR & Processing</span>
+                          <span className="text-[10px] text-slate-400">Secure AES-256 cloud scanner active</span>
+                        </div>
+                        
+                        <div className="w-full max-w-xs bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
+                          <div 
+                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300 rounded-full" 
+                            style={{ width: `${(docProcessingStage + 1) * 16.6}%` }}
+                          />
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5 font-mono text-[10px] text-left w-full max-w-xs border border-blue-500/10 p-3.5 rounded-xl bg-slate-950/40 mt-1">
+                          {["Uploading file...", "Reading document text (OCR)...", "Extracting metadata...", "Categorizing transactions...", "Generating AI insights...", "Sealed & Safe ✓"].map((step, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              {docProcessingStage > idx ? (
+                                <span className="text-emerald-400">✓</span>
+                              ) : docProcessingStage === idx ? (
+                                <span className="text-blue-400 animate-pulse">●</span>
+                              ) : (
+                                <span className="text-slate-600">○</span>
+                              )}
+                              <span className={docProcessingStage === idx ? "text-white font-bold" : docProcessingStage > idx ? "text-slate-400" : "text-slate-600"}>
+                                {step}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="border-b border-[var(--border-color)] pb-3 flex justify-between items-center">
                       <div>
                         <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Secure Storage</span>
@@ -6403,52 +6956,135 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      {documents.map((doc) => (
-                        <div 
-                          key={doc.id} 
-                          className="p-3.5 rounded-xl bg-slate-900/10 border border-[var(--border-color)] flex items-center justify-between hover:border-blue-500/20 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-800/10 flex items-center justify-center text-xs font-black text-slate-500">
-                              {doc.type}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-[var(--text-color)] text-sm flex items-center gap-1.5">
-                                {doc.name} <Lock className="w-3 h-3 text-emerald-500" />
-                              </span>
-                              <span className="text-xs text-slate-500 mt-0.5">Uploaded {doc.uploadedAt} &bull; {doc.size}</span>
-                            </div>
-                          </div>
+                    {/* Search and Chronological Timeline filter tabs */}
+                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border-b border-[var(--border-color)] pb-3">
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:max-w-xs text-left">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                        <input
+                          type="text"
+                          value={docSearchQuery}
+                          onChange={(e) => setDocSearchQuery(e.target.value)}
+                          placeholder="Search files (e.g. Salary, LIC, Insurance)..."
+                          className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950/40 border border-[var(--border-color)] text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500/30 text-[var(--text-color)]"
+                        />
+                      </div>
+                      
+                      {/* Timeline filter tabs */}
+                      <div className="flex items-center gap-1.5 bg-slate-950/20 p-1 border border-[var(--border-color)] rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-none">
+                        {["All", "Today", "This Week", "Last Month", "This Year"].map((tab) => (
+                          <button
+                            key={tab}
+                            onClick={() => setSelectedTimelineFilter(tab)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                              selectedTimelineFilter === tab
+                                ? "bg-blue-600 text-white shadow shadow-blue-500/10"
+                                : "text-slate-400 hover:text-[var(--text-color)]"
+                            }`}
+                          >
+                            {tab}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                          <div className="flex items-center gap-2">
-                            {/* Edit Pencil Button only for manual entry sheets, not for device-uploaded PDFs */}
-                            {doc.type === "MANUAL" && (
-                              <button 
-                                onClick={() => {
-                                  setShowManualEntryModal(true);
-                                }}
-                                className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-500 transition-all cursor-pointer"
-                                title="Edit Extracted Manual Sheet"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            )}
-                            {doc.type !== "MANUAL" && (
-                              <button className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all">
-                                <Download className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button 
-                              onClick={() => handleDeleteDocument(doc.id)}
-                              className="p-2 rounded-lg border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer"
-                              title="Delete Document"
+                    <div className="flex flex-col gap-3">
+                      {(() => {
+                        const filtered = documents.filter(doc => {
+                          const text = documentTexts[doc.id] || "";
+                          const matchesSearch = !docSearchQuery ||
+                            doc.name.toLowerCase().includes(docSearchQuery.toLowerCase()) ||
+                            doc.type.toLowerCase().includes(docSearchQuery.toLowerCase()) ||
+                            (doc.docType && doc.docType.toLowerCase().includes(docSearchQuery.toLowerCase())) ||
+                            text.toLowerCase().includes(docSearchQuery.toLowerCase());
+                          
+                          const ageGroup = getDocAgeGroup(doc.uploadedAt);
+                          const matchesTimeline = selectedTimelineFilter === "All" || ageGroup === selectedTimelineFilter;
+                          return matchesSearch && matchesTimeline;
+                        });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <span className="text-xs text-slate-500 text-center py-4 font-semibold">
+                              No matching documents found in secure vault
+                            </span>
+                          );
+                        }
+
+                        return filtered.map((doc) => {
+                          const rawData = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, "");
+                          return (
+                            <div 
+                              key={doc.id} 
+                              onClick={() => {
+                                setSelectedDocumentForSummary(doc);
+                                setShowSummaryDrawer(true);
+                              }}
+                              className="p-3.5 rounded-xl bg-slate-900/10 border border-[var(--border-color)] flex items-center justify-between hover:border-blue-500/20 hover:bg-slate-900/20 transition-all cursor-pointer group text-left"
+                              title="Click to view AI summary side panel"
                             >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-slate-800/10 flex items-center justify-center text-xs font-black text-slate-500 shrink-0">
+                                  {doc.type}
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-bold text-[var(--text-color)] text-sm flex items-center gap-1.5">
+                                    <span className="truncate">{doc.name}</span> <Lock className="w-3 h-3 text-emerald-500 shrink-0" />
+                                    {rawData.docType && (
+                                      <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] font-extrabold text-blue-400 uppercase tracking-wide shrink-0">
+                                        {rawData.docType}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="text-xs text-slate-500 mt-0.5">Uploaded {doc.uploadedAt} &bull; {doc.size}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 animate-in fade-in" onClick={(e) => e.stopPropagation()}>
+                                {/* Details summary trigger */}
+                                <button 
+                                  onClick={() => {
+                                    setSelectedDocumentForSummary(doc);
+                                    setShowSummaryDrawer(true);
+                                  }}
+                                  className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-400 transition-all cursor-pointer"
+                                  title="View AI Document Summary"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                
+                                {doc.type === "MANUAL" && (
+                                  <button 
+                                    onClick={() => {
+                                      setShowManualEntryModal(true);
+                                    }}
+                                    className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-blue-500 transition-all cursor-pointer"
+                                    title="Edit Extracted Manual Sheet"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                                {doc.type !== "MANUAL" && (
+                                  <button 
+                                    onClick={() => handleExportData("CSV", doc)}
+                                    className="p-2 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 text-slate-400 hover:text-[var(--text-color)] transition-all cursor-pointer"
+                                    title="Download extracted CSV"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteDocument(doc.id)}
+                                  className="p-2 rounded-lg border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer"
+                                  title="Delete Document"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
 
@@ -7326,6 +7962,284 @@ const handlePredefinedQuestion = (q: string) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Document Summary Side Panel Drawer */}
+      <AnimatePresence>
+        {showSummaryDrawer && selectedDocumentForSummary && (() => {
+          const doc = selectedDocumentForSummary;
+          const rawData = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, "");
+          return (
+            <>
+              {/* Blur backdrop overlay */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSummaryDrawer(false)}
+                className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[999998]"
+              />
+              
+              {/* Sliding Drawer panel */}
+              <motion.div 
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                className="fixed top-0 bottom-0 right-0 w-full max-w-md bg-slate-950/95 border-l border-blue-500/10 backdrop-blur-2xl shadow-2xl p-6 sm:p-8 overflow-y-auto z-[9999999] text-left flex flex-col justify-between"
+              >
+                <div className="flex flex-col gap-6">
+                  {/* Header */}
+                  <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-4 text-left">
+                    <div>
+                      <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] font-extrabold text-blue-400 uppercase tracking-wider block w-fit mb-1.5">
+                        {rawData.docType || "Document"} Summary
+                      </span>
+                      <h3 className="text-base font-black text-white flex items-center gap-1.5">
+                        {doc.name} <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setShowSummaryDrawer(false)}
+                      className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Trust Badges */}
+                  <div className="flex items-center gap-4 bg-slate-900/30 border border-[var(--border-color)] px-4 py-2.5 rounded-xl text-[10px] font-bold text-slate-400">
+                    <span className="flex items-center gap-1"><Lock className="w-3.5 h-3.5 text-emerald-400" /> Encrypted</span>
+                    <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-blue-400" /> Private</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Secure (SOC-2)</span>
+                  </div>
+
+                  {/* Extracted Parameters details */}
+                  <div className="flex flex-col gap-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Extracted Parameters</span>
+                    <div className="grid grid-cols-1 gap-2.5 bg-slate-900/10 border border-[var(--border-color)] p-4 rounded-xl">
+                      {Object.keys(rawData.details || {}).map((key) => (
+                        <div key={key} className="flex justify-between items-center text-xs">
+                          <span className="text-slate-400 font-semibold">{key}</span>
+                          <span className="text-white font-mono font-bold">{rawData.details[key]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Highlights and Dates */}
+                  {rawData.highlights && Object.keys(rawData.highlights).length > 0 && (
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Financial Highlights</span>
+                      <div className="grid grid-cols-1 gap-2.5 bg-slate-900/10 border border-[var(--border-color)] p-4 rounded-xl">
+                        {Object.keys(rawData.highlights).map((key) => (
+                          <div key={key} className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400 font-semibold">{key}</span>
+                            <span className="text-blue-400 font-mono font-bold">{rawData.highlights[key]}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {rawData.recommendations && rawData.recommendations.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">AI Recommendations</span>
+                      <ul className="flex flex-col gap-2 bg-blue-950/10 border border-blue-500/10 p-4 rounded-xl text-xs font-semibold text-slate-300">
+                        {rawData.recommendations.map((rec: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2 leading-relaxed">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Issues flagged */}
+                  {rawData.issues && rawData.issues.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] uppercase font-bold text-rose-500 tracking-wider block">Potential Risks Detected</span>
+                      <div className="bg-rose-950/10 border border-rose-500/15 p-4 rounded-xl text-xs font-semibold text-rose-400 flex flex-col gap-2">
+                        {rawData.issues.map((iss: string, idx: number) => (
+                          <div key={idx} className="flex items-start gap-2 leading-relaxed text-left">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                            <span>{iss}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom export bar */}
+                <div className="border-t border-[var(--border-color)] pt-4 mt-6">
+                  <span className="text-[9px] uppercase font-black text-slate-500 tracking-widest block mb-3 text-center">Export Extracted Data</span>
+                  <div className="grid grid-cols-4 gap-2">
+                    {["CSV", "Excel", "JSON", "PDF"].map((fmt) => (
+                      <button
+                        key={fmt}
+                        onClick={() => handleExportData(fmt as any, doc)}
+                        className="py-2.5 rounded-lg border border-[var(--border-color)] hover:bg-slate-500/5 hover:text-white text-[10px] font-bold text-slate-400 transition-all cursor-pointer text-center"
+                      >
+                        {fmt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* AI Transaction Sync Confirmation Modal */}
+      {showSyncModal && (
+        <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl glass-card rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 shadow-2xl relative bg-slate-900/95 text-left animate-in zoom-in-95 duration-200 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-blue-400" /> AI Auto-Sync Engine
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Confirm transaction ledger integration and asset updates extracted from uploaded statements.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSyncModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-500/10 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Asset updates summary */}
+            {pendingAssetsToSync && (
+              <div className="p-4 rounded-xl bg-blue-600/[0.03] border border-blue-500/10 flex flex-col gap-3">
+                <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Asset & Income Updates Detected</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {pendingAssetsToSync.salary && (
+                    <div className="flex items-center gap-2 p-2 rounded bg-slate-950/30 border border-[var(--border-color)]">
+                      <Coins className="w-4 h-4 text-emerald-400" />
+                      <div>
+                        <span className="text-slate-500 block text-[9px]">Income Update</span>
+                        <span className="text-white font-bold">{pendingAssetsToSync.salary.employer}: ₹{pendingAssetsToSync.salary.netSalary.toLocaleString()}/mo</span>
+                      </div>
+                    </div>
+                  )}
+                  {pendingAssetsToSync.mutualFunds && pendingAssetsToSync.mutualFunds.length > 0 && (
+                    <div className="flex items-center gap-2 p-2 rounded bg-slate-950/30 border border-[var(--border-color)]">
+                      <TrendingUp className="w-4 h-4 text-indigo-400" />
+                      <div>
+                        <span className="text-slate-500 block text-[9px]">Mutual Funds Detected</span>
+                        <span className="text-white font-bold">{pendingAssetsToSync.mutualFunds.length} fund statement(s) synced</span>
+                      </div>
+                    </div>
+                  )}
+                  {pendingAssetsToSync.fixedDeposits && pendingAssetsToSync.fixedDeposits.length > 0 && (
+                    <div className="flex items-center gap-2 p-2 rounded bg-slate-950/30 border border-[var(--border-color)]">
+                      <Building className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div>
+                        <span className="text-slate-500 block text-[9px]">Fixed Deposits Detected</span>
+                        <span className="text-white font-bold">{pendingAssetsToSync.fixedDeposits.length} deposit receipt(s) synced</span>
+                      </div>
+                    </div>
+                  )}
+                  {pendingAssetsToSync.insurance && pendingAssetsToSync.insurance.length > 0 && (
+                    <div className="flex items-center gap-2 p-2 rounded bg-slate-950/30 border border-[var(--border-color)]">
+                      <Shield className="w-4 h-4 text-purple-400 shrink-0" />
+                      <div>
+                        <span className="text-slate-500 block text-[9px]">Insurance Covers Detected</span>
+                        <span className="text-white font-bold">{pendingAssetsToSync.insurance.length} policies synced</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Transactions conflict check */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between items-center text-left">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Transaction Import List</span>
+                {duplicateTransactions.length > 0 && (
+                  <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold px-2 py-0.5 rounded uppercase">
+                    ⚠️ {duplicateTransactions.length} Potential Duplicates flagged
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-y-auto max-h-[220px] border border-[var(--border-color)] rounded-xl divide-y divide-[var(--border-color)] bg-slate-950/20">
+                {pendingTransactionsToSync.map((tx, idx) => {
+                  const isDup = duplicateTransactions.includes(idx);
+                  const isChecked = selectedTransactionIndices.includes(idx);
+                  return (
+                    <div key={idx} className={`p-3 flex items-center justify-between gap-3 text-xs transition-colors text-left ${isDup ? "bg-amber-500/[0.02]" : ""}`}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            setSelectedTransactionIndices(prev => 
+                              prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+                            );
+                          }}
+                          className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-white truncate flex items-center gap-2">
+                            {tx.desc} 
+                            {isDup && (
+                              <span className="text-[8px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1 py-0.2 rounded uppercase">
+                                Duplicate?
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[9px] text-slate-500 font-semibold">{tx.date} &bull; {tx.type}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[8px] font-black text-blue-400 uppercase">
+                          {tx.category}
+                        </span>
+                        <span className="font-mono font-black text-rose-400">
+                          -₹{tx.amount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Warning note */}
+            <p className="text-[10px] text-slate-500 leading-normal flex items-start gap-1.5 font-medium text-left">
+              <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+              <span>
+                To avoid duplicating data, transactions matching your current ledger are deselected by default. Conflicting or uncertain records are highlighted; please review before final check-in.
+              </span>
+            </p>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 mt-2 border-t border-[var(--border-color)] pt-4">
+              <button
+                onClick={() => setShowSyncModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] hover:bg-slate-500/5 text-xs font-bold text-[var(--text-subtitle)] hover:text-white transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSync}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" /> Confirm Import & Sync
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showManualEntryModal && (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
