@@ -721,6 +721,22 @@ export default function Dashboard() {
           } else {
             details[key] = { value: editingDocValue, confidence: 100 };
           }
+          if (d.type === "MANUAL") {
+            const numericValue = editingDocValue.replace(/[₹,]/g, "").trim();
+            if (key === "Monthly Salary") {
+              setManualSalary(numericValue);
+              persistData("manualSalary", numericValue);
+            } else if (key === "EMI Obligations") {
+              setManualEMI(numericValue);
+              persistData("manualEMI", numericValue);
+            } else if (key === "Other Monthly Expenses") {
+              setManualOtherExpenses(numericValue);
+              persistData("manualOtherExpenses", numericValue);
+            } else if (key === "Custom Base Net Worth") {
+              setManualNetWorth(numericValue);
+              persistData("manualNetWorth", numericValue);
+            }
+          }
           const updatedDoc = {
             ...d,
             extractedData: {
@@ -2637,12 +2653,36 @@ export default function Dashboard() {
     // Edit or append manual entry sheet without duplicating it
     setDocuments(prev => {
       const exists = prev.some(d => d.type === "MANUAL");
+      
+      const manualExtracted = {
+        docType: "Manual Sheet",
+        details: {
+          "Monthly Salary": { value: `₹${(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
+          "EMI Obligations": { value: `₹${(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
+          "Other Monthly Expenses": { value: `₹${(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
+          "Custom Base Net Worth": { value: `₹${(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
+        },
+        highlights: {
+          "Surplus Dynamic Savings": { value: `₹${calculatedSavings.toLocaleString()}`, confidence: 100 },
+          "Calculated Health Score": { value: `${healthScore}/100`, confidence: 100 }
+        },
+        recommendations: [
+          "Manual entry settings directly override local guest calculations.",
+          "Keep inputs updated to ensure proper AI planning recommendations."
+        ],
+        insights: [
+          "Manual sheet settings are locked and saved securely."
+        ],
+        transactions: []
+      };
+
       let updated;
       if (exists) {
-        // Update uploaded timestamp on the existing manual sheet rather than creating a new one
+        // Update uploaded timestamp and data on the existing manual sheet rather than creating a new one
         updated = prev.map(d => d.type === "MANUAL" ? {
           ...d,
-          uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+          uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          extractedData: manualExtracted
         } : d);
       } else {
         const newDoc: DocumentFile = {
@@ -2650,7 +2690,8 @@ export default function Dashboard() {
           name: `Manual_Entry_Sheet_${new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "_")}.pdf`,
           size: "18 KB",
           uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-          type: "MANUAL"
+          type: "MANUAL",
+          extractedData: manualExtracted
         };
         updated = [newDoc, ...prev];
       }
@@ -8268,7 +8309,30 @@ const handlePredefinedQuestion = (q: string) => {
       <AnimatePresence>
         {showSummaryDrawer && selectedDocumentForSummary && (() => {
           const doc = selectedDocumentForSummary;
-          const rawData = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, "");
+          let rawData = doc.extractedData || DEFAULT_DOC_EXTRACTS[doc.id] || parseUploadedFile(doc.name, "");
+          if (doc.type === "MANUAL") {
+            rawData = doc.extractedData || {
+              docType: "Manual Sheet",
+              details: {
+                "Monthly Salary": { value: `₹${(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
+                "EMI Obligations": { value: `₹${(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
+                "Other Monthly Expenses": { value: `₹${(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
+                "Custom Base Net Worth": { value: `₹${(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
+              },
+              highlights: {
+                "Surplus Dynamic Savings": { value: `₹${monthlySavings.toLocaleString()}`, confidence: 100 },
+                "Calculated Health Score": { value: `${healthScore}/100`, confidence: 100 }
+              },
+              recommendations: [
+                "Manual entry settings directly override local guest calculations.",
+                "Keep inputs updated to ensure proper AI planning recommendations."
+              ],
+              insights: [
+                "Manual sheet settings are locked and saved securely."
+              ],
+              transactions: []
+            };
+          }
           return (
             <>
               {/* Blur backdrop overlay */}
