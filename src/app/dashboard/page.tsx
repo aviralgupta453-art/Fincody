@@ -557,7 +557,7 @@ export default function Dashboard() {
     let insights: string[] = [];
     let transactions: any[] = [];
     
-    if (name.includes("salary") || name.includes("payslip") || text.includes("payslip") || text.includes("salary")) {
+    if (name.includes("salary") || name.includes("payslip") || name.includes("pay slip") || name.includes("earn") || text.includes("payslip") || text.includes("salary") || text.includes("gross pay") || text.includes("net pay")) {
       docType = "Salary Slip";
       details = {
         "Employer": { value: name.includes("google") ? "Google India Pvt Ltd" : name.includes("tcs") ? "Tata Consultancy Services" : "Fincody Technologies", confidence: 98 },
@@ -581,7 +581,7 @@ export default function Dashboard() {
         "Your take-home net salary rate is 82% of gross salary.",
         "Recurring income credit scheduled for 30th of the month."
       ];
-    } else if (name.includes("insurance") || name.includes("policy") || text.includes("insurance") || text.includes("policy")) {
+    } else if (name.includes("insurance") || name.includes("policy") || name.includes("lic") || name.includes("hdfc ergo") || text.includes("insurance") || text.includes("policy") || text.includes("premium")) {
       docType = "Insurance Policy";
       details = {
         "Insurer": { value: name.includes("lic") ? "Life Insurance Corp (LIC)" : name.includes("hdfc") ? "HDFC Ergo" : "Max Life", confidence: 98 },
@@ -602,7 +602,7 @@ export default function Dashboard() {
       insights = [
         "Current coverage provides baseline protection for financial dependents."
       ];
-    } else if (name.includes("mutual") || name.includes("fund") || name.includes("cas") || text.includes("folio") || text.includes("mutual fund")) {
+    } else if (name.includes("mutual") || name.includes("fund") || name.includes("cas") || name.includes("folio") || text.includes("mutual fund") || text.includes("portfolio") || text.includes("cas statement")) {
       docType = "Mutual Fund Statement";
       details = {
         "Fund Name": { value: "Parag Parikh Flexi Cap Fund", confidence: 98 },
@@ -624,7 +624,7 @@ export default function Dashboard() {
       insights = [
         "Compounding portfolio valuation has increased 23.6% above principal investment."
       ];
-    } else if (name.includes("fd") || name.includes("deposit") || text.includes("fixed deposit")) {
+    } else if (name.includes("fd") || name.includes("deposit") || name.includes("fdr") || text.includes("fixed deposit") || text.includes("term deposit")) {
       docType = "Fixed Deposit Receipt";
       details = {
         "Issuing Bank": { value: "HDFC Bank Ltd", confidence: 97 },
@@ -645,7 +645,54 @@ export default function Dashboard() {
       insights = [
         "Guaranteed maturity yield represents a safe emergency reserve buffer."
       ];
-    } else if (name.includes("receipt") || name.includes("invoice") || name.includes("bill") || text.includes("invoice") || text.includes("receipt")) {
+    } else if (name.includes("tax") || name.includes("itr") || name.includes("form 16") || name.includes("form16") || name.includes("ais") || text.includes("tax document") || text.includes("income tax") || text.includes("form 16")) {
+      docType = "Tax Document";
+      details = {
+        "Tax Payer Name": { value: "Aviral Gupta", confidence: 99 },
+        "PAN Number": { value: "ABCDE1234F", confidence: 98 },
+        "Assessment Year": { value: "2026-27", confidence: 99 },
+        "Gross Income": { value: "₹22,20,000", confidence: 97 },
+        "Total Deductions": { value: "₹2,50,000", confidence: 94 },
+        "Net Tax Payable": { value: "₹1,85,400", confidence: 91 }
+      };
+      highlights = {
+        "Filing Status": { value: "E-filed / Acknowledged", confidence: 99 },
+        "Refund Claimed": { value: "₹12,450", confidence: 95 }
+      };
+      recommendations = [
+        "Optimize deductions under Section 80C and 80D to save an additional ₹45,000.",
+        "Check AIS statement for accuracy against tax credits log."
+      ];
+      insights = [
+        "Your effective tax rate is 8.35% of gross annual earnings."
+      ];
+    } else if (name.includes("card") || name.includes("credit") || text.includes("credit card") || text.includes("visa") || text.includes("mastercard")) {
+      docType = "Credit Card Statement";
+      details = {
+        "Card Issuer": { value: name.includes("sbi") ? "SBI Card" : name.includes("hdfc") ? "HDFC Bank" : "ICICI Bank", confidence: 98 },
+        "Card Number": { value: "XXXX-XXXX-XXXX-4290", confidence: 99 },
+        "Total Amount Due": { value: "₹12,450", confidence: 98 },
+        "Minimum Amount Due": { value: "₹622", confidence: 99 },
+        "Payment Due Date": { value: "05 Aug 2026", confidence: 97 }
+      };
+      highlights = {
+        "Credit Limit": { value: "₹5,00,000", confidence: 99 },
+        "Available Credit": { value: "₹4,87,550", confidence: 99 },
+        "Reward Points": { value: "12,450 pts", confidence: 94 }
+      };
+      recommendations = [
+        "Pay total amount due before 05 Aug 2026 to avoid 42% interest charges.",
+        "Setup auto-debit for total amount due."
+      ];
+      insights = [
+        "Highest spending categories: Food & Dining (45%), Shopping (30%)."
+      ];
+      transactions = [
+        { date: "28 Jun 2026", desc: "Zomato Restaurant Delivery", amount: 1240, category: "Food & Dining", type: "Card" },
+        { date: "26 Jun 2026", desc: "Amazon India Retail #429", amount: 4890, category: "Shopping", type: "Card" },
+        { date: "24 Jun 2026", desc: "Uber India Ride Cab", amount: 620, category: "Transport", type: "Card" }
+      ];
+    } else if (name.includes("receipt") || name.includes("invoice") || name.includes("bill") || name.includes("gst") || name.includes("electricity") || name.includes("water") || name.includes("rent") || text.includes("invoice") || text.includes("receipt") || text.includes("tax invoice") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") || name.includes("img_") || name.includes("scan_")) {
       docType = "Receipt";
       details = {
         "Merchant": { value: name.includes("zomato") ? "Zomato Delivery" : name.includes("swiggy") ? "Swiggy Food" : name.includes("uber") ? "Uber Ride" : name.includes("amazon") ? "Amazon Retail" : "Retail Merchant", confidence: 98 },
@@ -698,6 +745,49 @@ export default function Dashboard() {
     }
     
     return { docType, details, highlights, recommendations, issues, insights, transactions };
+  };
+
+  const handleUpdateDocumentType = (docId: string, newDocType: string) => {
+    setDocuments(prev => {
+      const updated = prev.map(d => {
+        if (d.id === docId) {
+          // Generate new simulated data based on document type
+          const simulatedText = "Simulated OCR content for " + newDocType;
+          let filenameMock = d.name;
+          if (newDocType === "Salary Slip") filenameMock = "salary_slip.pdf";
+          else if (newDocType === "Mutual Fund Statement") filenameMock = "mutual_fund_cas.pdf";
+          else if (newDocType === "Insurance Policy") filenameMock = "insurance_policy.pdf";
+          else if (newDocType === "Fixed Deposit Receipt") filenameMock = "fixed_deposit.pdf";
+          else if (newDocType === "Receipt") filenameMock = "receipt.png";
+          else if (newDocType === "Tax Document") filenameMock = "tax_statement_itr.pdf";
+          else if (newDocType === "Utility Bill") filenameMock = "electricity_bill.pdf";
+          else if (newDocType === "Credit Card Statement") filenameMock = "credit_card.pdf";
+          else filenameMock = "bank_statement.pdf";
+
+          const newAnalysis = parseUploadedFileWithConfidence(filenameMock, simulatedText);
+          const updatedDoc = {
+            ...d,
+            docType: newDocType,
+            extractedData: newAnalysis,
+            aiInsights: newAnalysis.insights
+          };
+          if (selectedDocumentForSummary && selectedDocumentForSummary.id === docId) {
+            setTimeout(() => {
+              setSelectedDocumentForSummary(updatedDoc);
+            }, 0);
+          }
+          return updatedDoc;
+        }
+        return d;
+      });
+      persistData("documents", updated);
+      return updated;
+    });
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Document type updated to ${newDocType}. AI parameters recalculated.`, unread: true },
+      ...prev
+    ]);
   };
 
   const getFieldInfo = (field: any): { value: string, confidence: number } => {
@@ -3346,7 +3436,15 @@ const handleSaveCurrentPortfolio = (name: string) => {
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js";
       script.onload = () => {
         const pdfjsLib = (window as any).pdfjsLib;
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+        try {
+          // Bypassing CORS constraints using Blob URL for PDF worker
+          const workerCode = `importScripts("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js");`;
+          const blob = new Blob([workerCode], { type: "application/javascript" });
+          pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        } catch (err) {
+          console.error("Error setting PDF.js workerSrc Blob:", err);
+          pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+        }
         resolve(pdfjsLib);
       };
       script.onerror = reject;
@@ -3357,14 +3455,14 @@ const handleSaveCurrentPortfolio = (name: string) => {
   const extractTextFromPdf = async (file: File): Promise<string> => {
     const pdfjsLib = await loadPdfJS();
     const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
     const pdf = await loadingTask.promise;
     
     let fullText = "";
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item: any) => item.str).join(" ");
+      const pageText = textContent.items.map((item: any) => item?.str || "").join(" ");
       fullText += `--- Page ${i} ---\n${pageText}\n`;
     }
     return fullText;
@@ -3425,12 +3523,15 @@ const handleSaveCurrentPortfolio = (name: string) => {
           extractedText = await extractTextFromPdf(file);
           if (extractedText.trim().replace(/--- Page \d+ ---/g, "").length > 50) {
             isDigital = true;
+          } else {
+            extractedText = `Simulated OCR scanned PDF content: ${docName}`;
           }
         } catch (e) {
-          extractedText = "Fallback raw contents parsed from statement text buffer";
+          console.error("PDF text extraction failed:", e);
+          extractedText = `Simulated OCR scanned PDF content after parser error: ${docName}`;
         }
       } else {
-        extractedText = "Simulated OCR characters read from Image buffer streams";
+        extractedText = `Simulated OCR image text content: ${docName}`;
       }
 
       setDocumentTexts(prev => ({ ...prev, [docId]: extractedText }));
@@ -8356,9 +8457,28 @@ const handlePredefinedQuestion = (q: string) => {
                   {/* Header */}
                   <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-4 text-left">
                     <div>
-                      <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] font-extrabold text-blue-400 uppercase tracking-wider block w-fit mb-1.5">
-                        {rawData.docType || "Document"} Summary
-                      </span>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] font-extrabold text-blue-400 uppercase tracking-wider block w-fit">
+                          {rawData.docType || "Document"}
+                        </span>
+                        {doc.type !== "MANUAL" && (
+                          <select 
+                            value={rawData.docType} 
+                            onChange={(e) => handleUpdateDocumentType(doc.id, e.target.value)}
+                            className="bg-slate-900 border border-slate-800 text-[9px] font-bold text-slate-400 rounded px-1.5 py-0.5 cursor-pointer outline-none hover:text-white hover:border-slate-700 transition-colors"
+                          >
+                            <option value="Bank Statement">Bank Statement</option>
+                            <option value="Credit Card Statement">Credit Card Statement</option>
+                            <option value="Salary Slip">Salary Slip</option>
+                            <option value="Mutual Fund Statement">Mutual Fund Statement</option>
+                            <option value="Insurance Policy">Insurance Policy</option>
+                            <option value="Fixed Deposit Receipt">Fixed Deposit Receipt</option>
+                            <option value="Tax Document">Tax Document (ITR/Form 16)</option>
+                            <option value="Receipt">Receipt/Invoice</option>
+                            <option value="Utility Bill">Utility Bill/Rent</option>
+                          </select>
+                        )}
+                      </div>
                       <h3 className="text-base font-black text-white flex items-center gap-1.5">
                         {doc.name} <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                       </h3>
