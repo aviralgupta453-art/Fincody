@@ -841,6 +841,8 @@ export default function Dashboard() {
           else if (newDocType === "Tax Document") filenameMock = "tax_statement_itr.pdf";
           else if (newDocType === "Utility Bill") filenameMock = "electricity_bill.pdf";
           else if (newDocType === "Credit Card Statement") filenameMock = "credit_card.pdf";
+          else if (newDocType === "Paytm Statement") filenameMock = "paytm_statement.pdf";
+          else if (newDocType === "Google Pay Statement") filenameMock = "gpay_statement.pdf";
           else filenameMock = "bank_statement.pdf";
 
           const newAnalysis = parseUploadedFileWithConfidence(filenameMock, simulatedText);
@@ -8555,6 +8557,8 @@ const handlePredefinedQuestion = (q: string) => {
                             <option value="Tax Document">Tax Document (ITR/Form 16)</option>
                             <option value="Receipt">Receipt/Invoice</option>
                             <option value="Utility Bill">Utility Bill/Rent</option>
+                            <option value="Paytm Statement">Paytm Statement</option>
+                            <option value="Google Pay Statement">Google Pay Statement</option>
                           </select>
                         )}
                       </div>
