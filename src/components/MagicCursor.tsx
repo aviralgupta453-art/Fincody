@@ -374,7 +374,7 @@ export default function MagicCursor() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[9999999] hidden md:block"
+      className="fixed inset-0 pointer-events-none z-[2147483647] hidden md:block"
     />
   );
 }
