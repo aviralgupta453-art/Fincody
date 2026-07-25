@@ -5491,6 +5491,7 @@ const handlePredefinedQuestion = (q: string) => {
 
             {/* Investments */}
                         {activeTab === "investments" && (() => {
+              try {
               const safePortfolio = Array.isArray(portfolio) ? portfolio : [];
               const safeFixedDeposits = Array.isArray(fixedDeposits) ? fixedDeposits : [];
               const safeGoldHoldings = Array.isArray(goldHoldings) ? goldHoldings : [];
@@ -5920,7 +5921,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                                         // Rec sectors
                                         const recSects: Record<string, number> = {};
-                                        aiRecommendation.stocks.forEach((s: any) => {
+                                        (aiRecommendation?.stocks || []).forEach((s: any) => {
                                           recSects[s.sector] = (recSects[s.sector] || 0) + s.allocation;
                                         });
 
@@ -7093,6 +7094,24 @@ const handlePredefinedQuestion = (q: string) => {
 
                 </motion.div>
               );
+              } catch (err) {
+                console.error("Error rendering Investments tab:", err);
+                return (
+                  <div className="p-8 rounded-2xl border border-[var(--border-color)] bg-slate-900/50 flex flex-col items-center justify-center gap-4 text-center my-6">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Investments Engine Synchronizing</h3>
+                    <p className="text-xs text-slate-400 max-w-md">Refreshing live market quotes and portfolio valuations. Click below to reload your asset view.</p>
+                    <button 
+                      onClick={() => setActiveTab("investments")} 
+                      className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer shadow-lg shadow-blue-500/20"
+                    >
+                      Reload Investments Vault
+                    </button>
+                  </div>
+                );
+              }
             })()}
 
             {/* Subscriptions */}
