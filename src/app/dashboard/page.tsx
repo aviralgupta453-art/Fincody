@@ -2292,7 +2292,7 @@ export default function Dashboard() {
     }
   };
 
-  // Rock-Solid Universal Hydration Engine
+  // Rock-Solid Universal Hydration Engine with Local Storage Precedence
   useEffect(() => {
     const userPrefix = user ? `fincody_user_${user.id}_` : null;
 
@@ -2320,66 +2320,116 @@ export default function Dashboard() {
     }
 
     try {
-      // 1. Goals
-      const goalsVal = cloudData?.goals?.length ? cloudData.goals : getLocalJson("goals", null);
-      if (goalsVal && Array.isArray(goalsVal)) setGoals(goalsVal);
+      // 1. Subscriptions: Prioritize local storage edits over cloud metadata
+      const localSubs = getLocalJson("subscriptions", null);
+      if (localSubs && Array.isArray(localSubs)) {
+        setSubscriptions(localSubs);
+      } else if (cloudData?.subscriptions && Array.isArray(cloudData.subscriptions)) {
+        setSubscriptions(cloudData.subscriptions);
+      }
 
-      // 2. Subscriptions
-      const subsVal = cloudData?.subscriptions?.length ? cloudData.subscriptions : getLocalJson("subscriptions", null);
-      if (subsVal && Array.isArray(subsVal)) setSubscriptions(subsVal);
+      // 2. Goals
+      const localGoals = getLocalJson("goals", null);
+      if (localGoals && Array.isArray(localGoals)) {
+        setGoals(localGoals);
+      } else if (cloudData?.goals && Array.isArray(cloudData.goals)) {
+        setGoals(cloudData.goals);
+      }
 
-      // 3. Insurance Policies
-      const insVal = cloudData?.insurancePolicies?.length ? cloudData.insurancePolicies : getLocalJson("insurancePolicies", null);
-      if (insVal && Array.isArray(insVal)) setInsurancePolicies(insVal);
+      // 3. Insurance Policies & Profile
+      const localIns = getLocalJson("insurancePolicies", null);
+      if (localIns && Array.isArray(localIns)) {
+        setInsurancePolicies(localIns);
+      } else if (cloudData?.insurancePolicies && Array.isArray(cloudData.insurancePolicies)) {
+        setInsurancePolicies(cloudData.insurancePolicies);
+      }
 
-      // 4. Insurance Profile
-      const profVal = cloudData?.insProfile || getLocalJson("insProfile", null);
-      if (profVal) setInsProfile(profVal);
+      const localProf = getLocalJson("insProfile", null);
+      if (localProf) {
+        setInsProfile(localProf);
+      } else if (cloudData?.insProfile) {
+        setInsProfile(cloudData.insProfile);
+      }
 
-      // 5. Documents
-      const docsVal = cloudData?.documents?.length ? cloudData.documents : getLocalJson("documents", null);
-      if (docsVal && Array.isArray(docsVal)) setDocuments(docsVal);
+      // 4. Documents
+      const localDocs = getLocalJson("documents", null);
+      if (localDocs && Array.isArray(localDocs)) {
+        setDocuments(localDocs);
+      } else if (cloudData?.documents && Array.isArray(cloudData.documents)) {
+        setDocuments(cloudData.documents);
+      }
 
-      // 6. Financial Metrics
-      const nwVal = cloudData?.netWorth ?? getLocal("netWorth");
-      if (nwVal !== null && nwVal !== undefined) setNetWorth(parseFloat(nwVal) || 0);
+      // 5. Financial Metrics
+      const localNW = getLocal("netWorth");
+      if (localNW !== null) setNetWorth(parseFloat(localNW) || 0);
+      else if (cloudData?.netWorth !== undefined) setNetWorth(cloudData.netWorth);
 
-      const savVal = cloudData?.monthlySavings ?? getLocal("monthlySavings");
-      if (savVal !== null && savVal !== undefined) setMonthlySavings(parseFloat(savVal) || 0);
+      const localSav = getLocal("monthlySavings");
+      if (localSav !== null) setMonthlySavings(parseFloat(localSav) || 0);
+      else if (cloudData?.monthlySavings !== undefined) setMonthlySavings(cloudData.monthlySavings);
 
-      const salVal = cloudData?.manualSalary ?? getLocal("manualSalary");
-      if (salVal !== null && salVal !== undefined) setManualSalary(salVal);
+      const localSal = getLocal("manualSalary");
+      if (localSal !== null) setManualSalary(localSal);
+      else if (cloudData?.manualSalary !== undefined) setManualSalary(cloudData.manualSalary);
 
-      const emiVal = cloudData?.manualEMI ?? getLocal("manualEMI");
-      if (emiVal !== null && emiVal !== undefined) setManualEMI(emiVal);
+      const localEMI = getLocal("manualEMI");
+      if (localEMI !== null) setManualEMI(localEMI);
+      else if (cloudData?.manualEMI !== undefined) setManualEMI(cloudData.manualEMI);
 
-      const expVal = cloudData?.manualOtherExpenses ?? getLocal("manualOtherExpenses");
-      if (expVal !== null && expVal !== undefined) setManualOtherExpenses(expVal);
+      const localExp = getLocal("manualOtherExpenses");
+      if (localExp !== null) setManualOtherExpenses(localExp);
+      else if (cloudData?.manualOtherExpenses !== undefined) setManualOtherExpenses(cloudData.manualOtherExpenses);
 
-      // 7. Portfolio & Investments
-      const portVal = cloudData?.portfolio?.length ? cloudData.portfolio : getLocalJson("portfolio", null);
-      if (portVal && Array.isArray(portVal)) setPortfolio(portVal);
+      // 6. Investments & Asset Portfolios
+      const localPort = getLocalJson("portfolio", null);
+      if (localPort && Array.isArray(localPort)) {
+        setPortfolio(localPort);
+      } else if (cloudData?.portfolio && Array.isArray(cloudData.portfolio)) {
+        setPortfolio(cloudData.portfolio);
+      }
 
-      const mfVal = cloudData?.mutualFunds?.length ? cloudData.mutualFunds : getLocalJson("mutualFunds", null);
-      if (mfVal && Array.isArray(mfVal)) setMutualFunds(mfVal);
+      const localMF = getLocalJson("mutualFunds", null);
+      if (localMF && Array.isArray(localMF)) {
+        setMutualFunds(localMF);
+      } else if (cloudData?.mutualFunds && Array.isArray(cloudData.mutualFunds)) {
+        setMutualFunds(cloudData.mutualFunds);
+      }
 
-      const fdVal = cloudData?.fixedDeposits?.length ? cloudData.fixedDeposits : getLocalJson("fixedDeposits", null);
-      if (fdVal && Array.isArray(fdVal)) setFixedDeposits(fdVal);
+      const localFD = getLocalJson("fixedDeposits", null);
+      if (localFD && Array.isArray(localFD)) {
+        setFixedDeposits(localFD);
+      } else if (cloudData?.fixedDeposits && Array.isArray(cloudData.fixedDeposits)) {
+        setFixedDeposits(cloudData.fixedDeposits);
+      }
 
-      const ppfVal = cloudData?.ppfData || getLocalJson("ppfData", null);
-      if (ppfVal) setPpfData(ppfVal);
+      const localPPF = getLocalJson("ppfData", null);
+      if (localPPF) setPpfData(localPPF);
+      else if (cloudData?.ppfData) setPpfData(cloudData.ppfData);
 
-      const npsVal = cloudData?.npsData || getLocalJson("npsData", null);
-      if (npsVal) setNpsData(npsVal);
+      const localNPS = getLocalJson("npsData", null);
+      if (localNPS) setNpsData(localNPS);
+      else if (cloudData?.npsData) setNpsData(cloudData.npsData);
 
-      const goldVal = cloudData?.goldHoldings?.length ? cloudData.goldHoldings : getLocalJson("goldHoldings", null);
-      if (goldVal && Array.isArray(goldVal)) setGoldHoldings(goldVal);
+      const localGold = getLocalJson("goldHoldings", null);
+      if (localGold && Array.isArray(localGold)) {
+        setGoldHoldings(localGold);
+      } else if (cloudData?.goldHoldings && Array.isArray(cloudData.goldHoldings)) {
+        setGoldHoldings(cloudData.goldHoldings);
+      }
 
-      const etfVal = cloudData?.etfHoldings?.length ? cloudData.etfHoldings : getLocalJson("etfHoldings", null);
-      if (etfVal && Array.isArray(etfVal)) setEtfHoldings(etfVal);
+      const localETF = getLocalJson("etfHoldings", null);
+      if (localETF && Array.isArray(localETF)) {
+        setEtfHoldings(localETF);
+      } else if (cloudData?.etfHoldings && Array.isArray(cloudData.etfHoldings)) {
+        setEtfHoldings(cloudData.etfHoldings);
+      }
 
-      const bondVal = cloudData?.bondHoldings?.length ? cloudData.bondHoldings : getLocalJson("bondHoldings", null);
-      if (bondVal && Array.isArray(bondVal)) setBondHoldings(bondVal);
+      const localBond = getLocalJson("bondHoldings", null);
+      if (localBond && Array.isArray(localBond)) {
+        setBondHoldings(localBond);
+      } else if (cloudData?.bondHoldings && Array.isArray(cloudData.bondHoldings)) {
+        setBondHoldings(cloudData.bondHoldings);
+      }
 
       const sigVal = getLocalJson("uploadedDocSignatures", null);
       if (sigVal) setUploadedDocSignatures(sigVal);
@@ -5440,129 +5490,149 @@ const handlePredefinedQuestion = (q: string) => {
 
             {/* Investments */}
                         {activeTab === "investments" && (() => {
+              const safePortfolio = Array.isArray(portfolio) ? portfolio : [];
+              const safeFixedDeposits = Array.isArray(fixedDeposits) ? fixedDeposits : [];
+              const safeGoldHoldings = Array.isArray(goldHoldings) ? goldHoldings : [];
+              const safeEtfHoldings = Array.isArray(etfHoldings) ? etfHoldings : [];
+              const safeBondHoldings = Array.isArray(bondHoldings) ? bondHoldings : [];
+              const safeMutualFunds = Array.isArray(mutualFunds) ? mutualFunds : [];
+
               // 1. Equities Total Value
-              const equitiesVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
-              const equitiesCost = portfolio.reduce((acc, item) => acc + (item.qty * item.avgBuyPrice), 0);
+              const equitiesVal = safePortfolio.reduce((acc, item) => acc + ((item.qty || 0) * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+              const equitiesCost = safePortfolio.reduce((acc, item) => acc + ((item.qty || 0) * (item.avgBuyPrice || 0)), 0);
               const equitiesProfit = equitiesVal - equitiesCost;
-              const equitiesTodayChange = portfolio.reduce((acc, item) => {
+              const equitiesTodayChange = safePortfolio.reduce((acc, item) => {
                 const quote = quotes[item.symbol];
                 if (!quote) return acc;
-                return acc + (item.qty * quote.change);
+                return acc + ((item.qty || 0) * (quote.change || 0));
               }, 0);
 
               // 2. FDs calculations
               const now = new Date();
-              const fdsCalculated = fixedDeposits.map(fd => {
-                const start = new Date(fd.startDate);
-                const maturity = new Date(start);
-                maturity.setFullYear(maturity.getFullYear() + fd.tenureYears);
-                
-                const daysTotal = Math.max(1, Math.round((maturity.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-                const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-                const daysRemaining = Math.max(0, Math.round((maturity.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-                
-                // quarterly compounding
-                const expectedMaturityAmount = Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * fd.tenureYears));
-                
-                // current value based on elapsed fraction
-                const elapsedTenureInYears = (Math.min(daysElapsed, daysTotal) / 365);
-                const currentValue = Math.round(fd.principal * Math.pow(1 + (fd.rate / 400), 4 * elapsedTenureInYears));
-                const interestEarned = currentValue - fd.principal;
+              const fdsCalculated = safeFixedDeposits.map(fd => {
+                let start = fd.startDate ? new Date(fd.startDate) : new Date();
+                if (isNaN(start.getTime())) start = new Date();
 
-                // AI Insights
+                const tenure = parseFloat(fd.tenureYears) || 1;
+                let maturity = new Date(start);
+                maturity.setFullYear(maturity.getFullYear() + Math.floor(tenure));
+
+                const daysTotal = Math.max(1, Math.round((maturity.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) || 1);
+                const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) || 0);
+                const daysRemaining = Math.max(0, Math.round((maturity.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) || 0);
+                
+                const rate = parseFloat(fd.rate) || 6.5;
+                const principal = parseFloat(fd.principal) || 0;
+
+                const expectedMaturityAmount = Math.round(principal * Math.pow(1 + (rate / 400), 4 * tenure));
+                const elapsedTenureInYears = (Math.min(daysElapsed, daysTotal) / 365);
+                const currentValue = Math.round(principal * Math.pow(1 + (rate / 400), 4 * elapsedTenureInYears));
+                const interestEarned = currentValue - principal;
+
                 let insight = "Standard banking rate. Stable yield profile.";
-                if (fd.rate > 7.0) insight = "Premium yield rate. Outperforming average sovereign benchmarks.";
-                else if (fd.rate < 6.0) insight = "Sub-optimal rate. Consider corporate debt swaps for +1.5% yield.";
+                if (rate > 7.0) insight = "Premium yield rate. Outperforming average sovereign benchmarks.";
+                else if (rate < 6.0) insight = "Sub-optimal rate. Consider corporate debt swaps for +1.5% yield.";
 
                 return {
                   ...fd,
-                  maturityDate: maturity.toISOString().split("T")[0],
+                  maturityDate: isNaN(maturity.getTime()) ? new Date().toISOString().split("T")[0] : maturity.toISOString().split("T")[0],
                   daysRemaining,
                   expectedMaturityAmount,
                   currentValue,
                   interestEarned,
-                  progressPercent: Math.min(100, Math.round((daysElapsed / daysTotal) * 100)),
+                  progressPercent: Math.min(100, Math.max(0, Math.round((daysElapsed / daysTotal) * 100) || 0)),
                   insight
                 };
               });
 
-              const fdsTotalValue = fdsCalculated.reduce((acc, fd) => acc + fd.currentValue, 0);
-              const fdsTotalInterest = fdsCalculated.reduce((acc, fd) => acc + fd.interestEarned, 0);
+              const fdsTotalValue = fdsCalculated.reduce((acc, fd) => acc + (fd.currentValue || 0), 0);
+              const fdsTotalInterest = fdsCalculated.reduce((acc, fd) => acc + (fd.interestEarned || 0), 0);
 
               // 3. PPF calculations
-              const ppfTotalValue = ppfData.balance;
+              const ppfTotalValue = (ppfData && parseFloat(ppfData.balance)) || 450000;
 
               // 4. NPS calculations
-              const npsTotalValue = npsData.corpus;
+              const npsTotalValue = (npsData && parseFloat(npsData.corpus)) || 300000;
 
               // 5. Gold calculations
-              const goldCalculated = goldHoldings.map(g => {
+              const goldCalculated = safeGoldHoldings.map(g => {
                 const livePrice = g.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || g.buyPricePerGram || 120);
-                const currentValue = g.type === "Physical Gold" ? g.grams * livePrice : g.units * livePrice;
-                const cost = g.type === "Physical Gold" ? g.grams * g.buyPricePerGram : g.units * g.buyPricePerUnit;
+                const grams = parseFloat(g.grams) || 0;
+                const units = parseFloat(g.units) || 0;
+                const buyPricePerGram = parseFloat(g.buyPricePerGram) || 0;
+                const buyPricePerUnit = parseFloat(g.buyPricePerUnit) || 0;
+
+                const currentValue = g.type === "Physical Gold" ? grams * livePrice : units * livePrice;
+                const cost = g.type === "Physical Gold" ? grams * buyPricePerGram : units * buyPricePerUnit;
                 const profit = currentValue - cost;
                 const profitPct = cost > 0 ? (profit / cost) * 100 : 0;
                 return { ...g, currentValue, cost, profit, profitPct };
               });
-              const goldTotalValue = goldCalculated.reduce((acc, g) => acc + g.currentValue, 0);
-              const goldTotalCost = goldCalculated.reduce((acc, g) => acc + g.cost, 0);
+              const goldTotalValue = goldCalculated.reduce((acc, g) => acc + (g.currentValue || 0), 0);
+              const goldTotalCost = goldCalculated.reduce((acc, g) => acc + (g.cost || 0), 0);
               const goldTotalProfit = goldTotalValue - goldTotalCost;
 
               // 6. ETFs calculations
-              const etfsCalculated = etfHoldings.map(etf => {
-                const livePrice = quotes[etf.symbol]?.price || etf.avgPrice;
-                const currentValue = etf.units * livePrice;
-                const cost = etf.units * etf.avgPrice;
+              const etfsCalculated = safeEtfHoldings.map(etf => {
+                const livePrice = quotes[etf.symbol]?.price || etf.avgPrice || 100;
+                const units = parseFloat(etf.units) || 0;
+                const avgPrice = parseFloat(etf.avgPrice) || 0;
+                const currentValue = units * livePrice;
+                const cost = units * avgPrice;
                 const profit = currentValue - cost;
                 const profitPct = cost > 0 ? (profit / cost) * 100 : 0;
                 const change = quotes[etf.symbol]?.change || 0;
-                const todayChange = etf.units * change;
+                const todayChange = units * change;
                 return { ...etf, currentValue, cost, profit, profitPct, todayChange };
               });
-              const etfsTotalValue = etfsCalculated.reduce((acc, etf) => acc + etf.currentValue, 0);
-              const etfsTotalCost = etfsCalculated.reduce((acc, etf) => acc + etf.cost, 0);
+              const etfsTotalValue = etfsCalculated.reduce((acc, etf) => acc + (etf.currentValue || 0), 0);
+              const etfsTotalCost = etfsCalculated.reduce((acc, etf) => acc + (etf.cost || 0), 0);
               const etfsTotalProfit = etfsTotalValue - etfsTotalCost;
-              const etfsTodayChange = etfsCalculated.reduce((acc, etf) => acc + etf.todayChange, 0);
+              const etfsTodayChange = etfsCalculated.reduce((acc, etf) => acc + (etf.todayChange || 0), 0);
 
               // 7. Bonds calculations
-              const bondsCalculated = bondHoldings.map(b => {
-                const start = new Date(b.startDate);
+              const bondsCalculated = safeBondHoldings.map(b => {
+                let start = b.startDate ? new Date(b.startDate) : new Date();
+                if (isNaN(start.getTime())) start = new Date();
+
+                const faceVal = parseFloat(b.faceValue) || 0;
+                const coupon = parseFloat(b.couponRate) || 0;
                 const yearsElapsed = Math.max(0, (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-                const interestEarned = Math.round(b.faceValue * (b.couponRate / 100) * yearsElapsed);
-                const currentValue = b.faceValue + interestEarned;
+                const interestEarned = Math.round(faceVal * (coupon / 100) * yearsElapsed);
+                const currentValue = faceVal + interestEarned;
                 return { ...b, currentValue, interestEarned };
               });
-              const bondsTotalValue = bondsCalculated.reduce((acc, b) => acc + b.currentValue, 0);
-              const bondsTotalInterest = bondsCalculated.reduce((acc, b) => acc + b.interestEarned, 0);
+              const bondsTotalValue = bondsCalculated.reduce((acc, b) => acc + (b.currentValue || 0), 0);
+              const bondsTotalInterest = bondsCalculated.reduce((acc, b) => acc + (b.interestEarned || 0), 0);
 
               // Aggregated Totals
-              const mfTotalValue = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
-              const mfTotalInvested = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
+              const mfTotalValue = safeMutualFunds.reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
+              const mfTotalInvested = safeMutualFunds.reduce((acc: number, curr: any) => acc + parseFloat(curr.invested || 0), 0);
               const totalInvestmentValue = equitiesVal + fdsTotalValue + ppfTotalValue + npsTotalValue + goldTotalValue + etfsTotalValue + bondsTotalValue + mfTotalValue;
-              const totalCost = equitiesCost + fixedDeposits.reduce((acc, fd) => acc + fd.principal, 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + bondHoldings.reduce((acc, b) => acc + b.faceValue, 0) + mfTotalInvested;
+              const totalCost = equitiesCost + safeFixedDeposits.reduce((acc, fd) => acc + (fd.principal || 0), 0) + ppfTotalValue + npsTotalValue + goldTotalCost + etfsTotalCost + safeBondHoldings.reduce((acc, b) => acc + (b.faceValue || 0), 0) + mfTotalInvested;
               const overallGainLoss = totalInvestmentValue - totalCost;
               const todayGainLoss = equitiesTodayChange + etfsTodayChange;
 
               // Best / Worst Performers
               const allPerformanceItems: { symbolOrName: string; pct: number }[] = [];
-              portfolio.forEach(item => {
-                const cost = item.qty * item.avgBuyPrice;
-                const val = item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice);
+              safePortfolio.forEach(item => {
+                const cost = (item.qty || 0) * (item.avgBuyPrice || 0);
+                const val = (item.qty || 0) * (quotes[item.symbol]?.price || item.avgBuyPrice || 0);
                 const pct = cost > 0 ? ((val - cost) / cost) * 100 : 0;
-                allPerformanceItems.push({ symbolOrName: item.symbol, pct });
+                if (!isNaN(pct)) allPerformanceItems.push({ symbolOrName: item.symbol, pct });
               });
               etfsCalculated.forEach(item => {
-                allPerformanceItems.push({ symbolOrName: item.symbol, pct: item.profitPct });
+                if (!isNaN(item.profitPct)) allPerformanceItems.push({ symbolOrName: item.symbol, pct: item.profitPct });
               });
               goldCalculated.forEach(item => {
-                allPerformanceItems.push({ symbolOrName: item.type, pct: item.profitPct });
+                if (!isNaN(item.profitPct)) allPerformanceItems.push({ symbolOrName: item.type, pct: item.profitPct });
               });
 
               const sortedPerf = [...allPerformanceItems].sort((a, b) => b.pct - a.pct);
               const bestPerformer = sortedPerf[0] || { symbolOrName: "None", pct: 0 };
               const worstPerformer = sortedPerf[sortedPerf.length - 1] || { symbolOrName: "None", pct: 0 };
 
-              const totalHoldingsCount = portfolio.length + fixedDeposits.length + (ppfTotalValue > 0 ? 1 : 0) + (npsTotalValue > 0 ? 1 : 0) + goldHoldings.length + etfHoldings.length + bondHoldings.length;
+              const totalHoldingsCount = safePortfolio.length + safeFixedDeposits.length + (ppfTotalValue > 0 ? 1 : 0) + (npsTotalValue > 0 ? 1 : 0) + safeGoldHoldings.length + safeEtfHoldings.length + safeBondHoldings.length;
 
               // Unified Asset Allocation Data
               const consolidatedAllocationData = [
