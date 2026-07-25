@@ -378,16 +378,7 @@ export default function Dashboard() {
     "command" | "goals" | "investments" | "subscriptions" | "insurance" | "vault" | "decisions"
   >("command");
   
-  // URL tab and subtab sync
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const urlTab = params.get("tab");
-      const urlSubTab = params.get("subtab");
-      if (urlTab) setActiveTab(urlTab as any);
-      if (urlSubTab) setSelectedInvestmentSubTab(urlSubTab as any);
-    }
-  }, []);
+
 
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [hoveredLegend, setHoveredLegend] = useState<"standard" | "fincody" | null>(null);
