@@ -2267,17 +2267,20 @@ export default function Dashboard() {
     // Hydration Lock Ref to prevent autosave race conditions on page load
   const isLoadedRef = useRef(false);
 
-  // Persistence States & Helper
+  // Persistence Helper with Universal Dual-Write (User + Guest Fallback)
   const persistData = (key: string, data: any) => {
-    const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
+    const serialized = typeof data === "string" ? data : JSON.stringify(data);
     try {
-      localStorage.setItem(`${prefix}${key}`, typeof data === "string" ? data : JSON.stringify(data));
+      if (user) {
+        localStorage.setItem(`fincody_user_${user.id}_${key}`, serialized);
+      }
+      localStorage.setItem(`fincody_guest_${key}`, serialized);
     } catch (e) {
       console.error("Error saving persisted state:", e);
     }
   };
 
-  // Safe JSON parse helper to prevent corrupted local storage from crashing React hydration
+  // Safe JSON parse helper
   const safeJsonParse = (str: string | null, fallback: any) => {
     if (!str) return fallback;
     try {
@@ -2289,235 +2292,107 @@ export default function Dashboard() {
     }
   };
 
+  // Rock-Solid Universal Hydration Engine
   useEffect(() => {
-    if (!user) {
-      // Load guest data from LocalStorage safely
-      const prefix = "fincody_guest_";
-      try {
-        const savedGoals = localStorage.getItem(`${prefix}goals`);
-        if (savedGoals) setGoals(safeJsonParse(savedGoals, []));
+    const userPrefix = user ? `fincody_user_${user.id}_` : null;
 
-        const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
-        if (savedSubs) setSubscriptions(safeJsonParse(savedSubs, []));
-
-        const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
-        if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
-
-        const savedInsProfile = localStorage.getItem(`${prefix}insProfile`);
-        if (savedInsProfile) setInsProfile(safeJsonParse(savedInsProfile, insProfile));
-
-        const savedDocs = localStorage.getItem(`${prefix}documents`);
-        if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
-
-        const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
-        if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth) || 0);
-
-        const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
-        if (savedSavings) setMonthlySavings(parseFloat(savedSavings) || 0);
-
-        const savedScore = localStorage.getItem(`${prefix}healthScore`);
-        if (savedScore) setHealthScore(parseInt(savedScore) || 75);
-
-        const savedStartYear = localStorage.getItem(`${prefix}startYear`);
-        if (savedStartYear) setStartYear(parseInt(savedStartYear) || 2024);
-
-        const savedEndYear = localStorage.getItem(`${prefix}endYear`);
-        if (savedEndYear) setEndYear(parseInt(savedEndYear) || 2045);
-
-        const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
-        if (savedCalcStart) setCalculationStartDate(savedCalcStart);
-
-        const savedManualSalary = localStorage.getItem(`${prefix}manualSalary`);
-        if (savedManualSalary) setManualSalary(savedManualSalary);
-
-        const savedManualEMI = localStorage.getItem(`${prefix}manualEMI`);
-        if (savedManualEMI) setManualEMI(savedManualEMI);
-
-        const savedManualOtherExpenses = localStorage.getItem(`${prefix}manualOtherExpenses`);
-        if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
-
-        const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
-        if (savedPortfolio) setPortfolio(safeJsonParse(savedPortfolio, []));
-
-        const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
-        if (savedSavedPortfolios) setSavedPortfolios(safeJsonParse(savedSavedPortfolios, []));
-
-        const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
-        if (savedActivePortName) setActivePortfolioName(savedActivePortName);
-
-        const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
-        if (savedAiRec) setAiRecommendation(safeJsonParse(savedAiRec, DEFAULT_AI_RECOMMENDATION));
-
-        const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
-        if (savedFDs) setFixedDeposits(safeJsonParse(savedFDs, []));
-
-        const savedPPF = localStorage.getItem(`${prefix}ppfData`);
-        if (savedPPF) setPpfData(safeJsonParse(savedPPF, { balance: 450000, annualContribution: 150000, startYear: 2024 }));
-
-        const savedNPS = localStorage.getItem(`${prefix}npsData`);
-        if (savedNPS) setNpsData(safeJsonParse(savedNPS, { corpus: 300000, employerMonthly: 10000, personalMonthly: 5000, allocationE: 60, allocationC: 25, allocationG: 15 }));
-
-        const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
-        if (savedGold) setGoldHoldings(safeJsonParse(savedGold, []));
-
-        const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
-        if (savedMutualFunds) {
-          setMutualFunds(safeJsonParse(savedMutualFunds, DEFAULT_MUTUAL_FUNDS));
-        } else {
-          setMutualFunds(DEFAULT_MUTUAL_FUNDS);
-        }
-
-        const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
-        if (savedETFs) setEtfHoldings(safeJsonParse(savedETFs, []));
-
-        const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
-        if (savedBonds) setBondHoldings(safeJsonParse(savedBonds, []));
-
-        const savedSignatures = localStorage.getItem(`${prefix}uploadedDocSignatures`);
-        if (savedSignatures) {
-          try { setUploadedDocSignatures(safeJsonParse(savedSignatures, {})); } catch (e) {}
-        }
-      } catch (e) {
-        console.error("Error loading guest persisted state:", e);
+    // Helper to get from local storage checking both User key and Guest key
+    const getLocal = (key: string, fallback: any = null) => {
+      if (userPrefix) {
+        const val = localStorage.getItem(`${userPrefix}${key}`);
+        if (val !== null) return val;
       }
-      setSyncStatus("guest");
-      isLoadedRef.current = true;
-      return;
-    }
+      const guestVal = localStorage.getItem(`fincody_guest_${key}`);
+      return guestVal !== null ? guestVal : fallback;
+    };
 
-    // Authenticated User Hydration
-    // 1. Try to load from Supabase Cloud User Metadata
-    const cloudDataStr = user.user_metadata?.fincody_dashboard_data;
+    // Helper to parse local storage JSON checking both User key and Guest key
+    const getLocalJson = (key: string, fallback: any) => {
+      const val = getLocal(key);
+      return safeJsonParse(val, fallback);
+    };
+
+    // Cloud metadata data object
+    const cloudDataStr = user?.user_metadata?.fincody_dashboard_data;
+    let cloudData: any = null;
     if (cloudDataStr) {
-      try {
-        const data = typeof cloudDataStr === "object" ? cloudDataStr : safeJsonParse(cloudDataStr, null);
-        if (data) {
-          if (Array.isArray(data.goals)) setGoals(data.goals);
-          if (Array.isArray(data.subscriptions)) setSubscriptions(data.subscriptions);
-          if (Array.isArray(data.insurancePolicies)) setInsurancePolicies(data.insurancePolicies);
-          if (data.insProfile) setInsProfile(data.insProfile);
-          if (Array.isArray(data.documents)) setDocuments(data.documents);
-          if (data.netWorth !== undefined) setNetWorth(data.netWorth);
-          if (data.monthlySavings !== undefined) setMonthlySavings(data.monthlySavings);
-          if (data.healthScore !== undefined) setHealthScore(data.healthScore);
-          if (data.startYear !== undefined) setStartYear(data.startYear);
-          if (data.endYear !== undefined) setEndYear(data.endYear);
-          if (data.calculationStartDate) setCalculationStartDate(data.calculationStartDate);
-          if (data.manualSalary !== undefined) setManualSalary(data.manualSalary);
-          if (data.manualEMI !== undefined) setManualEMI(data.manualEMI);
-          if (data.manualOtherExpenses !== undefined) setManualOtherExpenses(data.manualOtherExpenses);
-          if (Array.isArray(data.portfolio)) setPortfolio(data.portfolio);
-          if (Array.isArray(data.savedPortfolios)) setSavedPortfolios(data.savedPortfolios);
-          if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
-          if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
-          if (data.manualNetWorth !== undefined) setManualNetWorth(data.manualNetWorth);
-          if (Array.isArray(data.mutualFunds)) setMutualFunds(data.mutualFunds);
-
-          if (Array.isArray(data.fixedDeposits)) setFixedDeposits(data.fixedDeposits);
-          if (data.ppfData) setPpfData(data.ppfData);
-          if (data.npsData) setNpsData(data.npsData);
-          if (Array.isArray(data.goldHoldings)) setGoldHoldings(data.goldHoldings);
-          if (Array.isArray(data.etfHoldings)) setEtfHoldings(data.etfHoldings);
-          if (Array.isArray(data.bondHoldings)) setBondHoldings(data.bondHoldings);
-
-          setSyncStatus("synced");
-          console.log("Hydrated Fincody dashboard from Cloud Vault.");
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to parse cloud dashboard data:", e);
-      }
+      cloudData = typeof cloudDataStr === "object" ? cloudDataStr : safeJsonParse(cloudDataStr, null);
     }
 
-    // 2. Local Storage Fallback if metadata is not populated yet
-    const prefix = `fincody_user_${user.id}_`;
     try {
-      const savedGoals = localStorage.getItem(`${prefix}goals`);
-      if (savedGoals) setGoals(safeJsonParse(savedGoals, []));
+      // 1. Goals
+      const goalsVal = cloudData?.goals?.length ? cloudData.goals : getLocalJson("goals", null);
+      if (goalsVal && Array.isArray(goalsVal)) setGoals(goalsVal);
 
-      const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
-      if (savedSubs) setSubscriptions(safeJsonParse(savedSubs, []));
+      // 2. Subscriptions
+      const subsVal = cloudData?.subscriptions?.length ? cloudData.subscriptions : getLocalJson("subscriptions", null);
+      if (subsVal && Array.isArray(subsVal)) setSubscriptions(subsVal);
 
-      const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
-      if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
+      // 3. Insurance Policies
+      const insVal = cloudData?.insurancePolicies?.length ? cloudData.insurancePolicies : getLocalJson("insurancePolicies", null);
+      if (insVal && Array.isArray(insVal)) setInsurancePolicies(insVal);
 
-      const savedInsProfile = localStorage.getItem(`${prefix}insProfile`);
-      if (savedInsProfile) setInsProfile(safeJsonParse(savedInsProfile, insProfile));
+      // 4. Insurance Profile
+      const profVal = cloudData?.insProfile || getLocalJson("insProfile", null);
+      if (profVal) setInsProfile(profVal);
 
-      const savedDocs = localStorage.getItem(`${prefix}documents`);
-      if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
+      // 5. Documents
+      const docsVal = cloudData?.documents?.length ? cloudData.documents : getLocalJson("documents", null);
+      if (docsVal && Array.isArray(docsVal)) setDocuments(docsVal);
 
-      const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
-      if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth) || 0);
+      // 6. Financial Metrics
+      const nwVal = cloudData?.netWorth ?? getLocal("netWorth");
+      if (nwVal !== null && nwVal !== undefined) setNetWorth(parseFloat(nwVal) || 0);
 
-      const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
-      if (savedSavings) setMonthlySavings(parseFloat(savedSavings) || 0);
+      const savVal = cloudData?.monthlySavings ?? getLocal("monthlySavings");
+      if (savVal !== null && savVal !== undefined) setMonthlySavings(parseFloat(savVal) || 0);
 
-      const savedScore = localStorage.getItem(`${prefix}healthScore`);
-      if (savedScore) setHealthScore(parseInt(savedScore) || 75);
+      const salVal = cloudData?.manualSalary ?? getLocal("manualSalary");
+      if (salVal !== null && salVal !== undefined) setManualSalary(salVal);
 
-      const savedStartYear = localStorage.getItem(`${prefix}startYear`);
-      if (savedStartYear) setStartYear(parseInt(savedStartYear) || 2024);
+      const emiVal = cloudData?.manualEMI ?? getLocal("manualEMI");
+      if (emiVal !== null && emiVal !== undefined) setManualEMI(emiVal);
 
-      const savedEndYear = localStorage.getItem(`${prefix}endYear`);
-      if (savedEndYear) setEndYear(parseInt(savedEndYear) || 2045);
+      const expVal = cloudData?.manualOtherExpenses ?? getLocal("manualOtherExpenses");
+      if (expVal !== null && expVal !== undefined) setManualOtherExpenses(expVal);
 
-      const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
-      if (savedCalcStart) setCalculationStartDate(savedCalcStart);
+      // 7. Portfolio & Investments
+      const portVal = cloudData?.portfolio?.length ? cloudData.portfolio : getLocalJson("portfolio", null);
+      if (portVal && Array.isArray(portVal)) setPortfolio(portVal);
 
-      const savedManualSalary = localStorage.getItem(`${prefix}manualSalary`);
-      if (savedManualSalary) setManualSalary(savedManualSalary);
+      const mfVal = cloudData?.mutualFunds?.length ? cloudData.mutualFunds : getLocalJson("mutualFunds", null);
+      if (mfVal && Array.isArray(mfVal)) setMutualFunds(mfVal);
 
-      const savedManualEMI = localStorage.getItem(`${prefix}manualEMI`);
-      if (savedManualEMI) setManualEMI(savedManualEMI);
+      const fdVal = cloudData?.fixedDeposits?.length ? cloudData.fixedDeposits : getLocalJson("fixedDeposits", null);
+      if (fdVal && Array.isArray(fdVal)) setFixedDeposits(fdVal);
 
-      const savedManualOtherExpenses = localStorage.getItem(`${prefix}manualOtherExpenses`);
-      if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
+      const ppfVal = cloudData?.ppfData || getLocalJson("ppfData", null);
+      if (ppfVal) setPpfData(ppfVal);
 
-      const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
-      if (savedPortfolio) setPortfolio(safeJsonParse(savedPortfolio, []));
+      const npsVal = cloudData?.npsData || getLocalJson("npsData", null);
+      if (npsVal) setNpsData(npsVal);
 
-      const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
-      if (savedSavedPortfolios) setSavedPortfolios(safeJsonParse(savedSavedPortfolios, []));
+      const goldVal = cloudData?.goldHoldings?.length ? cloudData.goldHoldings : getLocalJson("goldHoldings", null);
+      if (goldVal && Array.isArray(goldVal)) setGoldHoldings(goldVal);
 
-      const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
-      if (savedActivePortName) setActivePortfolioName(savedActivePortName);
+      const etfVal = cloudData?.etfHoldings?.length ? cloudData.etfHoldings : getLocalJson("etfHoldings", null);
+      if (etfVal && Array.isArray(etfVal)) setEtfHoldings(etfVal);
 
-      const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
-      if (savedAiRec) setAiRecommendation(safeJsonParse(savedAiRec, DEFAULT_AI_RECOMMENDATION));
+      const bondVal = cloudData?.bondHoldings?.length ? cloudData.bondHoldings : getLocalJson("bondHoldings", null);
+      if (bondVal && Array.isArray(bondVal)) setBondHoldings(bondVal);
 
-      const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
-      if (savedFDs) setFixedDeposits(safeJsonParse(savedFDs, []));
+      const sigVal = getLocalJson("uploadedDocSignatures", null);
+      if (sigVal) setUploadedDocSignatures(sigVal);
 
-      const savedPPF = localStorage.getItem(`${prefix}ppfData`);
-      if (savedPPF) setPpfData(safeJsonParse(savedPPF, { balance: 450000, annualContribution: 150000, startYear: 2024 }));
-
-      const savedNPS = localStorage.getItem(`${prefix}npsData`);
-      if (savedNPS) setNpsData(safeJsonParse(savedNPS, { corpus: 300000, employerMonthly: 10000, personalMonthly: 5000, allocationE: 60, allocationC: 25, allocationG: 15 }));
-
-      const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
-      if (savedGold) setGoldHoldings(safeJsonParse(savedGold, []));
-
-      const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
-      if (savedMutualFunds) {
-        setMutualFunds(safeJsonParse(savedMutualFunds, DEFAULT_MUTUAL_FUNDS));
-      } else {
-        setMutualFunds(DEFAULT_MUTUAL_FUNDS);
-      }
-
-      const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
-      if (savedETFs) setEtfHoldings(safeJsonParse(savedETFs, []));
-
-      const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
-      if (savedBonds) setBondHoldings(safeJsonParse(savedBonds, []));
     } catch (e) {
-      console.error("Error loading persisted state fallback:", e);
+      console.error("Error during unified hydration:", e);
     }
-    setSyncStatus("synced");
+
+    setSyncStatus(user ? "synced" : "guest");
     isLoadedRef.current = true;
   }, [user]);
 
-  // Live spot gold price update hook (queries live GC=F Futures & USDINR=X Exchange Rate)
+    // Live spot gold price update hook (queries live GC=F Futures & USDINR=X Exchange Rate)
   useEffect(() => {
     const fetchLiveGoldPrice = async () => {
       try {
