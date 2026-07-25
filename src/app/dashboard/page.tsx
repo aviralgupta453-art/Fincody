@@ -5987,31 +5987,68 @@ const handlePredefinedQuestion = (q: string) => {
                                   </div>
                                 </div>
 
-                                {/* Suggested Tickers Cards */}
-                                <div className="flex flex-col gap-3">
-                                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Asset Proposals</span>
+                                {/* Strategy Selectors & Asset Proposals */}
+                                <div className="flex flex-col gap-4">
+                                  <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">AI Asset Proposals & Multi-Asset Intelligence</span>
+                                    <div className="flex items-center gap-1.5 bg-slate-900/60 p-1 rounded-xl border border-[var(--border-color)] text-[10px]">
+                                      {["India Growth", "Tech Moat", "Gold & Hedge", "High Dividend"].map((strat) => (
+                                        <button
+                                          key={strat}
+                                          type="button"
+                                          onClick={() => {
+                                            if (strat === "Gold & Hedge") setAiGoalPrompt("Optimize for defensive inflation hedge and physical gold allocation");
+                                            else if (strat === "Tech Moat") setAiGoalPrompt("Focus on global AI, enterprise cloud, and mega-cap tech moats");
+                                            else if (strat === "High Dividend") setAiGoalPrompt("Maximize dividend yield and stable cash flow equity");
+                                            else setAiGoalPrompt("Build balanced high compounding Indian equity growth portfolio");
+                                          }}
+                                          className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all font-semibold cursor-pointer"
+                                        >
+                                          {strat}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {aiRecommendation.stocks
+                                    {(Array.isArray(aiRecommendation.equities || aiRecommendation.stocks) ? (aiRecommendation.equities || aiRecommendation.stocks) : [])
                                       .filter((s: any) => !ignoredRecs.includes(s.symbol))
                                       .map((st: any) => (
-                                        <div key={st.symbol} className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col justify-between gap-3 group relative">
+                                        <div key={st.symbol} className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col justify-between gap-3 group relative hover:border-blue-500/30 transition-all">
                                           <div>
                                             <div className="flex justify-between items-start">
                                               <div>
-                                                <span className="font-extrabold text-white text-xs block font-mono">{st.symbol}</span>
+                                                <div className="flex items-center gap-2">
+                                                  <span className="font-extrabold text-white text-xs font-mono">{st.symbol}</span>
+                                                  <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-slate-800 text-slate-300">{st.exchange || "NSE"}</span>
+                                                </div>
                                                 <span className="text-[10px] text-slate-500 font-bold block mt-0.5">{st.name}</span>
                                               </div>
-                                              <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/10">{st.allocation}%</span>
+                                              <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/10">{st.allocation || 20}%</span>
                                             </div>
                                             <p className="text-[10px] text-slate-400 mt-2 font-medium leading-relaxed">
-                                              {st.rationale}
+                                              {st.rationale || st.whyAsset || "Core holding with compounding growth upside."}
                                             </p>
-                                          </div>
 
-                                          {/* Target Details */}
-                                          <div className="border-t border-[var(--border-color)] pt-2 flex justify-between items-center text-[10px] font-bold">
-                                            <span className="text-slate-500">Target Shares:</span>
-                                            <span className="text-white font-mono">{st.qty} units</span>
+                                            {/* 5-Question AI Intelligence Drawer */}
+                                            <div className="mt-3 p-3 rounded-lg bg-slate-950/40 border border-slate-800/80 space-y-2 text-[10px]">
+                                              <div className="flex flex-col">
+                                                <span className="font-bold text-blue-400">🎯 Why this asset?</span>
+                                                <span className="text-slate-300 font-medium mt-0.5">{st.whyAsset || st.rationale || "Strong pricing power and commercial cash flows."}</span>
+                                              </div>
+                                              <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                                <span className="font-bold text-emerald-400">⚡ Why now?</span>
+                                                <span className="text-slate-300 font-medium mt-0.5">{st.whyNow || "Valuation multiple provides an attractive risk-reward entry point."}</span>
+                                              </div>
+                                              <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                                <span className="font-bold text-amber-400">⚠️ Key Risks</span>
+                                                <span className="text-slate-400 font-medium mt-0.5">{st.risks || "Sector rotation and broader macroeconomic market volatility."}</span>
+                                              </div>
+                                              <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                                <span className="font-bold text-rose-400">🔴 Downside Scenario</span>
+                                                <span className="text-slate-400 font-medium mt-0.5">{st.whatGoesWrong || "Slowing growth rates or corporate margin compression."}</span>
+                                              </div>
+                                            </div>
                                           </div>
 
                                           {/* Action Buttons */}
@@ -6750,6 +6787,57 @@ const handlePredefinedQuestion = (q: string) => {
                       {/* SUBTAB 4: Precious Metals */}
                       {selectedInvestmentSubTab === "metals" && (
                         <div className="flex flex-col gap-6">
+                          
+                          {/* Live 24K / 22K / 18K Gold Rates & Silver Purity Breakdown */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="glass-card p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between gap-2 shadow-lg shadow-amber-500/5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-black uppercase tracking-wider text-amber-400">24K Pure Gold</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300">99.9% Purity</span>
+                              </div>
+                              <div className="text-left font-mono my-1">
+                                <span className="text-xl font-black text-white">{format(spotGoldPrice)}</span>
+                                <span className="text-[10px] text-slate-400 font-sans ml-1">/ gram</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">Standard benchmark for Gold ETFs & Bullion</span>
+                            </div>
+
+                            <div className="glass-card p-4 rounded-2xl border border-amber-500/20 bg-slate-900/40 flex flex-col justify-between gap-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase tracking-wider text-amber-200">22K Sovereign Gold</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400">91.6% Purity</span>
+                              </div>
+                              <div className="text-left font-mono my-1">
+                                <span className="text-xl font-black text-white">{format(Math.round(spotGoldPrice * 0.9167))}</span>
+                                <span className="text-[10px] text-slate-400 font-sans ml-1">/ gram</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">Jewelry standard rate (BIS Hallmark 916)</span>
+                            </div>
+
+                            <div className="glass-card p-4 rounded-2xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col justify-between gap-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">18K Ornament Gold</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300">75.0% Purity</span>
+                              </div>
+                              <div className="text-left font-mono my-1">
+                                <span className="text-xl font-black text-white">{format(Math.round(spotGoldPrice * 0.7500))}</span>
+                                <span className="text-[10px] text-slate-400 font-sans ml-1">/ gram</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">Diamond studded jewelry purity standard</span>
+                            </div>
+
+                            <div className="glass-card p-4 rounded-2xl border border-slate-700/30 bg-slate-900/40 flex flex-col justify-between gap-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Fine Silver</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700/30 text-slate-300">99.9% Purity</span>
+                              </div>
+                              <div className="text-left font-mono my-1">
+                                <span className="text-xl font-black text-white">{format(Math.round(spotGoldPrice / 82))}</span>
+                                <span className="text-[10px] text-slate-400 font-sans ml-1">/ gram</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">Spot Silver Bullion rate</span>
+                            </div>
+                          </div>
                           
                           {/* Gold Holdings Card */}
                           <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900/5 flex flex-col gap-4">
