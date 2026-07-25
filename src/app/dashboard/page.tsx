@@ -251,41 +251,51 @@ const DEFAULT_AI_RECOMMENDATION = {
 };
 
 const ensureRichRecommendationData = (parsed: any) => {
-  if (!parsed) return DEFAULT_AI_RECOMMENDATION;
-  
-  const equities = (parsed.equities && parsed.equities.length > 0) ? parsed.equities : (parsed.stocks ? parsed.stocks.map((st: any) => ({
-    ...st,
-    type: "EQUITY",
-    confidenceScore: st.confidenceScore || 88,
-    returnRange: st.returnRange || "14% - 20% CAGR",
-    valuation: st.valuation || "Fairly Valued",
-    riskLevel: st.riskLevel || "Low-Medium",
-    horizon: st.horizon || "Long Term",
-    exchange: st.exchange || (st.symbol.includes(".NS") ? "NSE" : "NASDAQ"),
-    reasons: st.reasons || [st.rationale || "Strong growth prospect and solid moat"],
-    whyAsset: st.whyAsset || st.rationale || "Core market holding with strong compounding upside.",
-    whyNow: st.whyNow || "Valuation multiple provides an attractive entry point.",
-    risks: st.risks || "Sector rotation and macroeconomic market risks.",
-    whatGoesWrong: st.whatGoesWrong || "Macroeconomic downturn impacting corporate earnings.",
-    portfolioImprovement: st.portfolioImprovement || "Provides solid large-cap growth and stability."
-  })) : DEFAULT_AI_RECOMMENDATION.equities);
+  try {
+    if (!parsed || typeof parsed !== "object") return DEFAULT_AI_RECOMMENDATION;
+    
+    let equities = DEFAULT_AI_RECOMMENDATION.equities;
+    if (parsed.equities && Array.isArray(parsed.equities) && parsed.equities.length > 0) {
+      equities = parsed.equities;
+    } else if (parsed.stocks && Array.isArray(parsed.stocks) && parsed.stocks.length > 0) {
+      equities = parsed.stocks.map((st: any) => ({
+        ...st,
+        type: "EQUITY",
+        confidenceScore: st.confidenceScore || 88,
+        returnRange: st.returnRange || "14% - 20% CAGR",
+        valuation: st.valuation || "Fairly Valued",
+        riskLevel: st.riskLevel || "Low-Medium",
+        horizon: st.horizon || "Long Term",
+        exchange: st.exchange || (st.symbol && st.symbol.includes(".NS") ? "NSE" : "NASDAQ"),
+        reasons: Array.isArray(st.reasons) ? st.reasons : [st.rationale || "Strong growth prospect and solid moat"],
+        whyAsset: st.whyAsset || st.rationale || "Core market holding with strong compounding upside.",
+        whyNow: st.whyNow || "Valuation multiple provides an attractive entry point.",
+        risks: st.risks || "Sector rotation and macroeconomic market risks.",
+        whatGoesWrong: st.whatGoesWrong || "Macroeconomic downturn impacting corporate earnings.",
+        portfolioImprovement: st.portfolioImprovement || "Provides solid large-cap growth and stability."
+      }));
+    }
 
-  const etfs = (parsed.etfs && parsed.etfs.length > 0) ? parsed.etfs : DEFAULT_AI_RECOMMENDATION.etfs;
+    const etfs = (parsed.etfs && Array.isArray(parsed.etfs) && parsed.etfs.length > 0) ? parsed.etfs : DEFAULT_AI_RECOMMENDATION.etfs;
 
-  return {
-    ...parsed,
-    equities,
-    etfs,
-    stocks: equities,
-    diversification: parsed.diversification || 88,
-    risk: parsed.risk || "Moderate",
-    rationale: parsed.rationale || "Optimized multi-asset portfolio tailored for long-term compounding.",
-    portfolioAnalysis: parsed.portfolioAnalysis || [
-      "Technology allocation is optimal at ~25% of total wealth.",
-      "Financials and Banking allocation provides strong domestic credit growth upside.",
-      "Gold ETF allocation adds negative correlation shield against market pullbacks."
-    ]
-  };
+    return {
+      ...parsed,
+      equities,
+      etfs,
+      stocks: equities,
+      diversification: typeof parsed.diversification === "number" ? parsed.diversification : 88,
+      risk: parsed.risk || "Moderate",
+      rationale: parsed.rationale || "Optimized multi-asset portfolio tailored for long-term compounding.",
+      portfolioAnalysis: Array.isArray(parsed.portfolioAnalysis) ? parsed.portfolioAnalysis : [
+        "Technology allocation is optimal at ~25% of total wealth.",
+        "Financials and Banking allocation provides strong domestic credit growth upside.",
+        "Gold ETF allocation adds negative correlation shield against market pullbacks."
+      ]
+    };
+  } catch (e) {
+    console.error("Error in ensureRichRecommendationData:", e);
+    return DEFAULT_AI_RECOMMENDATION;
+  }
 };
 
 const BANK_FD_RATES = [
@@ -340,9 +350,9 @@ interface DocumentFile {
   size: string;
   uploadedAt: string;
   type: string;
-  categoryGroup?: string; // "Today" | "This Week" | "Last Month" | "This Year"
-  docType?: string; // e.g. "Bank Statement", "Salary Slip"
-  extractedData?: any; // structured key-value pairs
+  categoryGroup?: string;
+  docType?: string;
+  extractedData?: any;
   aiInsights?: string[];
   status?: "processed" | "processing" | "error";
 }
@@ -354,6 +364,7 @@ export default function Dashboard() {
   // Supabase Auth State
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -377,8 +388,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     "command" | "goals" | "investments" | "subscriptions" | "insurance" | "vault" | "decisions"
   >("command");
-  
-
 
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [hoveredLegend, setHoveredLegend] = useState<"standard" | "fincody" | null>(null);
@@ -388,10 +397,9 @@ export default function Dashboard() {
   // Sync Status State
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error" | "guest">("guest");
 
-
-
   // Theme Switching State
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("fincody-theme") || "dark";
@@ -399,39 +407,60 @@ export default function Dashboard() {
     }
   }, []);
 
-
   useEffect(() => {
-    // Check active session on mount
+    let isMounted = true;
+    
+    // Safety fallback timer: ensure authLoading is set to false within 2.5s maximum
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setAuthLoading(false);
+    }, 2500);
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Fetch fresh metadata from database server to enable cross-device updates
-        const { data: { user: freshUser } } = await supabase.auth.getUser();
-        setUser(freshUser ?? session.user);
-      } else {
-        setUser(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && isMounted) {
+          const { data: { user: freshUser } } = await supabase.auth.getUser();
+          if (isMounted) setUser(freshUser ?? session.user);
+        } else if (isMounted) {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setAuthLoading(false);
       }
-      setAuthLoading(false);
     };
     checkSession();
 
     if (typeof window !== "undefined") {
-      setHasAiMemory(!!localStorage.getItem("fincody_ai_memory"));
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get("tab");
+        if (tabParam) setActiveTab(tabParam as any);
+      } catch (e) {
+        console.error("Error reading URL search params:", e);
+      }
     }
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        // Fetch fresh user details
-        const { data: { user: freshUser } } = await supabase.auth.getUser();
-        setUser(freshUser ?? session.user);
-      } else {
-        setUser(null);
+      try {
+        if (session && isMounted) {
+          const { data: { user: freshUser } } = await supabase.auth.getUser();
+          if (isMounted) setUser(freshUser ?? session.user);
+        } else if (isMounted) {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Auth state change error:", err);
+      } finally {
+        if (isMounted) setAuthLoading(false);
       }
-      setAuthLoading(false);
     });
 
     return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
@@ -3966,7 +3995,7 @@ const handlePredefinedQuestion = (q: string) => {
     );
   }
 
-  if (!user) {
+  if (!user && !isGuestMode) {
     return (
       <div className="min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-x-hidden flex items-center justify-center p-6 transition-colors duration-300 relative">
         <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-blue-500/10 blur-[130px] pointer-events-none" />
@@ -4281,22 +4310,28 @@ const handlePredefinedQuestion = (q: string) => {
             <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold text-sm text-blue-400">
               {user?.user_metadata?.full_name 
                 ? user.user_metadata.full_name.slice(0, 2).toUpperCase() 
-                : (user?.email ? user.email.slice(0, 2).toUpperCase() : "AV")}
+                : (user?.email ? user.email.slice(0, 2).toUpperCase() : "GM")}
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-bold text-[var(--text-color)] truncate">
-                {user?.user_metadata?.full_name ?? (user?.email ? user.email.split("@")[0] : "User")}
+                {user?.user_metadata?.full_name ?? (user?.email ? user.email.split("@")[0] : "Guest User")}
               </p>
               <p className="text-xs text-[var(--text-subtitle)] truncate">
-                {user?.email ?? "no-email@fincody.com"}
+                {user?.email ?? "guest@fincody.local"}
               </p>
             </div>
           </div>
           <button 
-            onClick={handleSignOut}
+            onClick={() => {
+              if (user) {
+                handleSignOut();
+              } else {
+                setIsGuestMode(false);
+              }
+            }}
             className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-subtitle)] hover:text-rose-400 py-2 border border-[var(--border-color)] rounded-xl hover:bg-rose-500/5 transition-all cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5" /> Log Out
+            <LogOut className="w-3.5 h-3.5" /> {user ? "Log Out" : "Sign In / Register"}
           </button>
         </div>
       </aside>
