@@ -2300,6 +2300,9 @@ export default function Dashboard() {
         const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
         if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
 
+        const savedInsProfile = localStorage.getItem(`${prefix}insProfile`);
+        if (savedInsProfile) setInsProfile(safeJsonParse(savedInsProfile, insProfile));
+
         const savedDocs = localStorage.getItem(`${prefix}documents`);
         if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
 
@@ -2388,6 +2391,7 @@ export default function Dashboard() {
           if (Array.isArray(data.goals)) setGoals(data.goals);
           if (Array.isArray(data.subscriptions)) setSubscriptions(data.subscriptions);
           if (Array.isArray(data.insurancePolicies)) setInsurancePolicies(data.insurancePolicies);
+          if (data.insProfile) setInsProfile(data.insProfile);
           if (Array.isArray(data.documents)) setDocuments(data.documents);
           if (data.netWorth !== undefined) setNetWorth(data.netWorth);
           if (data.monthlySavings !== undefined) setMonthlySavings(data.monthlySavings);
@@ -2432,6 +2436,9 @@ export default function Dashboard() {
 
       const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
       if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
+
+      const savedInsProfile = localStorage.getItem(`${prefix}insProfile`);
+      if (savedInsProfile) setInsProfile(safeJsonParse(savedInsProfile, insProfile));
 
       const savedDocs = localStorage.getItem(`${prefix}documents`);
       if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
@@ -2544,6 +2551,7 @@ export default function Dashboard() {
         goals,
         subscriptions,
         insurancePolicies,
+        insProfile,
         documents,
         netWorth,
         monthlySavings,
@@ -8303,7 +8311,14 @@ const handlePredefinedQuestion = (q: string) => {
                         </div>
 
                         <button
-                          onClick={() => setShowInsProfileModal(false)}
+                          onClick={() => {
+                            persistData("insProfile", insProfile);
+                            setShowInsProfileModal(false);
+                            setNotifications(prev => [
+                              { id: Date.now(), text: "Financial & Risk Profile updated & saved successfully.", unread: true },
+                              ...prev
+                            ]);
+                          }}
                           className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer mt-2"
                         >
                           Save Profile & Update Gap Analysis
