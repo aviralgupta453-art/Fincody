@@ -2292,7 +2292,7 @@ export default function Dashboard() {
     }
   };
 
-  // Rock-Solid Universal Hydration Engine with Local Storage Precedence
+  // Rock-Solid Universal Hydration Engine with Array Length Validation
   useEffect(() => {
     const userPrefix = user ? `fincody_user_${user.id}_` : null;
 
@@ -2300,10 +2300,11 @@ export default function Dashboard() {
     const getLocal = (key: string, fallback: any = null) => {
       if (userPrefix) {
         const val = localStorage.getItem(`${userPrefix}${key}`);
-        if (val !== null) return val;
+        if (val !== null && val !== "" && val !== "[]") return val;
       }
       const guestVal = localStorage.getItem(`fincody_guest_${key}`);
-      return guestVal !== null ? guestVal : fallback;
+      if (guestVal !== null && guestVal !== "" && guestVal !== "[]") return guestVal;
+      return fallback;
     };
 
     // Helper to parse local storage JSON checking both User key and Guest key
@@ -2320,42 +2321,42 @@ export default function Dashboard() {
     }
 
     try {
-      // 1. Subscriptions: Prioritize local storage edits over cloud metadata
+      // 1. Subscriptions: Prioritize valid non-empty arrays
       const localSubs = getLocalJson("subscriptions", null);
-      if (localSubs && Array.isArray(localSubs)) {
+      if (localSubs && Array.isArray(localSubs) && localSubs.length > 0) {
         setSubscriptions(localSubs);
-      } else if (cloudData?.subscriptions && Array.isArray(cloudData.subscriptions)) {
+      } else if (cloudData?.subscriptions && Array.isArray(cloudData.subscriptions) && cloudData.subscriptions.length > 0) {
         setSubscriptions(cloudData.subscriptions);
       }
 
       // 2. Goals
       const localGoals = getLocalJson("goals", null);
-      if (localGoals && Array.isArray(localGoals)) {
+      if (localGoals && Array.isArray(localGoals) && localGoals.length > 0) {
         setGoals(localGoals);
-      } else if (cloudData?.goals && Array.isArray(cloudData.goals)) {
+      } else if (cloudData?.goals && Array.isArray(cloudData.goals) && cloudData.goals.length > 0) {
         setGoals(cloudData.goals);
       }
 
       // 3. Insurance Policies & Profile
       const localIns = getLocalJson("insurancePolicies", null);
-      if (localIns && Array.isArray(localIns)) {
+      if (localIns && Array.isArray(localIns) && localIns.length > 0) {
         setInsurancePolicies(localIns);
-      } else if (cloudData?.insurancePolicies && Array.isArray(cloudData.insurancePolicies)) {
+      } else if (cloudData?.insurancePolicies && Array.isArray(cloudData.insurancePolicies) && cloudData.insurancePolicies.length > 0) {
         setInsurancePolicies(cloudData.insurancePolicies);
       }
 
       const localProf = getLocalJson("insProfile", null);
-      if (localProf) {
+      if (localProf && typeof localProf === "object" && Object.keys(localProf).length > 0) {
         setInsProfile(localProf);
-      } else if (cloudData?.insProfile) {
+      } else if (cloudData?.insProfile && typeof cloudData.insProfile === "object") {
         setInsProfile(cloudData.insProfile);
       }
 
       // 4. Documents
       const localDocs = getLocalJson("documents", null);
-      if (localDocs && Array.isArray(localDocs)) {
+      if (localDocs && Array.isArray(localDocs) && localDocs.length > 0) {
         setDocuments(localDocs);
-      } else if (cloudData?.documents && Array.isArray(cloudData.documents)) {
+      } else if (cloudData?.documents && Array.isArray(cloudData.documents) && cloudData.documents.length > 0) {
         setDocuments(cloudData.documents);
       }
 
@@ -2382,23 +2383,23 @@ export default function Dashboard() {
 
       // 6. Investments & Asset Portfolios
       const localPort = getLocalJson("portfolio", null);
-      if (localPort && Array.isArray(localPort)) {
+      if (localPort && Array.isArray(localPort) && localPort.length > 0) {
         setPortfolio(localPort);
-      } else if (cloudData?.portfolio && Array.isArray(cloudData.portfolio)) {
+      } else if (cloudData?.portfolio && Array.isArray(cloudData.portfolio) && cloudData.portfolio.length > 0) {
         setPortfolio(cloudData.portfolio);
       }
 
       const localMF = getLocalJson("mutualFunds", null);
-      if (localMF && Array.isArray(localMF)) {
+      if (localMF && Array.isArray(localMF) && localMF.length > 0) {
         setMutualFunds(localMF);
-      } else if (cloudData?.mutualFunds && Array.isArray(cloudData.mutualFunds)) {
+      } else if (cloudData?.mutualFunds && Array.isArray(cloudData.mutualFunds) && cloudData.mutualFunds.length > 0) {
         setMutualFunds(cloudData.mutualFunds);
       }
 
       const localFD = getLocalJson("fixedDeposits", null);
-      if (localFD && Array.isArray(localFD)) {
+      if (localFD && Array.isArray(localFD) && localFD.length > 0) {
         setFixedDeposits(localFD);
-      } else if (cloudData?.fixedDeposits && Array.isArray(cloudData.fixedDeposits)) {
+      } else if (cloudData?.fixedDeposits && Array.isArray(cloudData.fixedDeposits) && cloudData.fixedDeposits.length > 0) {
         setFixedDeposits(cloudData.fixedDeposits);
       }
 
@@ -2411,23 +2412,23 @@ export default function Dashboard() {
       else if (cloudData?.npsData) setNpsData(cloudData.npsData);
 
       const localGold = getLocalJson("goldHoldings", null);
-      if (localGold && Array.isArray(localGold)) {
+      if (localGold && Array.isArray(localGold) && localGold.length > 0) {
         setGoldHoldings(localGold);
-      } else if (cloudData?.goldHoldings && Array.isArray(cloudData.goldHoldings)) {
+      } else if (cloudData?.goldHoldings && Array.isArray(cloudData.goldHoldings) && cloudData.goldHoldings.length > 0) {
         setGoldHoldings(cloudData.goldHoldings);
       }
 
       const localETF = getLocalJson("etfHoldings", null);
-      if (localETF && Array.isArray(localETF)) {
+      if (localETF && Array.isArray(localETF) && localETF.length > 0) {
         setEtfHoldings(localETF);
-      } else if (cloudData?.etfHoldings && Array.isArray(cloudData.etfHoldings)) {
+      } else if (cloudData?.etfHoldings && Array.isArray(cloudData.etfHoldings) && cloudData.etfHoldings.length > 0) {
         setEtfHoldings(cloudData.etfHoldings);
       }
 
       const localBond = getLocalJson("bondHoldings", null);
-      if (localBond && Array.isArray(localBond)) {
+      if (localBond && Array.isArray(localBond) && localBond.length > 0) {
         setBondHoldings(localBond);
-      } else if (cloudData?.bondHoldings && Array.isArray(cloudData.bondHoldings)) {
+      } else if (cloudData?.bondHoldings && Array.isArray(cloudData.bondHoldings) && cloudData.bondHoldings.length > 0) {
         setBondHoldings(cloudData.bondHoldings);
       }
 
