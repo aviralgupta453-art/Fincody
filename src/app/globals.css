@@ -149,15 +149,15 @@ body {
   }
 }
 
-/* Accessibility contrast overrides for Light Mode (Vibrant, high-contrast, grey-free styling) */
+/* Accessibility contrast overrides for Light Mode (Vibrant, high-contrast, grey-free pastel blue box styling) */
 html.light {
   --bg-color: #f0f4f9; /* Premium warm slate-blue paper background */
   --text-color: #0f172a; /* Legible deep navy-black */
   --text-subtitle: #334155; /* Slate 700 secondary text */
   --card-bg: #ffffff; /* Pure warm white solid card background */
-  --card-border: rgba(37, 99, 235, 0.12); /* Soft warm blue border */
-  --border-color: rgba(37, 99, 235, 0.16);
-  --glass-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.08); /* Warm blue shadow */
+  --card-border: rgba(37, 99, 235, 0.16); /* Soft warm blue border */
+  --border-color: rgba(37, 99, 235, 0.2);
+  --glass-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.12); /* Warm blue shadow */
   --accent-color: #2563eb;
   --accent-hover: #1d4ed8;
 }
@@ -182,22 +182,22 @@ html.light .glass-panel .text-slate-100,
 html.light .glass-panel .text-slate-200,
 html.light .glass-panel .text-slate-300,
 html.light footer .text-white {
-  color: #020617 !important;
+  color: #0f172a !important;
 }
 
 /* Ensure general text-white classes become carbon black, except on dark solid buttons and badges */
 html.light .text-white:not(button):not(a):not(.bg-blue-600):not(.bg-indigo-600):not(.bg-emerald-600):not(.bg-purple-600):not(.bg-rose-500):not(.bg-red-500):not(.bg-gradient-to-r):not(.bg-gradient-to-tr):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-purple-"]):not([class*="bg-rose-"]):not([class*="bg-red-"]):not([class*="bg-green-"]) {
-  color: #020617 !important;
+  color: #0f172a !important;
 }
 
-/* Map grey/slate classes to high-contrast legible slate and indigo navy tones */
+/* Map grey/slate text classes to high-contrast legible slate and indigo navy tones */
 html.light .text-slate-900,
 html.light .text-zinc-900,
 html.light .text-gray-900,
 html.light .text-slate-800,
 html.light .text-zinc-800,
 html.light .text-gray-800 {
-  color: #020617 !important; /* Sharp carbon black */
+  color: #091e42 !important; /* Sharp carbon black */
 }
 
 html.light .text-slate-700,
@@ -229,29 +229,53 @@ html.light .text-slate-300,
 html.light .text-zinc-300,
 html.light .text-gray-300,
 html.light .text-slate-300\/60 {
-  color: #475569 !important; /* Slate 600 */
+  color: #334155 !important;
 }
 
 html.light .text-slate-200,
 html.light .text-zinc-200,
 html.light .text-gray-200 {
-  color: #475569 !important; /* Slate 600 */
+  color: #334155 !important;
 }
 
-/* Replace dull grey backgrounds with soft, transparent warm-blue/indigo overlays */
+/* PASTEL BLUE LIGHT MODE BOX OVERRIDES (INVESTMENTS, INSURANCE, SUBSCRIPTIONS & GLOBAL) */
 html.light .bg-slate-900\/5,
 html.light .bg-slate-950\/5,
 html.light .bg-slate-900\/10,
 html.light .bg-slate-950\/10,
 html.light .bg-slate-950\/15,
 html.light .bg-slate-950\/20,
+html.light .bg-slate-900\/20,
+html.light .bg-slate-900\/30,
+html.light .bg-slate-900\/40,
 html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-950\/30,
 html.light .bg-slate-950\/40,
-html.light .bg-slate-950\/60 {
-  background-color: #e2eaf8 !important; /* Soft warm periwinkle-blue pastel card/box */
+html.light .bg-slate-950\/50,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-800,
+html.light .bg-slate-800\/20,
+html.light .bg-slate-800\/25,
+html.light .bg-slate-800\/30,
+html.light .bg-slate-800\/40,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/90,
+html.light [class*="bg-[#11172"],
+html.light [class*="bg-[#151c3"],
+html.light .bg-gray-100,
+html.light .bg-gray-200,
+html.light .bg-gray-300,
+html.light .bg-slate-100,
+html.light .bg-slate-200,
+html.light .bg-slate-300 {
+  background-color: #e6f0fa !important; /* Elegant Pastel Blue box background */
+  border-color: rgba(37, 99, 235, 0.2) !important;
+  color: #0f172a !important;
 }
 
-/* Ensure drawers, sidebar panels, and full modals use solid pure white instead of dark slate-gray */
+/* Ensure drawers, sidebar panels, and full modals use solid pure white with pastel blue inner boxes */
 html.light .bg-slate-950,
 html.light [class*="bg-slate-950/9"],
 html.light [class*="bg-slate-950/8"],
@@ -261,28 +285,70 @@ html.light [class*="bg-slate-900/8"] {
   background-color: #ffffff !important;
 }
 
+/* Form controls, input boxes & select elements in light mode */
+html.light input[type="text"],
+html.light input[type="number"],
+html.light input[type="email"],
+html.light input[type="date"],
+html.light select,
+html.light textarea {
+  background-color: #ebf3fc !important; /* Pastel Blue input box */
+  color: #0f172a !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #475569 !important;
+}
+
+/* Secondary & Ghost Buttons in Light Mode */
+html.light button.border-[var\(--border-color\)],
+html.light button.bg-slate-900\/40,
+html.light button.bg-slate-900\/50,
+html.light button.bg-slate-900\/60,
+html.light button.bg-slate-800 {
+  background-color: #dbeafe !important; /* Richer Pastel Blue button fill */
+  color: #1d4ed8 !important;
+  border-color: rgba(37, 99, 235, 0.3) !important;
+}
+
+html.light button.border-[var\(--border-color\)]:hover,
+html.light button.bg-slate-900\/40:hover,
+html.light button.bg-slate-900\/50:hover {
+  background-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+
 /* Replace dark grey borders with bright, warm contrast-blue boundaries */
 html.light .border-slate-800\/40,
 html.light .border-slate-800,
 html.light .border-slate-900 {
-  border-color: rgba(59, 130, 246, 0.16) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
 }
+
 /* Override light text color classes in light mode to dark, high-contrast equivalents */
-html.light .text-emerald-400 {
+html.light .text-emerald-400,
+html.light .text-emerald-500 {
   color: #047857 !important; /* Premium dark emerald green */
 }
-html.light .text-blue-400 {
+html.light .text-blue-400,
+html.light .text-blue-500 {
   color: #1d4ed8 !important; /* Premium dark royal blue */
 }
-html.light .text-indigo-400 {
+html.light .text-indigo-400,
+html.light .text-indigo-500 {
   color: #4338ca !important; /* Premium Indigo 700 */
 }
-html.light .text-rose-400 {
+html.light .text-purple-400,
+html.light .text-purple-500 {
+  color: #7e22ce !important; /* Premium Purple 700 */
+}
+html.light .text-amber-400,
+html.light .text-amber-500 {
+  color: #b45309 !important; /* Premium Amber 700 */
+}
+html.light .text-rose-400,
+html.light .text-rose-500 {
   color: #be123c !important; /* Premium Rose 700 */
-}
-html.light .text-emerald-500 {
-  color: #059669 !important;
-}
-html.light .text-blue-500 {
-  color: #2563eb !important;
 }
