@@ -2240,6 +2240,7 @@ export default function Dashboard() {
   const [insCompareList, setInsCompareList] = useState<any[]>([]);
   const [selectedInsSimScenario, setSelectedInsSimScenario] = useState<string>("hospitalization_10l");
   const [insCategoryFilter, setInsCategoryFilter] = useState<string>("all");
+  const [expandedRecIds, setExpandedRecIds] = useState<string[]>([]);
 
   // Investment Forms States
   const [addFdBank, setAddFdBank] = useState("");
@@ -7731,122 +7732,154 @@ const handlePredefinedQuestion = (q: string) => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {aiInsuranceRecommendations
                         .filter(r => insCategoryFilter === "all" || r.category === insCategoryFilter)
-                        .map((rec) => (
-                          <div key={rec.id} className="glass-card p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col justify-between gap-5 relative hover:border-blue-500/40 transition-all shadow-xl">
-                            {/* Card Header Strip */}
-                            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-4">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="px-2.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
-                                    {rec.category}
-                                  </span>
-                                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                    Priority: {rec.priority}
-                                  </span>
-                                  <span className="px-2 py-0.5 rounded text-[9px] font-mono text-slate-400 bg-slate-800">
-                                    Age: {rec.suitableAge}
-                                  </span>
-                                </div>
-                                <h4 className="font-extrabold text-white text-base mt-2">{rec.type}</h4>
-                              </div>
-
-                              {/* Circular Policy Score Gauge */}
-                              <div className="flex flex-col items-center">
-                                <div className="w-12 h-12 rounded-full border-2 border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-mono font-black text-xs shadow-inner">
-                                  {rec.policyScore}
-                                </div>
-                                <span className="text-[8px] uppercase font-bold text-slate-500 mt-1">Policy Score</span>
-                              </div>
-                            </div>
-
-                            {/* Core Financial Recommendations Metrics */}
-                            <div className="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 text-left font-mono">
-                              <div>
-                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">Recommended Coverage</span>
-                                <span className="text-xs font-black text-white block mt-0.5">₹${(rec.recCoverage / 100000 >= 100 ? (rec.recCoverage / 10000000).toFixed(2) + " Cr" : (rec.recCoverage / 100000).toFixed(0) + " Lakh")}</span>
-                              </div>
-                              <div>
-                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">Est. Premium Range</span>
-                                <span className="text-xs font-bold text-emerald-400 block mt-0.5">{rec.premiumRange}</span>
-                              </div>
-                              <div>
-                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">AI Confidence</span>
-                                <span className="text-xs font-bold text-blue-400 block mt-0.5">{rec.confidence}%</span>
-                              </div>
-                            </div>
-
-                            {/* Why This Insurance? */}
-                            <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
-                              <span className="font-bold text-blue-400 block text-[10px] uppercase tracking-wider">🎯 Why do I need this?</span>
-                              <p className="text-slate-300 font-medium leading-relaxed">{rec.whyNeed}</p>
-                            </div>
-
-                            {/* Why This Coverage Calculation? */}
-                            <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
-                              <span className="font-bold text-emerald-400 block text-[10px] uppercase tracking-wider">🧮 Why this coverage amount?</span>
-                              <p className="text-slate-300 font-medium leading-relaxed">{rec.whyCoverage}</p>
-                              <span className="inline-block mt-1 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 font-mono text-[9px] text-slate-400">
-                                Formula: {rec.calculationFormula}
-                              </span>
-                            </div>
-
-                            {/* Recommended Insurers & AI Explanation */}
-                            <div className="space-y-2 text-left">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Recommended Insurers & Objective Analysis</span>
-                              <div className="flex flex-col gap-2">
-                                {rec.topInsurers.map((ins, idx) => (
-                                  <div key={idx} className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex flex-col gap-1">
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-bold text-white text-xs">{ins.name}</span>
-                                      <div className="flex gap-2 text-[9px] font-mono">
-                                        <span className="text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">CSR: {ins.csr}</span>
-                                        <span className="text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">{ins.network}</span>
-                                      </div>
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 leading-snug">💡 <strong>Why this insurer?</strong> {ins.reason}</p>
+                        .map((rec) => {
+                          const isExpanded = expandedRecIds.includes(rec.id);
+                          return (
+                            <div key={rec.id} className="glass-card p-5 rounded-3xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col justify-between gap-4 relative hover:border-blue-500/40 transition-all shadow-xl text-left">
+                              {/* Card Header Strip */}
+                              <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                                      {rec.category}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                      Priority: {rec.priority}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-mono text-slate-400 bg-slate-800">
+                                      Age: {rec.suitableAge}
+                                    </span>
                                   </div>
-                                ))}
+                                  <h4 className="font-extrabold text-white text-base mt-1.5">{rec.type}</h4>
+                                </div>
+
+                                {/* Circular Policy Score Gauge */}
+                                <div className="flex flex-col items-center">
+                                  <div className="w-11 h-11 rounded-full border-2 border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-mono font-black text-xs shadow-inner">
+                                    {rec.policyScore}
+                                  </div>
+                                  <span className="text-[8px] uppercase font-bold text-slate-500 mt-0.5">Policy Score</span>
+                                </div>
+                              </div>
+
+                              {/* 1-2 Line Key Summary Metrics Bar */}
+                              <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-950/50 border border-slate-800 text-left font-mono text-[10px]">
+                                <div>
+                                  <span className="text-[8px] text-slate-500 font-sans block uppercase font-bold">Coverage Target</span>
+                                  <span className="text-xs font-black text-white block mt-0.5">₹{(rec.recCoverage / 100000 >= 100 ? (rec.recCoverage / 10000000).toFixed(2) + " Cr" : (rec.recCoverage / 100000).toFixed(0) + " Lakh")}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[8px] text-slate-500 font-sans block uppercase font-bold">Est. Premium</span>
+                                  <span className="text-xs font-bold text-emerald-400 block mt-0.5">{rec.premiumRange}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[8px] text-slate-500 font-sans block uppercase font-bold">AI Confidence</span>
+                                  <span className="text-xs font-bold text-blue-400 block mt-0.5">{rec.confidence}%</span>
+                                </div>
+                              </div>
+
+                              {/* Concise 1-Line Key Recommendation Insight */}
+                              <p className="text-xs text-slate-300 font-medium leading-tight text-left line-clamp-2 px-1">
+                                💡 <strong>AI Insight:</strong> {rec.whyNeed}
+                              </p>
+
+                              {/* Dropdown Toggle Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (isExpanded) {
+                                    setExpandedRecIds(prev => prev.filter(id => id !== rec.id));
+                                  } else {
+                                    setExpandedRecIds(prev => [...prev, rec.id]);
+                                  }
+                                }}
+                                className="w-full py-2 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                {isExpanded ? (
+                                  <>▲ Collapse AI Intelligence Breakdown</>
+                                ) : (
+                                  <>▼ View Full AI Intelligence & Insurers ({rec.topInsurers.length} Insurers)</>
+                                )}
+                              </button>
+
+                              {/* EXPANDABLE DROPDOWN DETAILS SECTION */}
+                              {isExpanded && (
+                                <div className="flex flex-col gap-4 pt-3 border-t border-[var(--border-color)] animate-fadeIn">
+                                  {/* Why This Insurance? */}
+                                  <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
+                                    <span className="font-bold text-blue-400 block text-[10px] uppercase tracking-wider">🎯 Why do I need this?</span>
+                                    <p className="text-slate-300 font-medium leading-relaxed">{rec.whyNeed}</p>
+                                  </div>
+
+                                  {/* Why This Coverage Calculation? */}
+                                  <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
+                                    <span className="font-bold text-emerald-400 block text-[10px] uppercase tracking-wider">🧮 Why this coverage amount?</span>
+                                    <p className="text-slate-300 font-medium leading-relaxed">{rec.whyCoverage}</p>
+                                    <span className="inline-block mt-1 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 font-mono text-[9px] text-slate-400">
+                                      Formula: {rec.calculationFormula}
+                                    </span>
+                                  </div>
+
+                                  {/* Recommended Insurers & AI Explanation */}
+                                  <div className="space-y-2 text-left">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Recommended Insurers & Objective Analysis</span>
+                                    <div className="flex flex-col gap-2">
+                                      {rec.topInsurers.map((ins, idx) => (
+                                        <div key={idx} className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex flex-col gap-1">
+                                          <div className="flex justify-between items-center">
+                                            <span className="font-bold text-white text-xs">{ins.name}</span>
+                                            <div className="flex gap-2 text-[9px] font-mono">
+                                              <span className="text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">CSR: {ins.csr}</span>
+                                              <span className="text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">{ins.network}</span>
+                                            </div>
+                                          </div>
+                                          <p className="text-[10px] text-slate-400 leading-snug">💡 <strong>Why this insurer?</strong> {ins.reason}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Action Buttons Toolbar */}
+                              <div className="flex items-center gap-3 pt-2 border-t border-[var(--border-color)]">
+                                <button
+                                  onClick={() => {
+                                    if (!insCompareList.some(c => c.id === rec.id)) {
+                                      setInsCompareList(prev => [...prev, rec]);
+                                    }
+                                    setShowInsCompareModal(true);
+                                  }}
+                                  className="flex-1 py-2 rounded-xl border border-[var(--border-color)] bg-slate-900/60 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                  ⚖️ Compare Plans
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const newP: Insurance = {
+                                      id: Date.now().toString(),
+                                      type: rec.category,
+                                      provider: rec.topInsurers[0].name.split(" ")[0] + " ERGO",
+                                      premium: 1800,
+                                      coverage: rec.recCoverage,
+                                      renewalDate: "28 Oct 2026"
+                                    };
+                                    const updated = [...insurancePolicies, newP];
+                                    setInsurancePolicies(updated);
+                                    persistData("insurancePolicies", updated);
+                                    setNotifications(prev => [
+                                      { id: Date.now(), text: `Added ${rec.category} (${format(rec.recCoverage)}) to your insurance vault.`, unread: true },
+                                      ...prev
+                                    ]);
+                                  }}
+                                  className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                  ➕ Add to Vault
+                                </button>
                               </div>
                             </div>
-
-                            {/* Action Buttons Toolbar */}
-                            <div className="flex items-center gap-3 pt-3 border-t border-[var(--border-color)]">
-                              <button
-                                onClick={() => {
-                                  if (!insCompareList.some(c => c.id === rec.id)) {
-                                    setInsCompareList(prev => [...prev, rec]);
-                                  }
-                                  setShowInsCompareModal(true);
-                                }}
-                                className="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/60 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                              >
-                                ⚖️ Compare Plans
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const newP: Insurance = {
-                                    id: Date.now().toString(),
-                                    type: rec.category,
-                                    provider: rec.topInsurers[0].name.split(" ")[0] + " ERGO",
-                                    premium: 1800,
-                                    coverage: rec.recCoverage,
-                                    renewalDate: "28 Oct 2026"
-                                  };
-                                  const updated = [...insurancePolicies, newP];
-                                  setInsurancePolicies(updated);
-                                  persistData("insurancePolicies", updated);
-                                  setNotifications(prev => [
-                                    { id: Date.now(), text: `Added ${rec.category} (${format(rec.recCoverage)}) to your insurance vault.`, unread: true },
-                                    ...prev
-                                  ]);
-                                }}
-                                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-1.5"
-                              >
-                                ➕ Add to Vault
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   </div>
 

@@ -149,15 +149,15 @@ body {
   }
 }
 
-/* Accessibility contrast overrides for Light Mode (Vibrant, high-contrast, grey-free pastel blue box styling) */
+/* Accessibility contrast overrides for Light Mode (Refined Dual-Tone Palette with Crisp Contrast Borders) */
 html.light {
-  --bg-color: #f0f4f9; /* Premium warm slate-blue paper background */
+  --bg-color: #f4f8fc; /* Soft warm paper background */
   --text-color: #0f172a; /* Legible deep navy-black */
   --text-subtitle: #334155; /* Slate 700 secondary text */
-  --card-bg: #ffffff; /* Pure warm white solid card background */
-  --card-border: rgba(37, 99, 235, 0.16); /* Soft warm blue border */
-  --border-color: rgba(37, 99, 235, 0.2);
-  --glass-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.12); /* Warm blue shadow */
+  --card-bg: #ffffff; /* Pure crisp white solid card background */
+  --card-border: #cbd5e1; /* Clear slate border */
+  --border-color: rgba(37, 99, 235, 0.18);
+  --glass-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.06);
   --accent-color: #2563eb;
   --accent-hover: #1d4ed8;
 }
@@ -197,7 +197,7 @@ html.light .text-gray-900,
 html.light .text-slate-800,
 html.light .text-zinc-800,
 html.light .text-gray-800 {
-  color: #091e42 !important; /* Sharp carbon black */
+  color: #091e42 !important;
 }
 
 html.light .text-slate-700,
@@ -206,7 +206,7 @@ html.light .text-gray-700,
 html.light .text-slate-600,
 html.light .text-zinc-600,
 html.light .text-gray-600 {
-  color: #0f172a !important; /* Legible dark slate */
+  color: #0f172a !important;
 }
 
 html.light .text-slate-500,
@@ -214,7 +214,7 @@ html.light .text-zinc-500,
 html.light .text-gray-500,
 html.light .text-slate-500\/80,
 html.light .text-slate-500\/60 {
-  color: #1e293b !important; /* Readable dark slate */
+  color: #1e293b !important;
 }
 
 html.light .text-slate-400,
@@ -222,7 +222,7 @@ html.light .text-zinc-400,
 html.light .text-gray-400,
 html.light .text-slate-400\/80,
 html.light .text-slate-400\/60 {
-  color: #334155 !important; /* Slate 700 */
+  color: #334155 !important;
 }
 
 html.light .text-slate-300,
@@ -238,7 +238,13 @@ html.light .text-gray-200 {
   color: #334155 !important;
 }
 
-/* PASTEL BLUE LIGHT MODE BOX OVERRIDES (INVESTMENTS, INSURANCE, SUBSCRIPTIONS & GLOBAL) */
+/* HIGH-CONTRAST DUAL-TONE LIGHT MODE BOXES & CONTAINERS */
+html.light .glass-card {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 16px -2px rgba(37, 99, 235, 0.05) !important;
+}
+
 html.light .bg-slate-900\/5,
 html.light .bg-slate-950\/5,
 html.light .bg-slate-900\/10,
@@ -263,19 +269,44 @@ html.light .bg-slate-800\/50,
 html.light .bg-slate-800\/80,
 html.light .bg-slate-800\/90,
 html.light [class*="bg-[#11172"],
-html.light [class*="bg-[#151c3"],
-html.light .bg-gray-100,
-html.light .bg-gray-200,
-html.light .bg-gray-300,
-html.light .bg-slate-100,
-html.light .bg-slate-200,
-html.light .bg-slate-300 {
-  background-color: #e6f0fa !important; /* Elegant Pastel Blue box background */
-  border-color: rgba(37, 99, 235, 0.2) !important;
+html.light [class*="bg-[#151c3"] {
+  background-color: #f0f7ff !important; /* Soft Ice-Blue box background */
+  border: 1px solid #bfdbfe !important; /* Distinct blue-slate border */
   color: #0f172a !important;
 }
 
-/* Ensure drawers, sidebar panels, and full modals use solid pure white with pastel blue inner boxes */
+/* Distinct Tints for Status Badges & Alerts in Light Mode */
+html.light .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+html.light .bg-blue-500\/10 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+html.light .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+html.light .bg-purple-500\/10 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+}
+
+html.light .bg-rose-500\/10 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+/* Ensure drawers, sidebar panels, and full modals use solid pure white */
 html.light .bg-slate-950,
 html.light [class*="bg-slate-950/9"],
 html.light [class*="bg-slate-950/8"],
@@ -292,63 +323,64 @@ html.light input[type="email"],
 html.light input[type="date"],
 html.light select,
 html.light textarea {
-  background-color: #ebf3fc !important; /* Pastel Blue input box */
+  background-color: #ffffff !important;
   color: #0f172a !important;
-  border-color: rgba(37, 99, 235, 0.25) !important;
+  border: 1px solid #cbd5e1 !important;
 }
 
 html.light input::placeholder,
 html.light textarea::placeholder {
-  color: #475569 !important;
+  color: #64748b !important;
 }
 
-/* Secondary & Ghost Buttons in Light Mode */
+/* Buttons in Light Mode */
 html.light button.border-[var\(--border-color\)],
 html.light button.bg-slate-900\/40,
 html.light button.bg-slate-900\/50,
 html.light button.bg-slate-900\/60,
 html.light button.bg-slate-800 {
-  background-color: #dbeafe !important; /* Richer Pastel Blue button fill */
+  background-color: #eff6ff !important;
   color: #1d4ed8 !important;
-  border-color: rgba(37, 99, 235, 0.3) !important;
+  border: 1px solid #bfdbfe !important;
 }
 
 html.light button.border-[var\(--border-color\)]:hover,
 html.light button.bg-slate-900\/40:hover,
 html.light button.bg-slate-900\/50:hover {
-  background-color: #bfdbfe !important;
+  background-color: #dbeafe !important;
   color: #1e40af !important;
 }
 
-/* Replace dark grey borders with bright, warm contrast-blue boundaries */
+/* Border overrides */
 html.light .border-slate-800\/40,
 html.light .border-slate-800,
-html.light .border-slate-900 {
-  border-color: rgba(59, 130, 246, 0.2) !important;
+html.light .border-slate-900,
+html.light .border-[var\(--border-color\)] {
+  border-color: #cbd5e1 !important;
 }
 
-/* Override light text color classes in light mode to dark, high-contrast equivalents */
+/* Override light text color classes in light mode */
 html.light .text-emerald-400,
 html.light .text-emerald-500 {
-  color: #047857 !important; /* Premium dark emerald green */
+  color: #047857 !important;
 }
 html.light .text-blue-400,
 html.light .text-blue-500 {
-  color: #1d4ed8 !important; /* Premium dark royal blue */
+  color: #1d4ed8 !important;
 }
 html.light .text-indigo-400,
 html.light .text-indigo-500 {
-  color: #4338ca !important; /* Premium Indigo 700 */
+  color: #4338ca !important;
 }
 html.light .text-purple-400,
 html.light .text-purple-500 {
-  color: #7e22ce !important; /* Premium Purple 700 */
+  color: #7e22ce !important;
 }
 html.light .text-amber-400,
 html.light .text-amber-500 {
-  color: #b45309 !important; /* Premium Amber 700 */
+  color: #b45309 !important;
 }
 html.light .text-rose-400,
 html.light .text-rose-500 {
-  color: #be123c !important; /* Premium Rose 700 */
+  color: #be123c !important;
 }
