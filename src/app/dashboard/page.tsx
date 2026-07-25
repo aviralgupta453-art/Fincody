@@ -2234,37 +2234,49 @@ export default function Dashboard() {
     }
   };
 
+  // Safe JSON parse helper to prevent corrupted local storage from crashing React hydration
+  const safeJsonParse = (str: string | null, fallback: any) => {
+    if (!str) return fallback;
+    try {
+      const parsed = JSON.parse(str);
+      return parsed !== null && parsed !== undefined ? parsed : fallback;
+    } catch (e) {
+      console.warn("Failed to parse stored JSON:", e);
+      return fallback;
+    }
+  };
+
   useEffect(() => {
     if (!user) {
-      // Load guest data from LocalStorage
+      // Load guest data from LocalStorage safely
       const prefix = "fincody_guest_";
       try {
         const savedGoals = localStorage.getItem(`${prefix}goals`);
-        if (savedGoals) setGoals(JSON.parse(savedGoals));
+        if (savedGoals) setGoals(safeJsonParse(savedGoals, []));
 
         const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
-        if (savedSubs) setSubscriptions(JSON.parse(savedSubs));
+        if (savedSubs) setSubscriptions(safeJsonParse(savedSubs, []));
 
         const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
-        if (savedInsurance) setInsurancePolicies(JSON.parse(savedInsurance));
+        if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
 
         const savedDocs = localStorage.getItem(`${prefix}documents`);
-        if (savedDocs) setDocuments(JSON.parse(savedDocs));
+        if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
 
         const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
-        if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth));
+        if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth) || 0);
 
         const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
-        if (savedSavings) setMonthlySavings(parseFloat(savedSavings));
+        if (savedSavings) setMonthlySavings(parseFloat(savedSavings) || 0);
 
         const savedScore = localStorage.getItem(`${prefix}healthScore`);
-        if (savedScore) setHealthScore(parseInt(savedScore));
+        if (savedScore) setHealthScore(parseInt(savedScore) || 75);
 
         const savedStartYear = localStorage.getItem(`${prefix}startYear`);
-        if (savedStartYear) setStartYear(parseInt(savedStartYear));
+        if (savedStartYear) setStartYear(parseInt(savedStartYear) || 2024);
 
         const savedEndYear = localStorage.getItem(`${prefix}endYear`);
-        if (savedEndYear) setEndYear(parseInt(savedEndYear));
+        if (savedEndYear) setEndYear(parseInt(savedEndYear) || 2045);
 
         const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
         if (savedCalcStart) setCalculationStartDate(savedCalcStart);
@@ -2279,46 +2291,45 @@ export default function Dashboard() {
         if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
 
         const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
-        if (savedPortfolio) setPortfolio(JSON.parse(savedPortfolio));
+        if (savedPortfolio) setPortfolio(safeJsonParse(savedPortfolio, []));
 
         const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
-        if (savedSavedPortfolios) setSavedPortfolios(JSON.parse(savedSavedPortfolios));
+        if (savedSavedPortfolios) setSavedPortfolios(safeJsonParse(savedSavedPortfolios, []));
 
         const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
         if (savedActivePortName) setActivePortfolioName(savedActivePortName);
 
         const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
-        if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
+        if (savedAiRec) setAiRecommendation(safeJsonParse(savedAiRec, DEFAULT_AI_RECOMMENDATION));
 
-        // Load new asset classes
         const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
-        if (savedFDs) setFixedDeposits(JSON.parse(savedFDs));
+        if (savedFDs) setFixedDeposits(safeJsonParse(savedFDs, []));
 
         const savedPPF = localStorage.getItem(`${prefix}ppfData`);
-        if (savedPPF) setPpfData(JSON.parse(savedPPF));
+        if (savedPPF) setPpfData(safeJsonParse(savedPPF, { balance: 450000, annualContribution: 150000, startYear: 2024 }));
 
         const savedNPS = localStorage.getItem(`${prefix}npsData`);
-        if (savedNPS) setNpsData(JSON.parse(savedNPS));
+        if (savedNPS) setNpsData(safeJsonParse(savedNPS, { corpus: 300000, employerMonthly: 10000, personalMonthly: 5000, allocationE: 60, allocationC: 25, allocationG: 15 }));
 
         const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
-        if (savedGold) setGoldHoldings(JSON.parse(savedGold));
+        if (savedGold) setGoldHoldings(safeJsonParse(savedGold, []));
 
         const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
         if (savedMutualFunds) {
-          setMutualFunds(JSON.parse(savedMutualFunds));
+          setMutualFunds(safeJsonParse(savedMutualFunds, DEFAULT_MUTUAL_FUNDS));
         } else {
           setMutualFunds(DEFAULT_MUTUAL_FUNDS);
         }
 
         const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
-        if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
+        if (savedETFs) setEtfHoldings(safeJsonParse(savedETFs, []));
 
         const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
-        if (savedBonds) setBondHoldings(JSON.parse(savedBonds));
+        if (savedBonds) setBondHoldings(safeJsonParse(savedBonds, []));
 
         const savedSignatures = localStorage.getItem(`${prefix}uploadedDocSignatures`);
         if (savedSignatures) {
-          try { setUploadedDocSignatures(JSON.parse(savedSignatures)); } catch (e) {}
+          try { setUploadedDocSignatures(safeJsonParse(savedSignatures, {})); } catch (e) {}
         }
       } catch (e) {
         console.error("Error loading guest persisted state:", e);
@@ -2332,38 +2343,39 @@ export default function Dashboard() {
     const cloudDataStr = user.user_metadata?.fincody_dashboard_data;
     if (cloudDataStr) {
       try {
-        const data = JSON.parse(cloudDataStr);
-        if (data.goals) setGoals(data.goals);
-        if (data.subscriptions) setSubscriptions(data.subscriptions);
-        if (data.insurancePolicies) setInsurancePolicies(data.insurancePolicies);
-        if (data.documents) setDocuments(data.documents);
-        if (data.netWorth !== undefined) setNetWorth(data.netWorth);
-        if (data.monthlySavings !== undefined) setMonthlySavings(data.monthlySavings);
-        if (data.healthScore !== undefined) setHealthScore(data.healthScore);
-        if (data.startYear !== undefined) setStartYear(data.startYear);
-        if (data.endYear !== undefined) setEndYear(data.endYear);
-        if (data.calculationStartDate) setCalculationStartDate(data.calculationStartDate);
-        if (data.manualSalary !== undefined) setManualSalary(data.manualSalary);
-        if (data.manualEMI !== undefined) setManualEMI(data.manualEMI);
-        if (data.manualOtherExpenses !== undefined) setManualOtherExpenses(data.manualOtherExpenses);
-        if (data.portfolio) setPortfolio(data.portfolio);
-        if (data.savedPortfolios) setSavedPortfolios(data.savedPortfolios);
-        if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
-        if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
-        if (data.manualNetWorth !== undefined) setManualNetWorth(data.manualNetWorth);
-        if (data.mutualFunds) setMutualFunds(data.mutualFunds);
+        const data = typeof cloudDataStr === "object" ? cloudDataStr : safeJsonParse(cloudDataStr, null);
+        if (data) {
+          if (Array.isArray(data.goals)) setGoals(data.goals);
+          if (Array.isArray(data.subscriptions)) setSubscriptions(data.subscriptions);
+          if (Array.isArray(data.insurancePolicies)) setInsurancePolicies(data.insurancePolicies);
+          if (Array.isArray(data.documents)) setDocuments(data.documents);
+          if (data.netWorth !== undefined) setNetWorth(data.netWorth);
+          if (data.monthlySavings !== undefined) setMonthlySavings(data.monthlySavings);
+          if (data.healthScore !== undefined) setHealthScore(data.healthScore);
+          if (data.startYear !== undefined) setStartYear(data.startYear);
+          if (data.endYear !== undefined) setEndYear(data.endYear);
+          if (data.calculationStartDate) setCalculationStartDate(data.calculationStartDate);
+          if (data.manualSalary !== undefined) setManualSalary(data.manualSalary);
+          if (data.manualEMI !== undefined) setManualEMI(data.manualEMI);
+          if (data.manualOtherExpenses !== undefined) setManualOtherExpenses(data.manualOtherExpenses);
+          if (Array.isArray(data.portfolio)) setPortfolio(data.portfolio);
+          if (Array.isArray(data.savedPortfolios)) setSavedPortfolios(data.savedPortfolios);
+          if (data.activePortfolioName !== undefined) setActivePortfolioName(data.activePortfolioName);
+          if (data.aiRecommendation !== undefined) setAiRecommendation(data.aiRecommendation);
+          if (data.manualNetWorth !== undefined) setManualNetWorth(data.manualNetWorth);
+          if (Array.isArray(data.mutualFunds)) setMutualFunds(data.mutualFunds);
 
-        // Hydrate new asset classes from cloud
-        if (data.fixedDeposits) setFixedDeposits(data.fixedDeposits);
-        if (data.ppfData) setPpfData(data.ppfData);
-        if (data.npsData) setNpsData(data.npsData);
-        if (data.goldHoldings) setGoldHoldings(data.goldHoldings);
-        if (data.etfHoldings) setEtfHoldings(data.etfHoldings);
-        if (data.bondHoldings) setBondHoldings(data.bondHoldings);
+          if (Array.isArray(data.fixedDeposits)) setFixedDeposits(data.fixedDeposits);
+          if (data.ppfData) setPpfData(data.ppfData);
+          if (data.npsData) setNpsData(data.npsData);
+          if (Array.isArray(data.goldHoldings)) setGoldHoldings(data.goldHoldings);
+          if (Array.isArray(data.etfHoldings)) setEtfHoldings(data.etfHoldings);
+          if (Array.isArray(data.bondHoldings)) setBondHoldings(data.bondHoldings);
 
-        setSyncStatus("synced");
-        console.log("Hydrated Fincody dashboard from Cloud Vault.");
-        return;
+          setSyncStatus("synced");
+          console.log("Hydrated Fincody dashboard from Cloud Vault.");
+          return;
+        }
       } catch (e) {
         console.error("Failed to parse cloud dashboard data:", e);
       }
@@ -2373,31 +2385,31 @@ export default function Dashboard() {
     const prefix = `fincody_user_${user.id}_`;
     try {
       const savedGoals = localStorage.getItem(`${prefix}goals`);
-      if (savedGoals) setGoals(JSON.parse(savedGoals));
+      if (savedGoals) setGoals(safeJsonParse(savedGoals, []));
 
       const savedSubs = localStorage.getItem(`${prefix}subscriptions`);
-      if (savedSubs) setSubscriptions(JSON.parse(savedSubs));
+      if (savedSubs) setSubscriptions(safeJsonParse(savedSubs, []));
 
       const savedInsurance = localStorage.getItem(`${prefix}insurancePolicies`);
-      if (savedInsurance) setInsurancePolicies(JSON.parse(savedInsurance));
+      if (savedInsurance) setInsurancePolicies(safeJsonParse(savedInsurance, []));
 
       const savedDocs = localStorage.getItem(`${prefix}documents`);
-      if (savedDocs) setDocuments(JSON.parse(savedDocs));
+      if (savedDocs) setDocuments(safeJsonParse(savedDocs, []));
 
       const savedNetWorth = localStorage.getItem(`${prefix}netWorth`);
-      if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth));
+      if (savedNetWorth) setNetWorth(parseFloat(savedNetWorth) || 0);
 
       const savedSavings = localStorage.getItem(`${prefix}monthlySavings`);
-      if (savedSavings) setMonthlySavings(parseFloat(savedSavings));
+      if (savedSavings) setMonthlySavings(parseFloat(savedSavings) || 0);
 
       const savedScore = localStorage.getItem(`${prefix}healthScore`);
-      if (savedScore) setHealthScore(parseInt(savedScore));
+      if (savedScore) setHealthScore(parseInt(savedScore) || 75);
 
       const savedStartYear = localStorage.getItem(`${prefix}startYear`);
-      if (savedStartYear) setStartYear(parseInt(savedStartYear));
+      if (savedStartYear) setStartYear(parseInt(savedStartYear) || 2024);
 
       const savedEndYear = localStorage.getItem(`${prefix}endYear`);
-      if (savedEndYear) setEndYear(parseInt(savedEndYear));
+      if (savedEndYear) setEndYear(parseInt(savedEndYear) || 2045);
 
       const savedCalcStart = localStorage.getItem(`${prefix}calculationStartDate`);
       if (savedCalcStart) setCalculationStartDate(savedCalcStart);
@@ -2412,42 +2424,41 @@ export default function Dashboard() {
       if (savedManualOtherExpenses) setManualOtherExpenses(savedManualOtherExpenses);
 
       const savedPortfolio = localStorage.getItem(`${prefix}portfolio`);
-      if (savedPortfolio) setPortfolio(JSON.parse(savedPortfolio));
+      if (savedPortfolio) setPortfolio(safeJsonParse(savedPortfolio, []));
 
       const savedSavedPortfolios = localStorage.getItem(`${prefix}savedPortfolios`);
-      if (savedSavedPortfolios) setSavedPortfolios(JSON.parse(savedSavedPortfolios));
+      if (savedSavedPortfolios) setSavedPortfolios(safeJsonParse(savedSavedPortfolios, []));
 
       const savedActivePortName = localStorage.getItem(`${prefix}activePortfolioName`);
       if (savedActivePortName) setActivePortfolioName(savedActivePortName);
 
       const savedAiRec = localStorage.getItem(`${prefix}aiRecommendation`);
-      if (savedAiRec) setAiRecommendation(JSON.parse(savedAiRec));
+      if (savedAiRec) setAiRecommendation(safeJsonParse(savedAiRec, DEFAULT_AI_RECOMMENDATION));
 
-      // Hydrate new asset classes
       const savedFDs = localStorage.getItem(`${prefix}fixedDeposits`);
-      if (savedFDs) setFixedDeposits(JSON.parse(savedFDs));
+      if (savedFDs) setFixedDeposits(safeJsonParse(savedFDs, []));
 
       const savedPPF = localStorage.getItem(`${prefix}ppfData`);
-      if (savedPPF) setPpfData(JSON.parse(savedPPF));
+      if (savedPPF) setPpfData(safeJsonParse(savedPPF, { balance: 450000, annualContribution: 150000, startYear: 2024 }));
 
       const savedNPS = localStorage.getItem(`${prefix}npsData`);
-      if (savedNPS) setNpsData(JSON.parse(savedNPS));
+      if (savedNPS) setNpsData(safeJsonParse(savedNPS, { corpus: 300000, employerMonthly: 10000, personalMonthly: 5000, allocationE: 60, allocationC: 25, allocationG: 15 }));
 
       const savedGold = localStorage.getItem(`${prefix}goldHoldings`);
-      if (savedGold) setGoldHoldings(JSON.parse(savedGold));
+      if (savedGold) setGoldHoldings(safeJsonParse(savedGold, []));
 
       const savedMutualFunds = localStorage.getItem(`${prefix}mutualFunds`);
       if (savedMutualFunds) {
-        setMutualFunds(JSON.parse(savedMutualFunds));
+        setMutualFunds(safeJsonParse(savedMutualFunds, DEFAULT_MUTUAL_FUNDS));
       } else {
         setMutualFunds(DEFAULT_MUTUAL_FUNDS);
       }
 
       const savedETFs = localStorage.getItem(`${prefix}etfHoldings`);
-      if (savedETFs) setEtfHoldings(JSON.parse(savedETFs));
+      if (savedETFs) setEtfHoldings(safeJsonParse(savedETFs, []));
 
       const savedBonds = localStorage.getItem(`${prefix}bondHoldings`);
-      if (savedBonds) setBondHoldings(JSON.parse(savedBonds));
+      if (savedBonds) setBondHoldings(safeJsonParse(savedBonds, []));
     } catch (e) {
       console.error("Error loading persisted state fallback:", e);
     }
@@ -3572,19 +3583,22 @@ const handleSaveCurrentPortfolio = (name: string) => {
     }
   };
 
-  // Poll all quotes when portfolio symbols change
+  // Poll all quotes when portfolio symbols change safely
   useEffect(() => {
-    if (portfolio.length === 0) return;
+    const safePort = Array.isArray(portfolio) ? portfolio : [];
+    if (safePort.length === 0) return;
     
     const fetchAll = () => {
-      portfolio.forEach(item => fetchQuote(item.symbol));
+      safePort.forEach(item => {
+        if (item?.symbol) fetchQuote(item.symbol);
+      });
     };
 
     fetchAll();
     const intervalId = setInterval(fetchAll, 20000); // Poll every 20s
 
     return () => clearInterval(intervalId);
-  }, [portfolio.map(p => p.symbol).join(",")]);
+  }, [(Array.isArray(portfolio) ? portfolio : []).map((p: any) => p?.symbol || "").join(",")]);
 
   // Dynamically calculated financial metrics incorporating all assets & entries (safely protected from NaN values)
   const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
@@ -4180,15 +4194,17 @@ const handlePredefinedQuestion = (q: string) => {
 
 
   
-  const calculatedGoalContributions = goals.reduce((acc: number, curr: any) => acc + curr.current, 0);
+  const safeGoalsList = Array.isArray(goals) ? goals : [];
+  const safeSubsList = Array.isArray(subscriptions) ? subscriptions : [];
+  const calculatedGoalContributions = safeGoalsList.reduce((acc: number, curr: any) => acc + (curr?.current || 0), 0);
 
   // Dynamic Financial Health Score calculations based on live vault indicators
   const savingsRateRatio = salaryVal > 0 ? (calculatedMonthlySavings / salaryVal) : 0;
   const healthSavingsScore = Math.min(40, Math.round(savingsRateRatio * 100 * 1.3));
-  const healthEmergencyGoal = (goals || []).find(g => g.name.toLowerCase().includes("emergency"));
-  const healthEmergencyRatio = healthEmergencyGoal ? (healthEmergencyGoal.current / healthEmergencyGoal.target) : 0.85;
+  const healthEmergencyGoal = safeGoalsList.find(g => g?.name && g.name.toLowerCase().includes("emergency"));
+  const healthEmergencyRatio = healthEmergencyGoal ? ((healthEmergencyGoal.current || 0) / (healthEmergencyGoal.target || 1)) : 0.85;
   const healthEmergencyScore = Math.min(30, Math.round(healthEmergencyRatio * 30));
-  const activeSubsCount = (subscriptions || []).filter(s => s.status === "active").length;
+  const activeSubsCount = safeSubsList.filter(s => s?.status === "active").length;
   const healthSubScore = Math.max(10, 30 - (activeSubsCount * 3.5));
   const dynamicCalculatedHealthScore = Math.min(99, Math.max(35, Math.round(healthSavingsScore + healthEmergencyScore + healthSubScore)));
 
