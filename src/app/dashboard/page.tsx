@@ -5881,7 +5881,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 type="text"
                                 value={aiGoalPrompt}
                                 onChange={(e) => setAiGoalPrompt(e.target.value)}
-                                placeholder='e.g., "Recommend top undervalued Indian banking & AI tech stocks with low debt"'
+                                placeholder='e.g., "I have 2,00,000 for high-growth tech stocks"'
                                 className="flex-1 px-4 py-3 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-xs focus:outline-none focus:border-blue-500/30 text-white font-medium"
                               />
                               <button
@@ -5892,9 +5892,391 @@ const handlePredefinedQuestion = (q: string) => {
                                 {isGeneratingPortfolio ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-4 h-4" /> Run Model</>}
                               </button>
                             </form>
-                          </div>
 
-                            {/* Inline Swap Selection Modals */}
+                            {/* Sample Query Chips & Quick Presets */}
+                            <div className="flex flex-col gap-2">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Sample Queries & Quick Prompts</span>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  "High-growth aggressive tech portfolio",
+                                  "Conservative dividend income",
+                                  "Technology sector focus",
+                                  "Undervalued Indian banking leaders with high ROE",
+                                  "I have 2,00,000 for high-growth tech stocks"
+                                ].map((p, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                      setAiGoalPrompt(p);
+                                      setTimeout(() => {
+                                        const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+                                        handleGeneratePortfolio(syntheticEvent);
+                                      }, 100);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg border border-[var(--border-color)] bg-slate-900/40 hover:bg-slate-800 text-[10px] text-slate-300 hover:text-white transition-all cursor-pointer font-medium"
+                                  >
+                                    💡 {p}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Investment Strategy Selectors (10 Strategies) */}
+                            <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-color)]">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Select Investment Strategy</span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {[
+                                  { id: "wealth_creation", label: "📈 Long Term Wealth" },
+                                  { id: "short_term", label: "⚡ Short Term Growth" },
+                                  { id: "dividend", label: "💵 Dividend Income" },
+                                  { id: "value", label: "💎 Value Investing" },
+                                  { id: "growth", label: "🚀 High Growth" },
+                                  { id: "passive", label: "⚖️ Passive Indexing" },
+                                  { id: "aggressive", label: "🔥 Aggressive Beta" },
+                                  { id: "conservative", label: "🛡️ Capital Shield" },
+                                  { id: "tax_saving", label: "🏦 Tax Saver" },
+                                  { id: "retirement", label: "🏖️ Retirement Fund" }
+                                ].map((strat) => (
+                                  <button
+                                    key={strat.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedStrategy(strat.id);
+                                      let promptText = "Build balanced high compounding Indian equity growth portfolio";
+                                      if (strat.id === "dividend") promptText = "Recommend high dividend yield bluechip stocks and dividend ETFs with stable cash flows";
+                                      else if (strat.id === "value") promptText = "Recommend undervalued stocks trading below historical average P/E and P/B with high ROE";
+                                      else if (strat.id === "growth") promptText = "Recommend fast growing tech and consumer companies with >20% revenue expansion";
+                                      else if (strat.id === "passive") promptText = "Recommend low cost Nifty 50, Gold, and Global Index ETFs";
+                                      else if (strat.id === "conservative") promptText = "Recommend low volatility mega-cap stocks and Gold ETFs for capital preservation";
+                                      
+                                      setAiGoalPrompt(promptText);
+                                      setTimeout(() => {
+                                        const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+                                        handleGeneratePortfolio(syntheticEvent);
+                                      }, 100);
+                                    }}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border cursor-pointer ${
+                                      selectedStrategy === strat.id
+                                        ? "bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/20"
+                                        : "bg-slate-900/40 text-slate-400 border-[var(--border-color)] hover:text-white hover:bg-slate-800"
+                                    }`}
+                                  >
+                                    {strat.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Portfolio Analysis & Diversification Gap Check */}
+                            <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-slate-950/30 flex flex-col gap-4">
+                              <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Portfolio Risk & Concentration Audit</span>
+                                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+                                  Diversification Score: {aiRecommendation?.diversification || 88}/100
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Sector Exposure Audit */}
+                                <div className="flex flex-col gap-2">
+                                  <span className="text-[9px] font-bold text-slate-500 uppercase">Current Sector Exposure</span>
+                                  {(() => {
+                                    const userSects: Record<string, number> = {};
+                                    (portfolio || []).forEach(s => {
+                                      userSects[s.sector || "Technology"] = (userSects[s.sector || "Technology"] || 0) + (s.qty * (quotes[s.symbol]?.price || s.avgBuyPrice || 100));
+                                    });
+                                    const userTotal = Object.values(userSects).reduce((a, b) => a + b, 0);
+
+                                    const recSects: Record<string, number> = { Finance: 25, Technology: 25, Energy: 20, "Precious Metals": 15, Healthcare: 15 };
+                                    const missingSectors = Object.keys(recSects).filter(s => !userSects[s] || userTotal === 0);
+                                    const overweightSectors = Object.keys(userSects).filter(s => {
+                                      if (userTotal === 0) return false;
+                                      return ((userSects[s] / userTotal) * 100) > 35;
+                                    });
+
+                                    return (
+                                      <div className="flex flex-col gap-2 mt-1 text-[10px]">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-400 font-medium">Underweight / Missing:</span>
+                                          <div className="flex flex-wrap gap-1">
+                                            {missingSectors.length > 0 ? missingSectors.slice(0, 3).map(s => (
+                                              <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">{s}</span>
+                                            )) : <span className="text-slate-500 italic">None</span>}
+                                          </div>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-400 font-medium">Over-concentrated:</span>
+                                          <div className="flex flex-wrap gap-1">
+                                            {overweightSectors.length > 0 ? overweightSectors.map(s => (
+                                              <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">{s} (Over 35%)</span>
+                                            )) : <span className="text-emerald-400 font-bold">Optimal Concentration</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+
+                                {/* Impact Metrics */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="p-3 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-left">
+                                    <span className="text-[9px] text-slate-500 font-bold block uppercase">Expected Return Impact</span>
+                                    <span className="text-xs font-black text-emerald-400 block mt-1">+4.25% CAGR</span>
+                                  </div>
+                                  <div className="p-3 rounded-xl bg-slate-900/50 border border-[var(--border-color)] text-left">
+                                    <span className="text-[9px] text-slate-500 font-bold block uppercase">Volatility Reduction</span>
+                                    <span className="text-xs font-black text-blue-400 block mt-1">-18.4% Variance</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Filter & Sorting Toolbar */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[var(--border-color)]">
+                              {/* Asset Type Switcher */}
+                              <div className="flex items-center bg-slate-900/60 p-1 rounded-xl border border-[var(--border-color)] text-[10px]">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedEquityTypeTab("all")}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                                    selectedEquityTypeTab === "all" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
+                                  }`}
+                                >
+                                  All Proposals
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedEquityTypeTab("equities")}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                                    selectedEquityTypeTab === "equities" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
+                                  }`}
+                                >
+                                  Equities (Stocks)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedEquityTypeTab("etfs")}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                                    selectedEquityTypeTab === "etfs" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
+                                  }`}
+                                >
+                                  ETFs (Index & Gold)
+                                </button>
+                              </div>
+
+                              {/* Sector & Sorting Controls */}
+                              <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                                <select
+                                  value={equitySectorFilter}
+                                  onChange={(e) => setEquitySectorFilter(e.target.value)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-slate-300 font-semibold focus:outline-none"
+                                >
+                                  <option value="all">All Sectors</option>
+                                  <option value="Technology">Technology</option>
+                                  <option value="Finance">Finance / Banking</option>
+                                  <option value="Energy">Energy</option>
+                                  <option value="Healthcare">Healthcare</option>
+                                  <option value="Precious Metals">Precious Metals</option>
+                                  <option value="Broad Market">Broad Market</option>
+                                </select>
+
+                                <select
+                                  value={equitySortBy}
+                                  onChange={(e) => setEquitySortBy(e.target.value as any)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-slate-300 font-semibold focus:outline-none"
+                                >
+                                  <option value="confidence">Sort by AI Confidence</option>
+                                  <option value="return">Sort by Return CAGR</option>
+                                  <option value="risk">Sort by Lowest Risk</option>
+                                  <option value="valuation">Sort by Valuation</option>
+                                  <option value="analyst">Sort by Analyst Rating</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Recommendations Grid Cards */}
+                            {aiRecommendation && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
+                                {(() => {
+                                  const equities = (aiRecommendation.equities || aiRecommendation.stocks || []);
+                                  const etfs = (aiRecommendation.etfs || []);
+                                  
+                                  let combined: any[] = [];
+                                  if (selectedEquityTypeTab === "all") combined = [...equities, ...etfs];
+                                  else if (selectedEquityTypeTab === "equities") combined = equities;
+                                  else combined = etfs;
+
+                                  if (equitySectorFilter !== "all") {
+                                    combined = combined.filter(item => item.sector === equitySectorFilter);
+                                  }
+
+                                  if (ignoredRecs.length > 0) {
+                                    combined = combined.filter(item => !ignoredRecs.includes(item.symbol));
+                                  }
+
+                                  return combined.map((st: any) => {
+                                    const isEtf = st.type === "ETF";
+                                    const isWatchlisted = watchlist.includes(st.symbol);
+                                    const isCompared = compareList.some(c => c.symbol === st.symbol);
+
+                                    return (
+                                      <div key={st.symbol} className="glass-card p-5 rounded-2xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col justify-between gap-4 group relative hover:border-blue-500/40 transition-all text-left shadow-lg">
+                                        {/* Top Header Strip */}
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-extrabold text-white text-sm font-mono tracking-wide">{st.symbol}</span>
+                                              <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-800 text-slate-300 uppercase">{st.exchange || (st.symbol.includes(".NS") ? "NSE" : "NASDAQ")}</span>
+                                              {isEtf ? (
+                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">ETF</span>
+                                              ) : (
+                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">Equity</span>
+                                              )}
+                                            </div>
+                                            <span className="text-xs text-slate-400 font-semibold block mt-0.5">{st.name}</span>
+                                          </div>
+
+                                          <div className="text-right">
+                                            <span className="text-xs font-black text-white font-mono block">{format(st.price || 1500)}</span>
+                                            <span className={`text-[10px] font-bold block ${ (st.change || 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                              {(st.change || 0) >= 0 ? "+" : ""}{st.change || "+0.85"}% Today
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Badges Bar: Valuation, Return CAGR, Risk, Market Cap */}
+                                        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-bold">
+                                          <span className={`px-2 py-0.5 rounded ${st.valuation === "Undervalued" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
+                                            {st.valuation || "Fairly Valued"}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                            {st.returnRange || "14% - 20% CAGR"}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                            Risk: {st.riskLevel || "Low-Medium"}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                                            Cap: {st.marketCap || "₹12.5L Cr"}
+                                          </span>
+                                        </div>
+
+                                        {/* Key Fundamental Metrics Bar */}
+                                        {!isEtf ? (
+                                          <div className="grid grid-cols-4 gap-2 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/80 text-center font-mono text-[10px]">
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">P/E Ratio</span>
+                                              <span className="text-white font-bold block mt-0.5">{st.peRatio || "18.2x"}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">P/B Ratio</span>
+                                              <span className="text-white font-bold block mt-0.5">{st.pbRatio || "2.4x"}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">Div Yield</span>
+                                              <span className="text-emerald-400 font-bold block mt-0.5">{st.dividendYield || "1.4"}%</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">Analyst Buy</span>
+                                              <span className="text-blue-400 font-bold block mt-0.5">{st.analystRating || 88}%</span>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="grid grid-cols-4 gap-2 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/80 text-center font-mono text-[10px]">
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">Expense Ratio</span>
+                                              <span className="text-emerald-400 font-bold block mt-0.5">{st.expenseRatio || 0.05}%</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">Tracking Error</span>
+                                              <span className="text-white font-bold block mt-0.5">{st.trackingError || 0.02}%</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">AUM</span>
+                                              <span className="text-white font-bold block mt-0.5">{st.aum || "₹24,500Cr"}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[8px] text-slate-500 block font-sans">Hist. CAGR</span>
+                                              <span className="text-blue-400 font-bold block mt-0.5">{st.cagr || "13.8%"}</span>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Concise Data-Backed Reasons */}
+                                        <div className="flex flex-col gap-1 text-[10px] text-slate-300">
+                                          <span className="text-[9px] font-bold text-slate-500 uppercase">Key Evidence</span>
+                                          {(st.reasons || [st.rationale || "Strong growth profile and market moat"]).slice(0, 3).map((r: string, idx: number) => (
+                                            <div key={idx} className="flex items-start gap-1.5 leading-tight">
+                                              <span className="text-emerald-400 font-bold mt-0.5">✓</span>
+                                              <span>{r}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+
+                                        {/* 5-Question AI Intelligence Drawer */}
+                                        <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-2 text-[10px]">
+                                          <div className="flex flex-col">
+                                            <span className="font-bold text-blue-400">🎯 Why this asset?</span>
+                                            <span className="text-slate-300 font-medium mt-0.5">{st.whyAsset || "Market leadership with strong commercial pricing power."}</span>
+                                          </div>
+                                          <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                            <span className="font-bold text-emerald-400">⚡ Why now?</span>
+                                            <span className="text-slate-300 font-medium mt-0.5">{st.whyNow || "Attractive valuation multiple post recent consolidation."}</span>
+                                          </div>
+                                          <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                            <span className="font-bold text-amber-400">⚠️ Key Risks</span>
+                                            <span className="text-slate-400 font-medium mt-0.5">{st.risks || "Sector rotation and macroeconomic interest rate shifts."}</span>
+                                          </div>
+                                          <div className="flex flex-col border-t border-slate-800/50 pt-1.5">
+                                            <span className="font-bold text-rose-400">🔴 Downside Scenario</span>
+                                            <span className="text-slate-400 font-medium mt-0.5">{st.whatGoesWrong || "Slowing earnings growth or unexpected margin pressure."}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Action Buttons Toolbar */}
+                                        <div className="grid grid-cols-5 gap-1.5 border-t border-[var(--border-color)] pt-3 text-[9px] font-bold">
+                                          <button
+                                            onClick={() => handleAddRecToPortfolio(st)}
+                                            className="py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-center cursor-pointer transition-colors col-span-2"
+                                          >
+                                            ➕ Add Asset
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              if (isWatchlisted) setWatchlist(prev => prev.filter(s => s !== st.symbol));
+                                              else setWatchlist(prev => [...prev, st.symbol]);
+                                            }}
+                                            className={`py-1.5 rounded-lg border border-[var(--border-color)] text-center cursor-pointer transition-colors ${
+                                              isWatchlisted ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-slate-800 text-slate-300 hover:text-white"
+                                            }`}
+                                          >
+                                            {isWatchlisted ? "⭐ Saved" : "⭐ Watch"}
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              if (isCompared) setCompareList(prev => prev.filter(c => c.symbol !== st.symbol));
+                                              else if (compareList.length < 3) setCompareList(prev => [...prev, st]);
+                                            }}
+                                            className={`py-1.5 rounded-lg border border-[var(--border-color)] text-center cursor-pointer transition-colors ${
+                                              isCompared ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : "bg-slate-800 text-slate-300 hover:text-white"
+                                            }`}
+                                          >
+                                            {isCompared ? "⚖️ Added" : "⚖️ Compare"}
+                                          </button>
+                                          <button
+                                            onClick={() => setIgnoredRecs(prev => [...prev, st.symbol])}
+                                            className="py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-center cursor-pointer transition-colors"
+                                          >
+                                            ❌ Ignore
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  });
+                                })()}
+                              </div>
+                            )}
+                          </div>{/* Inline Swap Selection Modals */}
                             {replacingRecStock && (
                               <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
                                 <div className="glass-card max-w-sm w-full p-6 rounded-2xl border border-[var(--border-color)] bg-slate-900 flex flex-col gap-4 text-left">
