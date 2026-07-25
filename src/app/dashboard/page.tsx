@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -2264,6 +2264,9 @@ export default function Dashboard() {
   const [addEtfAvgPrice, setAddEtfAvgPrice] = useState("");
 
 
+    // Hydration Lock Ref to prevent autosave race conditions on page load
+  const isLoadedRef = useRef(false);
+
   // Persistence States & Helper
   const persistData = (key: string, data: any) => {
     const prefix = user ? `fincody_user_${user.id}_` : "fincody_guest_";
@@ -2378,6 +2381,7 @@ export default function Dashboard() {
         console.error("Error loading guest persisted state:", e);
       }
       setSyncStatus("guest");
+      isLoadedRef.current = true;
       return;
     }
 
@@ -2510,6 +2514,7 @@ export default function Dashboard() {
       console.error("Error loading persisted state fallback:", e);
     }
     setSyncStatus("synced");
+    isLoadedRef.current = true;
   }, [user]);
 
   // Live spot gold price update hook (queries live GC=F Futures & USDINR=X Exchange Rate)
@@ -2540,7 +2545,7 @@ export default function Dashboard() {
 
   // Debounced Autosave Sync to Supabase User Metadata
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isLoadedRef.current) return;
 
     // We only want to trigger the sync after the initial load completes
     // A delay of 2500ms debounces continuous user edits (like typing networth/names)
