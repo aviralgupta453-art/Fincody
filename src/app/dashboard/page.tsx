@@ -2215,6 +2215,32 @@ export default function Dashboard() {
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [activeAnalysisAsset, setActiveAnalysisAsset] = useState<any | null>(null);
 
+  // AI Insurance Advisor States
+  const [insProfile, setInsProfile] = useState({
+    age: 34,
+    gender: "Male",
+    maritalStatus: "Married",
+    dependents: 2,
+    occupation: "Software Engineer",
+    annualIncome: 2400000,
+    monthlyExpenses: 85000,
+    medicalHistory: "No Pre-existing Conditions",
+    lifestyle: "Non-Smoking",
+    existingLoans: 1500000,
+    homeOwnership: "Rented",
+    vehicleOwnership: "4-Wheeler Sedan",
+    retirementGoals: "Retire at 60 with ₹3 Cr Corpus",
+    financialGoals: "Family Health & Wealth Security",
+    riskAppetite: "Moderate",
+    country: "India"
+  });
+
+  const [showInsProfileModal, setShowInsProfileModal] = useState<boolean>(false);
+  const [showInsCompareModal, setShowInsCompareModal] = useState<boolean>(false);
+  const [insCompareList, setInsCompareList] = useState<any[]>([]);
+  const [selectedInsSimScenario, setSelectedInsSimScenario] = useState<string>("hospitalization_10l");
+  const [insCategoryFilter, setInsCategoryFilter] = useState<string>("all");
+
   // Investment Forms States
   const [addFdBank, setAddFdBank] = useState("");
   const [addFdPrincipal, setAddFdPrincipal] = useState("");
@@ -7110,6 +7136,1204 @@ const handlePredefinedQuestion = (q: string) => {
             })()}
 
             {/* Subscriptions */}
+            {activeTab === "subscriptions" && (
+              <motion.div
+                key="subscriptions"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
+              >
+                {/* Left Column: Subscriptions List */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-950/10">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-slate-500 font-bold uppercase tracking-wider font-semibold">Total Monthly Subscription Spend</span>
+                      <span className="text-3xl font-black text-[var(--text-color)] font-mono"><RollingNumber value={monthlySubscriptionSpend} /> <span className="text-sm text-slate-500 font-medium">/month</span></span>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
+                        <span className="text-slate-500 block">Active services</span>
+                        <span className="text-[var(--text-color)] font-bold mt-0.5 block">{activeSubscriptions.length} / {subscriptions.length}</span>
+                      </div>
+                      <div className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/10 text-xs font-bold">
+                        <span className="text-slate-500 block">AI savings found</span>
+                        <span className="text-emerald-500 font-bold mt-0.5 block"><RollingNumber value={4220} />/mo projected</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-900/5">
+                    <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] border-b border-[var(--border-color)] pb-3 block">Configured recurring bills</span>
+                    
+                    <div className="flex flex-col gap-3">
+                      {subscriptions.map((sub) => (
+                        <div 
+                          key={sub.id} 
+                          className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                            sub.status === "canceled" 
+                              ? "bg-slate-950/10 border-dashed border-[var(--border-color)] opacity-50" 
+                              : "bg-[#11172a]/20 border-[var(--border-color)] hover:border-blue-500/20"
+                          }`}
+                        >
+                          {editingSubId === sub.id ? (
+                            // EDITING SUBSCRIPTION
+                            <div className="w-full flex flex-col gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Service Name</label>
+                                  <input
+                                    type="text"
+                                    value={editSubName}
+                                    onChange={(e) => setEditSubName(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Recurring Cost</label>
+                                  <input
+                                    type="number"
+                                    value={editSubPrice}
+                                    onChange={(e) => setEditSubPrice(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Interval</label>
+                                  <select
+                                    value={editSubInterval}
+                                    onChange={(e) => setEditSubInterval(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  >
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Annually</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 justify-end mt-1">
+                                <button
+                                  onClick={handleCancelEditSub}
+                                  className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] font-bold text-[var(--text-subtitle)] hover:bg-slate-500/5 transition-colors cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSaveEditSub(sub.id)}
+                                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[10px] font-bold text-white shadow shadow-blue-500/10 transition-colors cursor-pointer"
+                                >
+                                  Save Bill
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // VIEWING SUBSCRIPTION
+                            <>
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-slate-800/25 flex items-center justify-center font-bold text-xs text-slate-400">
+                                  {sub.name[0]}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className={`font-bold text-sm ${sub.status === "canceled" ? "line-through text-slate-500" : "text-[var(--text-color)]"}`}>
+                                    {sub.name}
+                                  </span>
+                                  <span className="text-xs text-slate-500 mt-0.5">{sub.category} &bull; Bill recurring {sub.interval}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-3.5">
+                                <div className="text-right mr-2">
+                                  <span className="font-bold text-[var(--text-color)] text-sm block font-mono"><RollingNumber value={sub.price} /></span>
+                                  <span className="text-[10px] text-slate-500 mt-0.5 block uppercase tracking-wider font-bold">{sub.interval}</span>
+                                </div>
+
+                                <button
+                                  onClick={() => handleStartEditSub(sub)}
+                                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+                                  title="Edit bill"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteSub(sub.id)}
+                                  className="text-rose-500 hover:text-rose-400 p-2 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer mr-2"
+                                  title="Delete subscription"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleToggleSub(sub.id)}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                                    sub.status === "canceled"
+                                      ? "bg-blue-600/10 border-blue-500/25 text-blue-500 dark:text-blue-400 hover:bg-blue-600/20"
+                                      : "bg-rose-500/5 border-rose-500/10 text-rose-500 hover:bg-rose-500/10"
+                                  }`}
+                                >
+                                  {sub.status === "active" ? "Cancel" : "Activate"}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Add Subscription Form */}
+                <div className="lg:col-span-4 flex flex-col gap-6">
+                  <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] flex flex-col gap-4 bg-slate-950/10">
+                    <div className="border-b border-[var(--border-color)] pb-3">
+                      <span className="text-sm font-bold uppercase tracking-wider text-[var(--text-color)] block">Add Subscription</span>
+                      <span className="text-xs text-slate-500 mt-0.5 block">Configure new recurring bills</span>
+                    </div>
+
+                    <form onSubmit={handleAddSubscription} className="flex flex-col gap-3.5">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Service Name</label>
+                        <input
+                          type="text"
+                          value={newSubName}
+                          onChange={(e) => setNewSubName(e.target.value)}
+                          placeholder="e.g. YouTube Premium"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Cost</label>
+                        <input
+                          type="number"
+                          value={newSubPrice}
+                          onChange={(e) => setNewSubPrice(e.target.value)}
+                          placeholder="e.g. 129"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Billing Cycle</label>
+                          <select
+                            value={newSubInterval}
+                            onChange={(e) => setNewSubInterval(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Annually</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Category</label>
+                          <select
+                            value={newSubCategory}
+                            onChange={(e) => setNewSubCategory(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-[var(--text-color)] focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Music">Music</option>
+                            <option value="Development">Development</option>
+                            <option value="Design">Design</option>
+                            <option value="AI Tools">AI Tools</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                      >
+                        <Plus className="w-4 h-4" /> Add Service
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Insurance Vault & AI Insurance Advisor */}
+            {activeTab === "insurance" && (() => {
+              // Real-Time Audit & Protection Gap Calculations
+              const lifePolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("life") || p.type.toLowerCase().includes("term"));
+              const totalLifeCover = lifePolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const recLifeCover = (insProfile.annualIncome * 10) + insProfile.existingLoans;
+              const lifeGap = Math.max(0, recLifeCover - totalLifeCover);
+
+              const healthPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("health") || p.type.toLowerCase().includes("medical"));
+              const totalHealthCover = healthPolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const recHealthCover = 2500000; // ₹25 Lakh benchmark for tier-1 ICU inflation
+              const healthGap = Math.max(0, recHealthCover - totalHealthCover);
+
+              const criticalPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("critical"));
+              const totalCriticalCover = criticalPolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const recCriticalCover = insProfile.monthlyExpenses * 36; // 3 years expenses
+              const criticalGap = Math.max(0, recCriticalCover - totalCriticalCover);
+
+              const accidentPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("accident") || p.type.toLowerCase().includes("disability"));
+              const totalAccidentCover = accidentPolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const recAccidentCover = insProfile.annualIncome * 5; // 5x Annual Income
+              const accidentGap = Math.max(0, recAccidentCover - totalAccidentCover);
+
+              const vehiclePolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("auto") || p.type.toLowerCase().includes("vehicle"));
+              const totalVehicleCover = vehiclePolicies.reduce((acc, p) => acc + p.coverage, 0);
+              const recVehicleCover = 1200000;
+              const vehicleGap = Math.max(0, recVehicleCover - totalVehicleCover);
+
+              // 6 Protection Pillar Scores
+              const healthScore = Math.min(100, Math.round((totalHealthCover / recHealthCover) * 100));
+              const lifeScore = Math.min(100, Math.round((totalLifeCover / recLifeCover) * 100));
+              const criticalScore = totalCriticalCover > 0 ? 100 : 50;
+              const accidentScore = totalAccidentCover > 0 ? 100 : 60;
+              const familyScore = insProfile.dependents > 0 ? (lifeScore > 80 && healthScore > 80 ? 95 : 70) : 90;
+              const assetScore = totalVehicleCover > 0 ? 92 : 65;
+
+              const overallHealthScore = Math.round((healthScore * 0.25) + (lifeScore * 0.25) + (criticalScore * 0.15) + (accidentScore * 0.15) + (familyScore * 0.10) + (assetScore * 0.10));
+
+              // AI Recommended Insurance Plans Data
+              const aiInsuranceRecommendations = [
+                {
+                  id: "rec-health-1",
+                  category: "Health Insurance",
+                  type: "Super Top-up / Family Floater Plan",
+                  recCoverage: 2500000,
+                  premiumRange: "₹18,000 – ₹24,000/year",
+                  suitableAge: "18 – 65 Yrs",
+                  priority: "HIGH",
+                  confidence: 95,
+                  riskLevel: "Low",
+                  whyNeed: `Your current health cover of ${format(totalHealthCover)} is insufficient for tier-1 ICU hospitalization & robotic surgery inflation in India.`,
+                  whyCoverage: `Calculated based on: ${insProfile.dependents} dependents + Tier-1 hospital daily ICU inflation + ${insProfile.medicalHistory}.`,
+                  calculationFormula: "Base Floater (₹10L) + Super Top-up (₹15L) = ₹25 Lakh Total Protection",
+                  policyScore: 94,
+                  scores: { coverage: 96, premiumValue: 92, claimExp: 95, network: 94 },
+                  topInsurers: [
+                    { name: "HDFC ERGO Optima Secure", csr: "99.4%", network: "12,000+ Hospitals", reason: "Zero co-pay, 2x coverage restoration, and 100% NCB bonus." },
+                    { name: "Niva Bupa ReAssure 2.0", csr: "98.8%", network: "10,000+ Hospitals", reason: "Lock the age premium benefit and unlimited room rent capping." },
+                    { name: "Care Health Advantage", csr: "97.5%", network: "9,500+ Hospitals", reason: "Comprehensive annual health checkups and pre-existing disease waiver." }
+                  ]
+                },
+                {
+                  id: "rec-life-1",
+                  category: "Term Life Insurance",
+                  type: "Pure Risk Term Cover + Terminal Illness",
+                  recCoverage: recLifeCover,
+                  premiumRange: "₹22,000 – ₹30,000/year",
+                  suitableAge: "18 – 60 Yrs",
+                  priority: "HIGH",
+                  confidence: 96,
+                  riskLevel: "Low",
+                  whyNeed: `You have ${insProfile.dependents} dependents relying on your ${format(insProfile.annualIncome)} annual income plus ${format(insProfile.existingLoans)} in active loans.`,
+                  whyCoverage: `(10x Annual Income: ${format(insProfile.annualIncome * 10)}) + (Outstanding Loans: ${format(insProfile.existingLoans)}) = ${format(recLifeCover)}`,
+                  calculationFormula: "10x Annual Income (₹2.4 Cr) + Home Loan Buffer (₹15L) = ₹2.55 Cr",
+                  policyScore: 96,
+                  scores: { coverage: 98, premiumValue: 95, claimExp: 97, network: 94 },
+                  topInsurers: [
+                    { name: "Max Life Smart Secure Plus", csr: "99.6%", network: "Instant Claim Guarantee", reason: "Highest claim settlement ratio with early terminal illness payout." },
+                    { name: "Tata AIA Maha Raksha Supreme", csr: "99.1%", network: "Global Coverage", reason: "Inbuilt critical illness rider with return of premium option." },
+                    { name: "ICICI Pru iProtect Smart", csr: "99.2%", network: "Fast-Track Payout", reason: "Comprehensive accidental death benefit & waiver of premium on disability." }
+                  ]
+                },
+                {
+                  id: "rec-critical-1",
+                  category: "Critical Illness Cover",
+                  type: "Standalone Critical Illness Rider",
+                  recCoverage: 2500000,
+                  premiumRange: "₹8,000 – ₹12,000/year",
+                  suitableAge: "25 – 60 Yrs",
+                  priority: "HIGH",
+                  confidence: 92,
+                  riskLevel: "Medium",
+                  whyNeed: "Major diagnosis (cancer, cardiac surgery, stroke) causes 12-24 months of total income disruption not paid out by standard health insurance.",
+                  whyCoverage: `Calculated based on 36 months of household expenses (${format(insProfile.monthlyExpenses)}/mo) to protect your family during recovery.`,
+                  calculationFormula: "Monthly Expenses (₹85,000) × 36 Months = ₹30.6 Lakh (Rounded to ₹25 Lakh Lump Sum)",
+                  policyScore: 91,
+                  scores: { coverage: 93, premiumValue: 90, claimExp: 92, network: 89 },
+                  topInsurers: [
+                    { name: "Star Health Criticare Plus", csr: "98.2%", network: "64 Diseases Covered", reason: "Lump sum payout on diagnosis of 64 critical conditions without hospital bill requirement." },
+                    { name: "Care Shield Critical Illness", csr: "97.1%", network: "Instant Lump Sum", reason: "Covers oncology, cardiology, organ transplant, and neuro-surgery." }
+                  ]
+                },
+                {
+                  id: "rec-accident-1",
+                  category: "Personal Accident Cover",
+                  type: "Accidental Death & Permanent Disability",
+                  recCoverage: 5000000,
+                  premiumRange: "₹4,500 – ₹7,000/year",
+                  suitableAge: "18 – 65 Yrs",
+                  priority: "MEDIUM",
+                  confidence: 90,
+                  riskLevel: "Low",
+                  whyNeed: "Standard health policies do not pay weekly income replacement or permanent disability compensation if an accident hinders your ability to work.",
+                  whyCoverage: "5x Annual Income buffer to guarantee permanent disability salary replacement.",
+                  calculationFormula: "5 × Annual Income (₹24L) = ₹1.2 Cr (Base Target ₹50 Lakh)",
+                  policyScore: 89,
+                  scores: { coverage: 90, premiumValue: 94, claimExp: 88, network: 85 },
+                  topInsurers: [
+                    { name: "ICICI Lombard Personal Protect", csr: "98.5%", network: "Pan-India Coverage", reason: "Includes weekly temporary total disability allowance & child education benefit." },
+                    { name: "HDFC ERGO Personal Accident", csr: "99.0%", network: "24/7 Worldwide", reason: "100% sum insured payout for permanent total disability." }
+                  ]
+                }
+              ];
+
+              // Simulated Scenarios Data
+              const simScenarios: Record<string, any> = {
+                hospitalization_10l: {
+                  title: "🏥 Tier-1 Hospitalization costing ₹10 Lakh",
+                  description: "Emergency ICU stay & surgery at a metro super-specialty hospital.",
+                  covered: Math.min(1000000, totalHealthCover),
+                  outOfPocket: Math.max(0, 1000000 - totalHealthCover),
+                  shortfall: Math.max(0, 1000000 - totalHealthCover),
+                  action: totalHealthCover >= 1000000 ? "Fully Protected by current health insurance." : "Upgrade health floater or add a ₹15L Super Top-up policy for ₹2,400/yr."
+                },
+                surgery_20l: {
+                  title: "🔪 Major Cardiac / Robotic Surgery (₹20 Lakh)",
+                  description: "Complex procedure requiring specialized implants, robotic tech & extended ICU.",
+                  covered: Math.min(2000000, totalHealthCover),
+                  outOfPocket: Math.max(0, 2000000 - totalHealthCover),
+                  shortfall: Math.max(0, 2000000 - totalHealthCover),
+                  action: totalHealthCover >= 2000000 ? "Fully Protected." : `Coverage Shortfall of ${format(Math.max(0, 2000000 - totalHealthCover))}. Enhance floater to ₹25L.`
+                },
+                critical_illness: {
+                  title: "🔴 Critical Illness Diagnosis (Cancer / Heart Stroke)",
+                  description: "12-month treatment protocol + 18-month career pause for recovery.",
+                  covered: totalCriticalCover,
+                  outOfPocket: Math.max(0, 2500000 - totalCriticalCover),
+                  shortfall: Math.max(0, 2500000 - totalCriticalCover),
+                  action: totalCriticalCover >= 2500000 ? "Fully Protected." : "Zero payout from basic health insurance for non-hospital recovery. Add Critical Illness Rider."
+                },
+                disability: {
+                  title: "⚡ Accidental Permanent Disability",
+                  description: "Total loss of physical earning capacity post major road/travel accident.",
+                  covered: totalAccidentCover,
+                  outOfPocket: Math.max(0, 5000000 - totalAccidentCover),
+                  shortfall: Math.max(0, 5000000 - totalAccidentCover),
+                  action: totalAccidentCover >= 5000000 ? "Fully Protected." : "Add ₹50 Lakh Personal Accident policy for ₹4,500/year."
+                }
+              };
+
+              const currentSim = simScenarios[selectedInsSimScenario] || simScenarios.hospitalization_10l;
+
+              return (
+                <motion.div
+                  key="insurance"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  className="flex flex-col gap-8 text-left"
+                >
+                  {/* TOP HEADER & INSURANCE HEALTH SCORE BANNER */}
+                  <div className="glass-card p-6 rounded-3xl border border-[var(--border-color)] bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-indigo-950/40 flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
+                    <div className="flex items-center gap-6">
+                      {/* Animated Radial Score Ring */}
+                      <div className="relative w-24 h-24 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            className="text-slate-800"
+                            strokeWidth="3.5"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          <path
+                            className="text-blue-500 transition-all duration-1000 stroke-current"
+                            strokeDasharray={`${overallHealthScore}, 100`}
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute flex flex-col items-center justify-center text-center">
+                          <span className="text-xl font-black text-white font-mono">{overallHealthScore}</span>
+                          <span className="text-[8px] uppercase font-extrabold text-slate-400">out of 100</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-5 h-5 text-blue-500" />
+                          <h2 className="text-base font-black text-white uppercase tracking-wider">AI Insurance Health Score</h2>
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            {overallHealthScore >= 85 ? "Optimal Shield" : overallHealthScore >= 60 ? "Moderate Protection" : "High Risk Exposure"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
+                          Personalized insurance audit calculated from your financial profile (${insProfile.age} Yrs, ${insProfile.dependents} Dependents, ${format(insProfile.annualIncome)} Income).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                      <button
+                        onClick={() => setShowInsProfileModal(true)}
+                        className="w-full lg:w-auto px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/60 hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        ⚙️ Customize Profile (${insProfile.age} Yrs, ${insProfile.maritalStatus})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 6 PROTECTION PILLARS BREAKDOWN */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {[
+                      { title: "Health Cover", score: healthScore, icon: "🩺", amount: `₹${(totalHealthCover / 100000).toFixed(0)}L / ₹25L` },
+                      { title: "Life Cover", score: lifeScore, icon: "🛡️", amount: `₹${(totalLifeCover / 10000000).toFixed(1)}Cr / ₹2.5Cr` },
+                      { title: "Personal Accident", score: accidentScore, icon: "⚡", amount: totalAccidentCover > 0 ? "Covered" : "Missing" },
+                      { title: "Critical Illness", score: criticalScore, icon: "🔴", amount: totalCriticalCover > 0 ? "Covered" : "Missing" },
+                      { title: "Family Shield", score: familyScore, icon: "👨‍👩‍👧‍👦", amount: `${insProfile.dependents} Dependents` },
+                      { title: "Asset Protection", score: assetScore, icon: "🚗", amount: "Vehicle IDV Active" }
+                    ].map((p, idx) => (
+                      <div key={idx} className="glass-card p-3.5 rounded-2xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col gap-2">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-slate-400">{p.icon} {p.title}</span>
+                          <span className={`font-mono font-black ${p.score >= 80 ? "text-emerald-400" : "text-amber-400"}`}>{p.score}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-700 ${p.score >= 80 ? "bg-emerald-400" : "bg-amber-400"}`} style={{ width: `${p.score}%` }} />
+                        </div>
+                        <span className="text-[9px] font-mono text-slate-500 font-semibold">{p.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* INSURANCE PROTECTION GAP ANALYSIS BOX */}
+                  <div className="glass-card p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col gap-6 shadow-xl">
+                    <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-4">
+                      <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-400" /> Insurance Protection Gap Analysis
+                        </h3>
+                        <span className="text-xs text-slate-400 block mt-0.5">Calculated financial shortfall between your current policies and target safety requirements.</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
+                        Total Protection Shortfall: ₹${((lifeGap + healthGap + criticalGap + accidentGap) / 100000).toFixed(1)} Lakhs
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 text-xs">
+                      {/* Life Gap */}
+                      <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-extrabold text-white">Term Life Insurance</span>
+                          <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">Gap: ₹${(lifeGap / 100000).toFixed(0)}L</span>
+                        </div>
+                        <div className="space-y-1 text-[10px]">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Current: ₹${(totalLifeCover / 10000000).toFixed(1)} Cr</span>
+                            <span>Target: ₹${(recLifeCover / 10000000).toFixed(2)} Cr</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, (totalLifeCover / recLifeCover) * 100)}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-slate-400 leading-tight">
+                          ⚠️ <strong>Financial Risk</strong>: Dependents face ₹${(lifeGap / 100000).toFixed(0)}L income replacement deficit in case of untimely demise.
+                        </span>
+                      </div>
+
+                      {/* Health Gap */}
+                      <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-extrabold text-white">Health Insurance</span>
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Gap: ₹${(healthGap / 100000).toFixed(0)}L</span>
+                        </div>
+                        <div className="space-y-1 text-[10px]">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Current: ₹${(totalHealthCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹${(recHealthCover / 100000).toFixed(0)}L</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (totalHealthCover / recHealthCover) * 100)}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-slate-400 leading-tight">
+                          ⚠️ <strong>Financial Risk</strong>: Metro ICU & robotic surgery costs frequently breach ${(totalHealthCover / 100000).toFixed(0)}L.
+                        </span>
+                      </div>
+
+                      {/* Critical Illness Gap */}
+                      <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-extrabold text-white">Critical Illness</span>
+                          <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">Gap: ₹${(criticalGap / 100000).toFixed(0)}L</span>
+                        </div>
+                        <div className="space-y-1 text-[10px]">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Current: ₹${(totalCriticalCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹${(recCriticalCover / 100000).toFixed(0)}L</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, (totalCriticalCover / recCriticalCover) * 100)}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-slate-400 leading-tight">
+                          ⚠️ <strong>Financial Risk</strong>: Zero payout for 12-24 month recovery period post oncology or cardiac treatment.
+                        </span>
+                      </div>
+
+                      {/* Personal Accident Gap */}
+                      <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-extrabold text-white">Personal Accident</span>
+                          <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">Gap: ₹${(accidentGap / 100000).toFixed(0)}L</span>
+                        </div>
+                        <div className="space-y-1 text-[10px]">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Current: ₹${(totalAccidentCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹${(recAccidentCover / 100000).toFixed(0)}L</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, (totalAccidentCover / recAccidentCover) * 100)}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-slate-400 leading-tight">
+                          ⚠️ <strong>Financial Risk</strong>: Permanent disability income replacement is unhedged by standard policies.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI RECOMMENDED INSURANCE PLANS SECTION */}
+                  <div className="flex flex-col gap-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-3">
+                      <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-blue-500" /> Tailored AI Insurance Recommendations
+                        </h3>
+                        <span className="text-xs text-slate-400 block mt-0.5">Objective product recommendations calculated for your age, dependents, & financial goals.</span>
+                      </div>
+
+                      {/* Category Filter Pills */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {["all", "Health Insurance", "Term Life Insurance", "Critical Illness Cover", "Personal Accident Cover"].map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setInsCategoryFilter(cat)}
+                            className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                              insCategoryFilter === cat
+                                ? "bg-blue-600 text-white border-blue-500 shadow"
+                                : "bg-slate-900/60 text-slate-400 border-[var(--border-color)] hover:text-white"
+                            }`}
+                          >
+                            {cat === "all" ? "All Recommendations" : cat}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {aiInsuranceRecommendations
+                        .filter(r => insCategoryFilter === "all" || r.category === insCategoryFilter)
+                        .map((rec) => (
+                          <div key={rec.id} className="glass-card p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col justify-between gap-5 relative hover:border-blue-500/40 transition-all shadow-xl">
+                            {/* Card Header Strip */}
+                            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-4">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                                    {rec.category}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    Priority: {rec.priority}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded text-[9px] font-mono text-slate-400 bg-slate-800">
+                                    Age: {rec.suitableAge}
+                                  </span>
+                                </div>
+                                <h4 className="font-extrabold text-white text-base mt-2">{rec.type}</h4>
+                              </div>
+
+                              {/* Circular Policy Score Gauge */}
+                              <div className="flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full border-2 border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-mono font-black text-xs shadow-inner">
+                                  {rec.policyScore}
+                                </div>
+                                <span className="text-[8px] uppercase font-bold text-slate-500 mt-1">Policy Score</span>
+                              </div>
+                            </div>
+
+                            {/* Core Financial Recommendations Metrics */}
+                            <div className="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 text-left font-mono">
+                              <div>
+                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">Recommended Coverage</span>
+                                <span className="text-xs font-black text-white block mt-0.5">₹${(rec.recCoverage / 100000 >= 100 ? (rec.recCoverage / 10000000).toFixed(2) + " Cr" : (rec.recCoverage / 100000).toFixed(0) + " Lakh")}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">Est. Premium Range</span>
+                                <span className="text-xs font-bold text-emerald-400 block mt-0.5">{rec.premiumRange}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] text-slate-500 font-sans block uppercase font-bold">AI Confidence</span>
+                                <span className="text-xs font-bold text-blue-400 block mt-0.5">{rec.confidence}%</span>
+                              </div>
+                            </div>
+
+                            {/* Why This Insurance? */}
+                            <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
+                              <span className="font-bold text-blue-400 block text-[10px] uppercase tracking-wider">🎯 Why do I need this?</span>
+                              <p className="text-slate-300 font-medium leading-relaxed">{rec.whyNeed}</p>
+                            </div>
+
+                            {/* Why This Coverage Calculation? */}
+                            <div className="p-3.5 rounded-2xl bg-slate-950/30 border border-slate-800/80 space-y-1 text-left text-xs">
+                              <span className="font-bold text-emerald-400 block text-[10px] uppercase tracking-wider">🧮 Why this coverage amount?</span>
+                              <p className="text-slate-300 font-medium leading-relaxed">{rec.whyCoverage}</p>
+                              <span className="inline-block mt-1 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 font-mono text-[9px] text-slate-400">
+                                Formula: {rec.calculationFormula}
+                              </span>
+                            </div>
+
+                            {/* Recommended Insurers & AI Explanation */}
+                            <div className="space-y-2 text-left">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Recommended Insurers & Objective Analysis</span>
+                              <div className="flex flex-col gap-2">
+                                {rec.topInsurers.map((ins, idx) => (
+                                  <div key={idx} className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex flex-col gap-1">
+                                    <div className="flex justify-between items-center">
+                                      <span className="font-bold text-white text-xs">{ins.name}</span>
+                                      <div className="flex gap-2 text-[9px] font-mono">
+                                        <span className="text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">CSR: {ins.csr}</span>
+                                        <span className="text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">{ins.network}</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 leading-snug">💡 <strong>Why this insurer?</strong> {ins.reason}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Action Buttons Toolbar */}
+                            <div className="flex items-center gap-3 pt-3 border-t border-[var(--border-color)]">
+                              <button
+                                onClick={() => {
+                                  if (!insCompareList.some(c => c.id === rec.id)) {
+                                    setInsCompareList(prev => [...prev, rec]);
+                                  }
+                                  setShowInsCompareModal(true);
+                                }}
+                                className="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] bg-slate-900/60 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                ⚖️ Compare Plans
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newP: Insurance = {
+                                    id: Date.now().toString(),
+                                    type: rec.category,
+                                    provider: rec.topInsurers[0].name.split(" ")[0] + " ERGO",
+                                    premium: 1800,
+                                    coverage: rec.recCoverage,
+                                    renewalDate: "28 Oct 2026"
+                                  };
+                                  const updated = [...insurancePolicies, newP];
+                                  setInsurancePolicies(updated);
+                                  persistData("insurancePolicies", updated);
+                                  setNotifications(prev => [
+                                    { id: Date.now(), text: `Added ${rec.category} (${format(rec.recCoverage)}) to your insurance vault.`, unread: true },
+                                    ...prev
+                                  ]);
+                                }}
+                                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                ➕ Add to Vault
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* WHAT-IF RISK SCENARIO SIMULATOR */}
+                  <div className="glass-card p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900/40 flex flex-col gap-5 shadow-xl">
+                    <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                      <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                          🧪 "What-If" Life Event Risk Simulator
+                        </h3>
+                        <span className="text-xs text-slate-400 block mt-0.5">Test how your current insurance vault holds up against critical financial emergencies.</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "hospitalization_10l", label: "🏥 Hospitalization (₹10 Lakh)" },
+                        { id: "surgery_20l", label: "🔪 Major Surgery (₹20 Lakh)" },
+                        { id: "critical_illness", label: "🔴 Critical Illness Diagnosis" },
+                        { id: "disability", label: "⚡ Accidental Disability" }
+                      ].map((sc) => (
+                        <button
+                          key={sc.id}
+                          onClick={() => setSelectedInsSimScenario(sc.id)}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            selectedInsSimScenario === sc.id
+                              ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/20"
+                              : "bg-slate-900/60 text-slate-400 border-[var(--border-color)] hover:text-white"
+                          }`}
+                        >
+                          {sc.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Simulation Result Output */}
+                    <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">Simulated Event</span>
+                        <span className="text-xs font-extrabold text-white block mt-1">{currentSim.title}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{currentSim.description}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">Covered Amount</span>
+                        <span className="text-sm font-mono font-black text-emerald-400 block mt-1">₹${(currentSim.covered / 100000).toFixed(1)} Lakh</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">Out-of-Pocket Cost</span>
+                        <span className={`text-sm font-mono font-black block mt-1 ${currentSim.outOfPocket > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                          ₹${(currentSim.outOfPocket / 100000).toFixed(1)} Lakh
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">AI Recommended Action</span>
+                        <span className="text-[10px] text-slate-300 font-semibold block mt-1 leading-snug">
+                          💡 {currentSim.action}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACTIVE REGISTERED POLICIES VAULT & SMART REMINDERS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column: Active Vault Policies List */}
+                    <div className="lg:col-span-8 flex flex-col gap-5">
+                      <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                        <div>
+                          <span className="text-sm font-bold uppercase tracking-wider text-white block">Active Insurance Vault Policies</span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">Audit and manage active policies registered in your account</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        {insurancePolicies.map((policy) => {
+                          const isEditing = editingInsuranceId === policy.id;
+                          return (
+                            <div key={policy.id} className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-[#11172b]/10 flex flex-col gap-4 relative">
+                              {isEditing ? (
+                                <form onSubmit={(e) => handleSaveEditInsurance(e, policy.id)} className="flex flex-col gap-3.5">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Policy Type</label>
+                                      <select
+                                        value={editInsType}
+                                        onChange={(e) => setEditInsType(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                      >
+                                        <option value="Health Insurance">Health Insurance</option>
+                                        <option value="Term Life Insurance">Term Life Insurance</option>
+                                        <option value="Auto Insurance">Auto Insurance</option>
+                                        <option value="Home Insurance">Home Insurance</option>
+                                        <option value="Critical Illness Insurance">Critical Illness Insurance</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Provider Name</label>
+                                      <input
+                                        type="text"
+                                        value={editInsProvider}
+                                        onChange={(e) => setEditInsProvider(e.target.value)}
+                                        placeholder="e.g. HDFC Ergo"
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Coverage Sum</label>
+                                      <input
+                                        type="number"
+                                        value={editInsCoverage}
+                                        onChange={(e) => setEditInsCoverage(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Monthly Premium</label>
+                                      <input
+                                        type="number"
+                                        value={editInsPremium}
+                                        onChange={(e) => setEditInsPremium(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Renewal Date</label>
+                                      <input
+                                        type="text"
+                                        value={editInsRenewalDate}
+                                        onChange={(e) => setEditInsRenewalDate(e.target.value)}
+                                        placeholder="e.g. 15 Oct 2026"
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-2 justify-end mt-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingInsuranceId(null)}
+                                      className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="submit"
+                                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer"
+                                    >
+                                      Save Policy
+                                    </button>
+                                  </div>
+                                </form>
+                              ) : (
+                                <>
+                                  <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
+                                    <div className="flex items-center gap-3 text-left">
+                                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                        <Shield className="w-5 h-5" />
+                                      </div>
+                                      <div>
+                                        <h3 className="font-bold text-[var(--text-color)] text-sm">{policy.type}</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">{policy.provider}</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => handleStartEditInsurance(policy)}
+                                        className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-500/10 transition-all cursor-pointer"
+                                        title="Edit policy details"
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleRemoveInsurance(policy.id)}
+                                        className="text-rose-500 hover:text-rose-400 p-2 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer"
+                                        title="Delete policy"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-3 gap-4 my-1 text-left">
+                                    <div>
+                                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Coverage Sum</span>
+                                      <span className="text-base font-extrabold text-white mt-0.5 block font-mono">
+                                        <RollingNumber value={policy.coverage} />
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Monthly Premium</span>
+                                      <span className="text-base font-extrabold text-white mt-0.5 block font-mono">
+                                        <RollingNumber value={policy.premium} /> <span className="text-[10px] text-slate-500 font-semibold">/mo</span>
+                                      </span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Renewal & Reminders</span>
+                                      <span className="text-xs font-bold text-amber-500 mt-1 block">📅 {policy.renewalDate}</span>
+                                      <span className="text-[9px] text-emerald-400 block mt-0.5">✓ Nominee & KYC Active</span>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {insurancePolicies.length === 0 && (
+                          <div className="text-center py-8 text-xs text-slate-500 italic">
+                            No active insurance policies registered.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Register Custom Policy Form */}
+                    <div className="lg:col-span-4 flex flex-col gap-6">
+                      <div className="glass-card p-6 rounded-2xl border border-[var(--border-color)] bg-slate-950/10 flex flex-col gap-4 text-left">
+                        <div className="border-b border-[var(--border-color)] pb-3">
+                          <span className="text-sm font-bold uppercase tracking-wider text-white block">Add Policy to Vault</span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">Manually register new insurance policy</span>
+                        </div>
+
+                        <form onSubmit={handleAddInsurance} className="flex flex-col gap-3.5">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Policy Type</label>
+                            <select
+                              value={addInsType}
+                              onChange={(e) => setAddInsType(e.target.value)}
+                              className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                              <option value="Health Insurance">Health Insurance</option>
+                              <option value="Term Life Insurance">Term Life Insurance</option>
+                              <option value="Auto Insurance">Auto Insurance</option>
+                              <option value="Home Insurance">Home Insurance</option>
+                              <option value="Critical Illness Insurance">Critical Illness Insurance</option>
+                              <option value="Personal Accident Insurance">Personal Accident Insurance</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Provider Name</label>
+                            <input
+                              type="text"
+                              value={addInsProvider}
+                              onChange={(e) => setAddInsProvider(e.target.value)}
+                              placeholder="e.g. HDFC Ergo / Max Life"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                              required
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Coverage Sum</label>
+                              <input
+                                type="number"
+                                value={addInsCoverage}
+                                onChange={(e) => setAddInsCoverage(e.target.value)}
+                                placeholder="e.g. 1500000"
+                                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Monthly Premium</label>
+                              <input
+                                type="number"
+                                value={addInsPremium}
+                                onChange={(e) => setAddInsPremium(e.target.value)}
+                                placeholder="e.g. 1500"
+                                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 placeholder-slate-600 font-mono"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Renewal Date</label>
+                            <input
+                              type="text"
+                              value={addInsRenewalDate}
+                              onChange={(e) => setAddInsRenewalDate(e.target.value)}
+                              placeholder="e.g. 15 Oct 2026"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-[var(--border-color)] text-xs text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                          >
+                            <Plus className="w-4 h-4" /> Add Policy
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* MODAL 1: PROFILE CUSTOMIZATION MODAL */}
+                  {showInsProfileModal && (
+                    <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+                      <div className="glass-card max-w-2xl w-full p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900 flex flex-col gap-5 text-left shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                          <div>
+                            <h3 className="text-base font-black text-white uppercase tracking-wider">Configure Financial & Risk Profile</h3>
+                            <span className="text-xs text-slate-400 mt-0.5 block">AI Advisor uses these parameters to calculate personalized coverage targets.</span>
+                          </div>
+                          <button onClick={() => setShowInsProfileModal(false)} className="text-slate-400 hover:text-white font-bold p-1">✕</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Age</label>
+                            <input
+                              type="number"
+                              value={insProfile.age}
+                              onChange={(e) => setInsProfile({ ...insProfile, age: parseInt(e.target.value) || 30 })}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Marital Status & Dependents</label>
+                            <div className="flex gap-2">
+                              <select
+                                value={insProfile.maritalStatus}
+                                onChange={(e) => setInsProfile({ ...insProfile, maritalStatus: e.target.value })}
+                                className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500"
+                              >
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={insProfile.dependents}
+                                onChange={(e) => setInsProfile({ ...insProfile, dependents: parseInt(e.target.value) || 0 })}
+                                placeholder="Dependents"
+                                className="w-24 px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500 font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Annual Income (₹)</label>
+                            <input
+                              type="number"
+                              value={insProfile.annualIncome}
+                              onChange={(e) => setInsProfile({ ...insProfile, annualIncome: parseFloat(e.target.value) || 0 })}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Monthly Expenses (₹)</label>
+                            <input
+                              type="number"
+                              value={insProfile.monthlyExpenses}
+                              onChange={(e) => setInsProfile({ ...insProfile, monthlyExpenses: parseFloat(e.target.value) || 0 })}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Existing Loans (₹)</label>
+                            <input
+                              type="number"
+                              value={insProfile.existingLoans}
+                              onChange={(e) => setInsProfile({ ...insProfile, existingLoans: parseFloat(e.target.value) || 0 })}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Lifestyle & Smoking</label>
+                            <select
+                              value={insProfile.lifestyle}
+                              onChange={(e) => setInsProfile({ ...insProfile, lifestyle: e.target.value })}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-[var(--border-color)] text-white focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="Non-Smoking">Non-Smoking</option>
+                              <option value="Occasional Smoker">Occasional Smoker</option>
+                              <option value="Regular Smoker">Regular Smoker</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setShowInsProfileModal(false)}
+                          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer mt-2"
+                        >
+                          Save Profile & Update Gap Analysis
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MODAL 2: SIDE-BY-SIDE PLAN COMPARISON MODAL */}
+                  {showInsCompareModal && (
+                    <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+                      <div className="glass-card max-w-4xl w-full p-6 rounded-3xl border border-[var(--border-color)] bg-slate-900 flex flex-col gap-5 text-left shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
+                          <div>
+                            <h3 className="text-base font-black text-white uppercase tracking-wider">Compare Insurance Plans & Insurers</h3>
+                            <span className="text-xs text-slate-400 mt-0.5 block">Objective side-by-side comparison matrix of coverage, CSR, room rent, & features.</span>
+                          </div>
+                          <button onClick={() => setShowInsCompareModal(false)} className="text-slate-400 hover:text-white font-bold p-1">✕</button>
+                        </div>
+
+                        {insCompareList.length === 0 ? (
+                          <span className="text-xs text-slate-500 italic text-center py-8">No plans selected for comparison. Click "⚖️ Compare Plans" on any recommendation card.</span>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs border-collapse font-sans">
+                              <thead>
+                                <tr className="border-b border-slate-800 text-slate-400">
+                                  <th className="p-3 font-bold uppercase text-[10px]">Feature Matrix</th>
+                                  {insCompareList.map(plan => (
+                                    <th key={plan.id} className="p-3 font-extrabold text-white">{plan.category} ({plan.topInsurers[0]?.name})</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                                <tr>
+                                  <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Recommended Coverage</td>
+                                  {insCompareList.map(plan => (
+                                    <td key={plan.id} className="p-3 font-mono font-bold text-white">₹${(plan.recCoverage / 100000).toFixed(0)} Lakh</td>
+                                  ))}
+                                </tr>
+                                <tr>
+                                  <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Est. Annual Premium</td>
+                                  {insCompareList.map(plan => (
+                                    <td key={plan.id} className="p-3 font-mono text-emerald-400 font-bold">{plan.premiumRange}</td>
+                                  ))}
+                                </tr>
+                                <tr>
+                                  <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Claim Settlement Ratio (CSR)</td>
+                                  {insCompareList.map(plan => (
+                                    <td key={plan.id} className="p-3 font-mono text-blue-400 font-bold">{plan.topInsurers[0]?.csr || "99.2%"}</td>
+                                  ))}
+                                </tr>
+                                <tr>
+                                  <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Cashless Network</td>
+                                  {insCompareList.map(plan => (
+                                    <td key={plan.id} className="p-3 font-mono text-white">{plan.topInsurers[0]?.network || "10,000+ Hospitals"}</td>
+                                  ))}
+                                </tr>
+                                <tr>
+                                  <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Policy Score</td>
+                                  {insCompareList.map(plan => (
+                                    <td key={plan.id} className="p-3 font-mono font-bold text-emerald-400">{plan.policyScore} / 100</td>
+                                  ))}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-3 pt-2">
+                          <button
+                            onClick={() => setInsCompareList([])}
+                            className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-bold text-slate-400 hover:text-white"
+                          >
+                            Clear Comparison
+                          </button>
+                          <button
+                            onClick={() => setShowInsCompareModal(false)}
+                            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white"
+                          >
+                            Close Matrix
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })()}
+
+            {/* Subscriptions */}{/* Subscriptions */}
             {activeTab === "subscriptions" && (
               <motion.div
                 key="subscriptions"
