@@ -3074,7 +3074,7 @@ export default function Dashboard() {
       calculatedSavings = Math.max(0, salaryVal - emiVal - otherExpVal - subSpend);
       setMonthlySavings(calculatedSavings);
       persistData("monthlySavings", calculatedSavings);
-      updatedLog.push(`Savings calculated to ₹${calculatedSavings.toLocaleString()}`);
+      updatedLog.push(`Savings calculated to ₹{calculatedSavings.toLocaleString()}`);
 
       // Calculate dynamic health score
       const savingsRate = calculatedSavings / (salaryVal || 1);
@@ -3089,7 +3089,7 @@ export default function Dashboard() {
     if (manualNetWorth && !isNaN(netWorthVal)) {
       setNetWorth(netWorthVal);
       persistData("netWorth", netWorthVal);
-      updatedLog.push(`Net Worth set to ₹${netWorthVal.toLocaleString()}`);
+      updatedLog.push(`Net Worth set to ₹{netWorthVal.toLocaleString()}`);
     }
 
     // Add new subscription if filled
@@ -3108,7 +3108,7 @@ export default function Dashboard() {
         nextSubs = [...subscriptions, newSub];
         setSubscriptions(nextSubs);
         persistData("subscriptions", nextSubs);
-        updatedLog.push(`Added subscription ${manualSubscriptionName} (₹${priceVal})`);
+        updatedLog.push(`Added subscription ${manualSubscriptionName} (₹{priceVal})`);
       }
     }
 
@@ -3131,13 +3131,13 @@ export default function Dashboard() {
       const manualExtracted = {
         docType: "Manual Sheet",
         details: {
-          "Monthly Salary": { value: `₹${(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
-          "EMI Obligations": { value: `₹${(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
-          "Other Monthly Expenses": { value: `₹${(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
-          "Custom Base Net Worth": { value: `₹${(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
+          "Monthly Salary": { value: `₹{(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
+          "EMI Obligations": { value: `₹{(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
+          "Other Monthly Expenses": { value: `₹{(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
+          "Custom Base Net Worth": { value: `₹{(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
         },
         highlights: {
-          "Surplus Dynamic Savings": { value: `₹${calculatedSavings.toLocaleString()}`, confidence: 100 },
+          "Surplus Dynamic Savings": { value: `₹{calculatedSavings.toLocaleString()}`, confidence: 100 },
           "Calculated Health Score": { value: `${healthScore}/100`, confidence: 100 }
         },
         recommendations: [
@@ -5510,11 +5510,11 @@ const handlePredefinedQuestion = (q: string) => {
                       const isFeasible = actualMonthlySavings >= requiredMonthlySaving;
                       
                       if (isFeasible) {
-                        suggestionText = `Feasible Milestones: Your current monthly surplus of ₹${actualMonthlySavings.toLocaleString()} is fully sufficient to meet your tracked goals (₹${totalTarget.toLocaleString()}) within 5 years.`;
+                        suggestionText = `Feasible Milestones: Your current monthly surplus of ₹{actualMonthlySavings.toLocaleString()} is fully sufficient to meet your tracked goals (₹{totalTarget.toLocaleString()}) within 5 years.`;
                         suggestionBadge = "Low Risk Plan";
                         suggestionColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
                       } else {
-                        suggestionText = `Underfunded Milestones: Based on your goals (₹${totalTarget.toLocaleString()}), you need to save ₹${Math.round(requiredMonthlySaving).toLocaleString()}/mo. Consider raising savings by 10% or extending deadlines.`;
+                        suggestionText = `Underfunded Milestones: Based on your goals (₹{totalTarget.toLocaleString()}), you need to save ₹{Math.round(requiredMonthlySaving).toLocaleString()}/mo. Consider raising savings by 10% or extending deadlines.`;
                         suggestionBadge = "Underfunded Alert";
                         suggestionColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
                       }
@@ -7361,25 +7361,37 @@ const handlePredefinedQuestion = (q: string) => {
 
             {/* Insurance Vault & AI Insurance Advisor */}
             {activeTab === "insurance" && (() => {
-              // Real-Time Audit & Protection Gap Calculations
+              // Real-Time Audit & Dynamic Protection Gap Calculations
+              const isSingleNoDependents = insProfile.maritalStatus.toLowerCase() === "single" && insProfile.dependents === 0;
+
               const lifePolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("life") || p.type.toLowerCase().includes("term"));
               const totalLifeCover = lifePolicies.reduce((acc, p) => acc + p.coverage, 0);
-              const recLifeCover = (insProfile.annualIncome * 10) + insProfile.existingLoans;
+              
+              // Dynamic Life Target calculation based on Single vs Married & Loans
+              const recLifeCover = isSingleNoDependents
+                ? (insProfile.existingLoans > 0 ? insProfile.existingLoans + (insProfile.annualIncome * 3) : Math.max(5000000, insProfile.annualIncome * 3))
+                : (insProfile.annualIncome * 10) + insProfile.existingLoans;
+              
               const lifeGap = Math.max(0, recLifeCover - totalLifeCover);
 
               const healthPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("health") || p.type.toLowerCase().includes("medical"));
               const totalHealthCover = healthPolicies.reduce((acc, p) => acc + p.coverage, 0);
-              const recHealthCover = 2500000; // ₹25 Lakh benchmark for tier-1 ICU inflation
+              
+              // Dynamic Health Target based on Age & Marital Status
+              const recHealthCover = insProfile.age >= 50 
+                ? 3500000 
+                : (isSingleNoDependents ? 1500000 : 2500000);
+              
               const healthGap = Math.max(0, recHealthCover - totalHealthCover);
 
               const criticalPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("critical"));
               const totalCriticalCover = criticalPolicies.reduce((acc, p) => acc + p.coverage, 0);
-              const recCriticalCover = insProfile.monthlyExpenses * 36; // 3 years expenses
+              const recCriticalCover = Math.max(1500000, insProfile.monthlyExpenses * 36); // 36 months expenses
               const criticalGap = Math.max(0, recCriticalCover - totalCriticalCover);
 
               const accidentPolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("accident") || p.type.toLowerCase().includes("disability"));
               const totalAccidentCover = accidentPolicies.reduce((acc, p) => acc + p.coverage, 0);
-              const recAccidentCover = insProfile.annualIncome * 5; // 5x Annual Income
+              const recAccidentCover = Math.max(2500000, insProfile.annualIncome * 5); // 5x Annual Income
               const accidentGap = Math.max(0, recAccidentCover - totalAccidentCover);
 
               const vehiclePolicies = insurancePolicies.filter(p => p.type.toLowerCase().includes("auto") || p.type.toLowerCase().includes("vehicle"));
@@ -7392,26 +7404,32 @@ const handlePredefinedQuestion = (q: string) => {
               const lifeScore = Math.min(100, Math.round((totalLifeCover / recLifeCover) * 100));
               const criticalScore = totalCriticalCover > 0 ? 100 : 50;
               const accidentScore = totalAccidentCover > 0 ? 100 : 60;
-              const familyScore = insProfile.dependents > 0 ? (lifeScore > 80 && healthScore > 80 ? 95 : 70) : 90;
+              const familyScore = isSingleNoDependents ? 95 : (insProfile.dependents > 0 ? (lifeScore > 80 && healthScore > 80 ? 95 : 70) : 90);
               const assetScore = totalVehicleCover > 0 ? 92 : 65;
 
               const overallHealthScore = Math.round((healthScore * 0.25) + (lifeScore * 0.25) + (criticalScore * 0.15) + (accidentScore * 0.15) + (familyScore * 0.10) + (assetScore * 0.10));
 
-              // AI Recommended Insurance Plans Data
+              // DYNAMIC AI RECOMMENDED INSURANCE PLANS (ADAPTS INSTANTLY TO AGE, MARITAL STATUS & DEPENDENTS)
               const aiInsuranceRecommendations = [
                 {
                   id: "rec-health-1",
                   category: "Health Insurance",
-                  type: "Super Top-up / Family Floater Plan",
-                  recCoverage: 2500000,
-                  premiumRange: "₹18,000 – ₹24,000/year",
+                  type: isSingleNoDependents ? "Individual Comprehensive Health & Super Top-up" : "Family Floater + Super Top-up Plan",
+                  recCoverage: recHealthCover,
+                  premiumRange: insProfile.age < 30 ? "₹12,000 – ₹16,000/year" : insProfile.age < 50 ? "₹18,000 – ₹26,000/year" : "₹32,000 – ₹45,000/year",
                   suitableAge: "18 – 65 Yrs",
                   priority: "HIGH",
                   confidence: 95,
                   riskLevel: "Low",
-                  whyNeed: `Your current health cover of ${format(totalHealthCover)} is insufficient for tier-1 ICU hospitalization & robotic surgery inflation in India.`,
-                  whyCoverage: `Calculated based on: ${insProfile.dependents} dependents + Tier-1 hospital daily ICU inflation + ${insProfile.medicalHistory}.`,
-                  calculationFormula: "Base Floater (₹10L) + Super Top-up (₹15L) = ₹25 Lakh Total Protection",
+                  whyNeed: isSingleNoDependents 
+                    ? `As a ${insProfile.age} year old single individual (${insProfile.occupation}), your individual health cover of ${format(totalHealthCover)} needs a target sum insured of ${format(recHealthCover)} to hedge against metro ICU medical inflation.` 
+                    : `Protecting your spouse and ${insProfile.dependents} dependents against medical emergencies. Your current health cover of ${format(totalHealthCover)} is below recommended ${format(recHealthCover)} threshold.`,
+                  whyCoverage: isSingleNoDependents 
+                    ? `Calculated for age ${insProfile.age} single profile (${insProfile.lifestyle}, ${insProfile.medicalHistory}) with individual tier-1 ICU inflation buffer.` 
+                    : `Calculated based on: ${insProfile.dependents} dependents + Tier-1 hospital daily ICU inflation + ${insProfile.medicalHistory}.`,
+                  calculationFormula: isSingleNoDependents 
+                    ? `Base Individual Cover (₹10L) + Top-up (₹5L) = ${format(recHealthCover)} Total Protection` 
+                    : `Base Family Floater (₹10L) + Super Top-up (₹15L) = ${format(recHealthCover)} Total Protection`,
                   policyScore: 94,
                   scores: { coverage: 96, premiumValue: 92, claimExp: 95, network: 94 },
                   topInsurers: [
@@ -7423,16 +7441,26 @@ const handlePredefinedQuestion = (q: string) => {
                 {
                   id: "rec-life-1",
                   category: "Term Life Insurance",
-                  type: "Pure Risk Term Cover + Terminal Illness",
+                  type: isSingleNoDependents ? "Pure Risk Term Cover (Loan & Wealth Protection)" : "Pure Risk Term Cover + Family Income Replacement",
                   recCoverage: recLifeCover,
-                  premiumRange: "₹22,000 – ₹30,000/year",
+                  premiumRange: insProfile.lifestyle.toLowerCase().includes("smok") 
+                    ? (insProfile.age < 30 ? "₹18,000 – ₹25,000/yr" : insProfile.age < 45 ? "₹32,000 – ₹44,000/yr" : "₹55,000 – ₹78,000/yr") 
+                    : (insProfile.age < 30 ? "₹12,000 – ₹16,000/yr" : insProfile.age < 45 ? "₹22,000 – ₹30,000/yr" : "₹38,000 – ₹52,000/yr"),
                   suitableAge: "18 – 60 Yrs",
-                  priority: "HIGH",
+                  priority: isSingleNoDependents ? "MEDIUM" : "HIGH",
                   confidence: 96,
                   riskLevel: "Low",
-                  whyNeed: `You have ${insProfile.dependents} dependents relying on your ${format(insProfile.annualIncome)} annual income plus ${format(insProfile.existingLoans)} in active loans.`,
-                  whyCoverage: `(10x Annual Income: ${format(insProfile.annualIncome * 10)}) + (Outstanding Loans: ${format(insProfile.existingLoans)}) = ${format(recLifeCover)}`,
-                  calculationFormula: "10x Annual Income (₹2.4 Cr) + Home Loan Buffer (₹15L) = ₹2.55 Cr",
+                  whyNeed: isSingleNoDependents 
+                    ? (insProfile.existingLoans > 0 
+                        ? `Since you are single with 0 dependents, your primary term life focus is debt protection for your loans (${format(insProfile.existingLoans)}) so family members do not inherit liabilities.` 
+                        : `As a ${insProfile.age} year old single professional, locking term insurance early secures lowest lifetime premiums before rate increases at age 35.`)
+                    : `You have ${insProfile.dependents} dependents relying on your ${format(insProfile.annualIncome)} annual income plus ${format(insProfile.existingLoans)} in active loans.`,
+                  whyCoverage: isSingleNoDependents 
+                    ? `(3x Annual Income: ${format(insProfile.annualIncome * 3)}) + (Outstanding Loans: ${format(insProfile.existingLoans)}) = ${format(recLifeCover)}` 
+                    : `(10x Annual Income: ${format(insProfile.annualIncome * 10)}) + (Outstanding Loans: ${format(insProfile.existingLoans)}) = ${format(recLifeCover)}`,
+                  calculationFormula: isSingleNoDependents 
+                    ? `3x Annual Income (${format(insProfile.annualIncome * 3)}) + Loan Protection (${format(insProfile.existingLoans)}) = ${format(recLifeCover)}` 
+                    : `10x Annual Income (${format(insProfile.annualIncome * 10)}) + Loan Protection (${format(insProfile.existingLoans)}) = ${format(recLifeCover)}`,
                   policyScore: 96,
                   scores: { coverage: 98, premiumValue: 95, claimExp: 97, network: 94 },
                   topInsurers: [
@@ -7445,15 +7473,15 @@ const handlePredefinedQuestion = (q: string) => {
                   id: "rec-critical-1",
                   category: "Critical Illness Cover",
                   type: "Standalone Critical Illness Rider",
-                  recCoverage: 2500000,
-                  premiumRange: "₹8,000 – ₹12,000/year",
+                  recCoverage: recCriticalCover,
+                  premiumRange: insProfile.age < 35 ? "₹6,000 – ₹9,000/year" : "₹10,000 – ₹16,000/year",
                   suitableAge: "25 – 60 Yrs",
                   priority: "HIGH",
                   confidence: 92,
                   riskLevel: "Medium",
                   whyNeed: "Major diagnosis (cancer, cardiac surgery, stroke) causes 12-24 months of total income disruption not paid out by standard health insurance.",
-                  whyCoverage: `Calculated based on 36 months of household expenses (${format(insProfile.monthlyExpenses)}/mo) to protect your family during recovery.`,
-                  calculationFormula: "Monthly Expenses (₹85,000) × 36 Months = ₹30.6 Lakh (Rounded to ₹25 Lakh Lump Sum)",
+                  whyCoverage: `Calculated based on 36 months of household expenses (${format(insProfile.monthlyExpenses)}/mo = ${format(recCriticalCover)}) to protect your profile during recovery.`,
+                  calculationFormula: `Monthly Expenses (${format(insProfile.monthlyExpenses)}) × 36 Months = ${format(recCriticalCover)} Lump Sum`,
                   policyScore: 91,
                   scores: { coverage: 93, premiumValue: 90, claimExp: 92, network: 89 },
                   topInsurers: [
@@ -7465,15 +7493,15 @@ const handlePredefinedQuestion = (q: string) => {
                   id: "rec-accident-1",
                   category: "Personal Accident Cover",
                   type: "Accidental Death & Permanent Disability",
-                  recCoverage: 5000000,
+                  recCoverage: recAccidentCover,
                   premiumRange: "₹4,500 – ₹7,000/year",
                   suitableAge: "18 – 65 Yrs",
                   priority: "MEDIUM",
                   confidence: 90,
                   riskLevel: "Low",
                   whyNeed: "Standard health policies do not pay weekly income replacement or permanent disability compensation if an accident hinders your ability to work.",
-                  whyCoverage: "5x Annual Income buffer to guarantee permanent disability salary replacement.",
-                  calculationFormula: "5 × Annual Income (₹24L) = ₹1.2 Cr (Base Target ₹50 Lakh)",
+                  whyCoverage: `5x Annual Income buffer (${format(insProfile.annualIncome)} × 5 = ${format(recAccidentCover)}) to guarantee permanent disability salary replacement.`,
+                  calculationFormula: `5 × Annual Income (${format(insProfile.annualIncome)}) = ${format(recAccidentCover)}`,
                   policyScore: 89,
                   scores: { coverage: 90, premiumValue: 94, claimExp: 88, network: 85 },
                   topInsurers: [
@@ -7483,7 +7511,7 @@ const handlePredefinedQuestion = (q: string) => {
                 }
               ];
 
-              // Simulated Scenarios Data
+              // Dynamic Simulated Scenarios Data
               const simScenarios: Record<string, any> = {
                 hospitalization_10l: {
                   title: "🏥 Tier-1 Hospitalization costing ₹10 Lakh",
@@ -7505,17 +7533,17 @@ const handlePredefinedQuestion = (q: string) => {
                   title: "🔴 Critical Illness Diagnosis (Cancer / Heart Stroke)",
                   description: "12-month treatment protocol + 18-month career pause for recovery.",
                   covered: totalCriticalCover,
-                  outOfPocket: Math.max(0, 2500000 - totalCriticalCover),
-                  shortfall: Math.max(0, 2500000 - totalCriticalCover),
-                  action: totalCriticalCover >= 2500000 ? "Fully Protected." : "Zero payout from basic health insurance for non-hospital recovery. Add Critical Illness Rider."
+                  outOfPocket: Math.max(0, recCriticalCover - totalCriticalCover),
+                  shortfall: Math.max(0, recCriticalCover - totalCriticalCover),
+                  action: totalCriticalCover >= recCriticalCover ? "Fully Protected." : "Zero payout from basic health insurance for non-hospital recovery. Add Critical Illness Rider."
                 },
                 disability: {
                   title: "⚡ Accidental Permanent Disability",
                   description: "Total loss of physical earning capacity post major road/travel accident.",
                   covered: totalAccidentCover,
-                  outOfPocket: Math.max(0, 5000000 - totalAccidentCover),
-                  shortfall: Math.max(0, 5000000 - totalAccidentCover),
-                  action: totalAccidentCover >= 5000000 ? "Fully Protected." : "Add ₹50 Lakh Personal Accident policy for ₹4,500/year."
+                  outOfPocket: Math.max(0, recAccidentCover - totalAccidentCover),
+                  shortfall: Math.max(0, recAccidentCover - totalAccidentCover),
+                  action: totalAccidentCover >= recAccidentCover ? "Fully Protected." : `Add ${format(recAccidentCover)} Personal Accident policy.`
                 }
               };
 
@@ -7584,8 +7612,8 @@ const handlePredefinedQuestion = (q: string) => {
                   {/* 6 PROTECTION PILLARS BREAKDOWN */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {[
-                      { title: "Health Cover", score: healthScore, icon: "🩺", amount: `₹${(totalHealthCover / 100000).toFixed(0)}L / ₹25L` },
-                      { title: "Life Cover", score: lifeScore, icon: "🛡️", amount: `₹${(totalLifeCover / 10000000).toFixed(1)}Cr / ₹2.5Cr` },
+                      { title: "Health Cover", score: healthScore, icon: "🩺", amount: `₹{(totalHealthCover / 100000).toFixed(0)}L / ₹25L` },
+                      { title: "Life Cover", score: lifeScore, icon: "🛡️", amount: `₹{(totalLifeCover / 10000000).toFixed(1)}Cr / ₹2.5Cr` },
                       { title: "Personal Accident", score: accidentScore, icon: "⚡", amount: totalAccidentCover > 0 ? "Covered" : "Missing" },
                       { title: "Critical Illness", score: criticalScore, icon: "🔴", amount: totalCriticalCover > 0 ? "Covered" : "Missing" },
                       { title: "Family Shield", score: familyScore, icon: "👨‍👩‍👧‍👦", amount: `${insProfile.dependents} Dependents` },
@@ -7614,7 +7642,7 @@ const handlePredefinedQuestion = (q: string) => {
                         <span className="text-xs text-slate-400 block mt-0.5">Calculated financial shortfall between your current policies and target safety requirements.</span>
                       </div>
                       <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
-                        Total Protection Shortfall: ₹${((lifeGap + healthGap + criticalGap + accidentGap) / 100000).toFixed(1)} Lakhs
+                        Total Protection Shortfall: ₹{((lifeGap + healthGap + criticalGap + accidentGap) / 100000).toFixed(1)} Lakhs
                       </span>
                     </div>
 
@@ -7623,19 +7651,19 @@ const handlePredefinedQuestion = (q: string) => {
                       <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                           <span className="font-extrabold text-white">Term Life Insurance</span>
-                          <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">Gap: ₹${(lifeGap / 100000).toFixed(0)}L</span>
+                          <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">Gap: ₹{(lifeGap / 100000).toFixed(0)}L</span>
                         </div>
                         <div className="space-y-1 text-[10px]">
                           <div className="flex justify-between text-slate-400">
-                            <span>Current: ₹${(totalLifeCover / 10000000).toFixed(1)} Cr</span>
-                            <span>Target: ₹${(recLifeCover / 10000000).toFixed(2)} Cr</span>
+                            <span>Current: ₹{(totalLifeCover / 10000000).toFixed(1)} Cr</span>
+                            <span>Target: ₹{(recLifeCover / 10000000).toFixed(2)} Cr</span>
                           </div>
                           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, (totalLifeCover / recLifeCover) * 100)}%` }} />
                           </div>
                         </div>
                         <span className="text-[9px] text-slate-400 leading-tight">
-                          ⚠️ <strong>Financial Risk</strong>: Dependents face ₹${(lifeGap / 100000).toFixed(0)}L income replacement deficit in case of untimely demise.
+                          ⚠️ <strong>Financial Risk</strong>: Dependents face ₹{(lifeGap / 100000).toFixed(0)}L income replacement deficit in case of untimely demise.
                         </span>
                       </div>
 
@@ -7643,19 +7671,19 @@ const handlePredefinedQuestion = (q: string) => {
                       <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                           <span className="font-extrabold text-white">Health Insurance</span>
-                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Gap: ₹${(healthGap / 100000).toFixed(0)}L</span>
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Gap: ₹{(healthGap / 100000).toFixed(0)}L</span>
                         </div>
                         <div className="space-y-1 text-[10px]">
                           <div className="flex justify-between text-slate-400">
-                            <span>Current: ₹${(totalHealthCover / 100000).toFixed(0)}L</span>
-                            <span>Target: ₹${(recHealthCover / 100000).toFixed(0)}L</span>
+                            <span>Current: ₹{(totalHealthCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹{(recHealthCover / 100000).toFixed(0)}L</span>
                           </div>
                           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (totalHealthCover / recHealthCover) * 100)}%` }} />
                           </div>
                         </div>
                         <span className="text-[9px] text-slate-400 leading-tight">
-                          ⚠️ <strong>Financial Risk</strong>: Metro ICU & robotic surgery costs frequently breach ${(totalHealthCover / 100000).toFixed(0)}L.
+                          ⚠️ <strong>Financial Risk</strong>: Metro ICU & robotic surgery costs frequently breach ₹${(totalHealthCover / 100000).toFixed(0)}L.
                         </span>
                       </div>
 
@@ -7663,12 +7691,12 @@ const handlePredefinedQuestion = (q: string) => {
                       <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                           <span className="font-extrabold text-white">Critical Illness</span>
-                          <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">Gap: ₹${(criticalGap / 100000).toFixed(0)}L</span>
+                          <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">Gap: ₹{(criticalGap / 100000).toFixed(0)}L</span>
                         </div>
                         <div className="space-y-1 text-[10px]">
                           <div className="flex justify-between text-slate-400">
-                            <span>Current: ₹${(totalCriticalCover / 100000).toFixed(0)}L</span>
-                            <span>Target: ₹${(recCriticalCover / 100000).toFixed(0)}L</span>
+                            <span>Current: ₹{(totalCriticalCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹{(recCriticalCover / 100000).toFixed(0)}L</span>
                           </div>
                           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, (totalCriticalCover / recCriticalCover) * 100)}%` }} />
@@ -7683,12 +7711,12 @@ const handlePredefinedQuestion = (q: string) => {
                       <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-slate-950/40 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                           <span className="font-extrabold text-white">Personal Accident</span>
-                          <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">Gap: ₹${(accidentGap / 100000).toFixed(0)}L</span>
+                          <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">Gap: ₹{(accidentGap / 100000).toFixed(0)}L</span>
                         </div>
                         <div className="space-y-1 text-[10px]">
                           <div className="flex justify-between text-slate-400">
-                            <span>Current: ₹${(totalAccidentCover / 100000).toFixed(0)}L</span>
-                            <span>Target: ₹${(recAccidentCover / 100000).toFixed(0)}L</span>
+                            <span>Current: ₹{(totalAccidentCover / 100000).toFixed(0)}L</span>
+                            <span>Target: ₹{(recAccidentCover / 100000).toFixed(0)}L</span>
                           </div>
                           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, (totalAccidentCover / recAccidentCover) * 100)}%` }} />
@@ -7924,12 +7952,12 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-bold uppercase block">Covered Amount</span>
-                        <span className="text-sm font-mono font-black text-emerald-400 block mt-1">₹${(currentSim.covered / 100000).toFixed(1)} Lakh</span>
+                        <span className="text-sm font-mono font-black text-emerald-400 block mt-1">₹{(currentSim.covered / 100000).toFixed(1)} Lakh</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-bold uppercase block">Out-of-Pocket Cost</span>
                         <span className={`text-sm font-mono font-black block mt-1 ${currentSim.outOfPocket > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                          ₹${(currentSim.outOfPocket / 100000).toFixed(1)} Lakh
+                          ₹{(currentSim.outOfPocket / 100000).toFixed(1)} Lakh
                         </span>
                       </div>
                       <div>
@@ -8313,7 +8341,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <tr>
                                   <td className="p-3 font-bold text-slate-400 text-[10px] uppercase">Recommended Coverage</td>
                                   {insCompareList.map(plan => (
-                                    <td key={plan.id} className="p-3 font-mono font-bold text-white">₹${(plan.recCoverage / 100000).toFixed(0)} Lakh</td>
+                                    <td key={plan.id} className="p-3 font-mono font-bold text-white">₹{(plan.recCoverage / 100000).toFixed(0)} Lakh</td>
                                   ))}
                                 </tr>
                                 <tr>
@@ -9472,13 +9500,13 @@ const handlePredefinedQuestion = (q: string) => {
             rawData = doc.extractedData || {
               docType: "Manual Sheet",
               details: {
-                "Monthly Salary": { value: `₹${(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
-                "EMI Obligations": { value: `₹${(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
-                "Other Monthly Expenses": { value: `₹${(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
-                "Custom Base Net Worth": { value: `₹${(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
+                "Monthly Salary": { value: `₹{(parseFloat(manualSalary) || 0).toLocaleString()}`, confidence: 100 },
+                "EMI Obligations": { value: `₹{(parseFloat(manualEMI) || 0).toLocaleString()}`, confidence: 100 },
+                "Other Monthly Expenses": { value: `₹{(parseFloat(manualOtherExpenses) || 0).toLocaleString()}`, confidence: 100 },
+                "Custom Base Net Worth": { value: `₹{(parseFloat(manualNetWorth) || 0).toLocaleString()}`, confidence: 100 }
               },
               highlights: {
-                "Surplus Dynamic Savings": { value: `₹${monthlySavings.toLocaleString()}`, confidence: 100 },
+                "Surplus Dynamic Savings": { value: `₹{monthlySavings.toLocaleString()}`, confidence: 100 },
                 "Calculated Health Score": { value: `${healthScore}/100`, confidence: 100 }
               },
               recommendations: [
