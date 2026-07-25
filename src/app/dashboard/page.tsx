@@ -68,6 +68,226 @@ import { useCurrency, SUPPORTED_CURRENCIES } from "@/context/CurrencyContext";
 import MutualFundsSection, { DEFAULT_MUTUAL_FUNDS } from "@/components/MutualFundsSection";
 
 // Standard bank Fixed Deposit rates as of date
+
+const DEFAULT_AI_RECOMMENDATION = {
+  totalCapital: 200000,
+  risk: "Moderate",
+  diversification: 88,
+  lastUpdated: "Just Now",
+  rationale: "Optimized multi-asset portfolio tailored for long-term compounding, sector balance, and defensive inflation hedging.",
+  portfolioAnalysis: [
+    "Technology allocation is optimal at ~25% of total wealth.",
+    "Financials and Banking allocation provides strong domestic credit growth upside.",
+    "Gold ETF allocation adds negative correlation shield against market pullbacks."
+  ],
+  equities: [
+    {
+      symbol: "AAPL",
+      name: "Apple Inc.",
+      type: "EQUITY",
+      sector: "Technology",
+      allocation: 25,
+      price: 224.50,
+      change: 1.25,
+      marketCap: "$3.45T",
+      riskLevel: "Low-Medium",
+      horizon: "Long Term",
+      confidenceScore: 88,
+      expectedRisk: "Moderate",
+      returnRange: "14% - 20% CAGR",
+      valuation: "Fairly Valued",
+      exchange: "NASDAQ",
+      sharesOutstanding: 15400000000,
+      analystRating: 88,
+      esgScore: "A",
+      reasons: ["Massive consumer ecosystem & software pricing power", "Strong quarterly free cash flow generation", "Increasing institutional inflows"],
+      whyAsset: "Massive consumer ecosystem, strong pricing power, and high cash-flow generation.",
+      whyNow: "Valuation multiple has pulled back slightly below historical peak, presenting a reasonable entry.",
+      risks: "Slowing iPhone upgrade cycles and regulatory hurdles in global markets.",
+      whatGoesWrong: "Antitrust rulings forcing major changes in App Store revenue share.",
+      portfolioImprovement: "Provides solid mega-cap stability and high quality returns with low beta risk."
+    },
+    {
+      symbol: "MSFT",
+      name: "Microsoft Corporation",
+      type: "EQUITY",
+      sector: "Technology",
+      allocation: 20,
+      price: 448.90,
+      change: 2.10,
+      marketCap: "$3.33T",
+      riskLevel: "Low",
+      horizon: "Long Term",
+      confidenceScore: 94,
+      expectedRisk: "Low",
+      returnRange: "15% - 22% CAGR",
+      valuation: "Undervalued",
+      exchange: "NASDAQ",
+      sharesOutstanding: 7430000000,
+      analystRating: 94,
+      esgScore: "A+",
+      reasons: ["Azure cloud revenue accelerating +31% YoY", "Enterprise Copilot AI adoption expanding", "Pristine balance sheet"],
+      whyAsset: "Undeniable monopoly in office software and enterprise cloud infrastructure (Azure).",
+      whyNow: "Enterprise migration to cloud AI platforms accelerates subscription compounding.",
+      risks: "High valuation multiple relative to historical averages.",
+      whatGoesWrong: "Cloud demand growth decelerating faster than anticipated as corporate IT budgets trim.",
+      portfolioImprovement: "Builds defensiveness with low volatility and recurring commercial subscriptions."
+    },
+    {
+      symbol: "RELIANCE.NS",
+      name: "Reliance Industries Ltd",
+      type: "EQUITY",
+      sector: "Energy",
+      allocation: 20,
+      price: 2980.50,
+      change: 0.75,
+      marketCap: "₹20,15,000 Cr",
+      riskLevel: "Medium",
+      horizon: "Long Term",
+      confidenceScore: 86,
+      expectedRisk: "Moderate",
+      returnRange: "12% - 16% CAGR",
+      valuation: "Fairly Valued",
+      exchange: "NSE",
+      sharesOutstanding: 6760000000,
+      analystRating: 85,
+      esgScore: "B+",
+      reasons: ["Bedrock private conglomerate in Indian energy, Jio digital services, and retail networks", "Jio digital expansion driving ARPU growth", "Green energy giga-factory investments"],
+      whyAsset: "India's largest commercial conglomerate with diversified cash flow across retail, telecom, and oil.",
+      whyNow: "Telecom tariff hikes drive margin expansion while retail IPO plans unlock value.",
+      risks: "Volatility in global refining margins and heavy capex in new green energy ventures.",
+      whatGoesWrong: "Sluggish consumer demand or delays in new energy commercialization.",
+      portfolioImprovement: "Provides robust large-cap foundation tied to India domestic economic expansion."
+    },
+    {
+      symbol: "HDFCBANK.NS",
+      name: "HDFC Bank Ltd",
+      type: "EQUITY",
+      sector: "Finance",
+      allocation: 20,
+      price: 1645.00,
+      change: -0.45,
+      marketCap: "₹12,50,000 Cr",
+      riskLevel: "Low",
+      horizon: "Long Term",
+      confidenceScore: 90,
+      expectedRisk: "Low",
+      returnRange: "13% - 17% CAGR",
+      valuation: "Undervalued",
+      exchange: "NSE",
+      sharesOutstanding: 7590000000,
+      analystRating: 90,
+      esgScore: "A",
+      reasons: ["Trading below historical 5-year average valuation", "Dominant lender capturing retail consumer credit expansion", "High net interest income margins"],
+      whyAsset: "Premier private sector bank in India with industry-leading asset quality and CASA ratio.",
+      whyNow: "Valuation compressed post-merger, offering an attractive long-term entry point.",
+      risks: "Slower deposit growth relative to credit growth.",
+      whatGoesWrong: "NPA spikes during unexpected macroeconomic downturns.",
+      portfolioImprovement: "Adds high-quality financial sector weight with strong compounding track record."
+    }
+  ],
+  etfs: [
+    {
+      symbol: "NIFTYBEES.NS",
+      name: "Nifty 50 Index ETF",
+      type: "ETF",
+      allocation: 10,
+      price: 285.20,
+      change: 0.65,
+      marketCap: "₹24,500 Cr",
+      sector: "Broad Market",
+      riskLevel: "Low",
+      horizon: "Long Term",
+      confidenceScore: 92,
+      expectedRisk: "Low",
+      returnRange: "12% - 15% CAGR",
+      valuation: "Fairly Valued",
+      exchange: "NSE",
+      expenseRatio: 0.05,
+      trackingError: 0.03,
+      aum: "₹24,500 Cr",
+      cagr: "13.8%",
+      dividendYield: 1.2,
+      topHoldings: ["HDFC Bank", "Reliance", "ICICI Bank", "Infosys"],
+      suitability: "Core equity foundation tracking India top 50 companies.",
+      reasons: ["Broad equity coverage", "Ultra-low 0.05% expense ratio", "Zero single-stock default risk"],
+      whyAsset: "Core market proxy for broad Indian economy.",
+      whyNow: "Attractive valuation after recent market consolidation.",
+      risks: "Broad equity market drawdown risk.",
+      whatGoesWrong: "Macroeconomic recession impacting corporate revenues.",
+      portfolioImprovement: "Reduces single-stock volatility while capturing national wealth creation."
+    },
+    {
+      symbol: "GOLDBEES.NS",
+      name: "Nifty Gold ETF",
+      type: "ETF",
+      allocation: 5,
+      price: 68.50,
+      change: -0.15,
+      marketCap: "₹12,800 Cr",
+      sector: "Precious Metals",
+      riskLevel: "Low",
+      horizon: "Medium Term",
+      confidenceScore: 89,
+      expectedRisk: "Low",
+      returnRange: "8% - 12% CAGR",
+      valuation: "Fairly Valued",
+      exchange: "NSE",
+      expenseRatio: 0.79,
+      trackingError: 0.12,
+      aum: "₹12,800 Cr",
+      cagr: "11.2%",
+      dividendYield: 0.0,
+      topHoldings: ["Physical Gold Bullion 99.5%"],
+      suitability: "Defensive inflation hedge and safe-haven portfolio stabilizer.",
+      reasons: ["100% backed by physical gold bullion", "Negative correlation with equities", "High liquidity"],
+      whyAsset: "Hassle-free digital route to invest in 99.5% pure physical gold bullion.",
+      whyNow: "Central bank purchases and global geopolitical tensions maintain support for gold as a hedge.",
+      risks: "Opportunity cost during runaway stock bull markets.",
+      whatGoesWrong: "Global interest rate hikes driving capital out of non-yielding commodities.",
+      portfolioImprovement: "Reduces overall portfolio drawdowns due to negative correlation with equities."
+    }
+  ]
+};
+
+const ensureRichRecommendationData = (parsed: any) => {
+  if (!parsed) return DEFAULT_AI_RECOMMENDATION;
+  
+  const equities = (parsed.equities && parsed.equities.length > 0) ? parsed.equities : (parsed.stocks ? parsed.stocks.map((st: any) => ({
+    ...st,
+    type: "EQUITY",
+    confidenceScore: st.confidenceScore || 88,
+    returnRange: st.returnRange || "14% - 20% CAGR",
+    valuation: st.valuation || "Fairly Valued",
+    riskLevel: st.riskLevel || "Low-Medium",
+    horizon: st.horizon || "Long Term",
+    exchange: st.exchange || (st.symbol.includes(".NS") ? "NSE" : "NASDAQ"),
+    reasons: st.reasons || [st.rationale || "Strong growth prospect and solid moat"],
+    whyAsset: st.whyAsset || st.rationale || "Core market holding with strong compounding upside.",
+    whyNow: st.whyNow || "Valuation multiple provides an attractive entry point.",
+    risks: st.risks || "Sector rotation and macroeconomic market risks.",
+    whatGoesWrong: st.whatGoesWrong || "Macroeconomic downturn impacting corporate earnings.",
+    portfolioImprovement: st.portfolioImprovement || "Provides solid large-cap growth and stability."
+  })) : DEFAULT_AI_RECOMMENDATION.equities);
+
+  const etfs = (parsed.etfs && parsed.etfs.length > 0) ? parsed.etfs : DEFAULT_AI_RECOMMENDATION.etfs;
+
+  return {
+    ...parsed,
+    equities,
+    etfs,
+    stocks: equities,
+    diversification: parsed.diversification || 88,
+    risk: parsed.risk || "Moderate",
+    rationale: parsed.rationale || "Optimized multi-asset portfolio tailored for long-term compounding.",
+    portfolioAnalysis: parsed.portfolioAnalysis || [
+      "Technology allocation is optimal at ~25% of total wealth.",
+      "Financials and Banking allocation provides strong domestic credit growth upside.",
+      "Gold ETF allocation adds negative correlation shield against market pullbacks."
+    ]
+  };
+};
+
 const BANK_FD_RATES = [
   { name: "HDFC Bank", rate: 7.25 },
   { name: "ICICI Bank", rate: 7.20 },
@@ -157,6 +377,18 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     "command" | "goals" | "investments" | "subscriptions" | "insurance" | "vault" | "decisions"
   >("command");
+  
+  // URL tab and subtab sync
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlTab = params.get("tab");
+      const urlSubTab = params.get("subtab");
+      if (urlTab) setActiveTab(urlTab as any);
+      if (urlSubTab) setSelectedInvestmentSubTab(urlSubTab as any);
+    }
+  }, []);
+
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [hoveredLegend, setHoveredLegend] = useState<"standard" | "fincody" | null>(null);
   const [refreshingAdvice, setRefreshingAdvice] = useState<boolean>(false);
@@ -1879,7 +2111,7 @@ export default function Dashboard() {
   // AI Portfolio Builder States
   const [aiGoalPrompt, setAiGoalPrompt] = useState("");
   const [isGeneratingPortfolio, setIsGeneratingPortfolio] = useState(false);
-  const [aiRecommendation, setAiRecommendation] = useState<any | null>(null);
+  const [aiRecommendation, setAiRecommendation] = useState<any>(DEFAULT_AI_RECOMMENDATION);
   const [savedPortfolios, setSavedPortfolios] = useState<any[]>([]);
   const [activePortfolioName, setActivePortfolioName] = useState("Custom Portfolio");
   const [showSavePortfolioModal, setShowSavePortfolioModal] = useState(false);

@@ -1576,7 +1576,7 @@ For fully personalized co-pilot advice, please enter your details in the **Dashb
               </button>
             ) : (
               <Link 
-                href="/dashboard"
+                href="/dashboard?tab=investments&subtab=equities"
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 hover:-translate-y-0.5 cursor-pointer"
               >
                 Sign In
