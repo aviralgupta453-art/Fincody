@@ -5488,6 +5488,20 @@ const handlePredefinedQuestion = (q: string) => {
             {/* Investments */}
                         {activeTab === "investments" && (() => {
               try {
+                const safePpfData = {
+                  balance: typeof ppfData?.balance === "number" ? ppfData.balance : 450000,
+                  annualContribution: typeof ppfData?.annualContribution === "number" ? ppfData.annualContribution : 150000,
+                  startYear: typeof ppfData?.startYear === "number" ? ppfData.startYear : 2024
+                };
+
+                const safeNpsData = {
+                  corpus: typeof npsData?.corpus === "number" ? npsData.corpus : 300000,
+                  employerMonthly: typeof npsData?.employerMonthly === "number" ? npsData.employerMonthly : 10000,
+                  personalMonthly: typeof npsData?.personalMonthly === "number" ? npsData.personalMonthly : 5000,
+                  allocationE: typeof npsData?.allocationE === "number" ? npsData.allocationE : 60,
+                  allocationC: typeof npsData?.allocationC === "number" ? npsData.allocationC : 25,
+                  allocationG: typeof npsData?.allocationG === "number" ? npsData.allocationG : 15
+                };
               const safePortfolio = Array.isArray(portfolio) ? portfolio : [];
               const safeFixedDeposits = Array.isArray(fixedDeposits) ? fixedDeposits : [];
               const safeGoldHoldings = Array.isArray(goldHoldings) ? goldHoldings : [];
@@ -5547,10 +5561,10 @@ const handlePredefinedQuestion = (q: string) => {
               const fdsTotalInterest = fdsCalculated.reduce((acc, fd) => acc + (fd.interestEarned || 0), 0);
 
               // 3. PPF calculations
-              const ppfTotalValue = (ppfData && parseFloat(ppfData.balance)) || 450000;
+              const ppfTotalValue = (ppfData && parseFloat(safePpfData.balance)) || 450000;
 
               // 4. NPS calculations
-              const npsTotalValue = (npsData && parseFloat(npsData.corpus)) || 300000;
+              const npsTotalValue = (npsData && parseFloat(safeNpsData.corpus)) || 300000;
 
               // 5. Gold calculations
               const goldCalculated = safeGoldHoldings.map(g => {
@@ -6578,7 +6592,7 @@ const handlePredefinedQuestion = (q: string) => {
                               </div>
                               <div className="text-right">
                                 <span className="text-[10px] text-slate-500 block">Balance</span>
-                                <span className="text-base font-black text-white font-mono"><RollingNumber value={ppfData.balance} /></span>
+                                <span className="text-base font-black text-white font-mono"><RollingNumber value={safePpfData.balance} /></span>
                               </div>
                             </div>
 
@@ -6587,8 +6601,8 @@ const handlePredefinedQuestion = (q: string) => {
                               <ResponsiveContainer width="99%" height="100%">
                                 <AreaChart data={(() => {
                                   const data = [];
-                                  let currentBal = ppfData.balance;
-                                  const annualDep = ppfData.annualContribution;
+                                  let currentBal = safePpfData.balance;
+                                  const annualDep = safePpfData.annualContribution;
                                   const rate = 0.071;
                                   for (let year = 0; year <= 15; year++) {
                                     data.push({
@@ -6613,7 +6627,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Current PPF Balance</label>
                                 <input
                                   type="number"
-                                  value={ppfData.balance}
+                                  value={safePpfData.balance}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
                                     const updated = { ...ppfData, balance: val };
@@ -6627,7 +6641,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Annual Contribution Limit</label>
                                 <input
                                   type="number"
-                                  value={ppfData.annualContribution}
+                                  value={safePpfData.annualContribution}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
                                     const updated = { ...ppfData, annualContribution: val };
@@ -6649,7 +6663,7 @@ const handlePredefinedQuestion = (q: string) => {
                               </div>
                               <div className="text-right">
                                 <span className="text-[10px] text-slate-500 block">Current Corpus</span>
-                                <span className="text-base font-black text-white font-mono"><RollingNumber value={npsData.corpus} /></span>
+                                <span className="text-base font-black text-white font-mono"><RollingNumber value={safeNpsData.corpus} /></span>
                               </div>
                             </div>
 
@@ -6659,9 +6673,9 @@ const handlePredefinedQuestion = (q: string) => {
                               const yearsToRetire = 30;
                               const monthlyRate = 0.105 / 12;
                               const months = yearsToRetire * 12;
-                              const monthlyDeposit = npsData.employerMonthly + npsData.personalMonthly;
+                              const monthlyDeposit = safeNpsData.employerMonthly + safeNpsData.personalMonthly;
                               
-                              let projectedCorpus = npsData.corpus * Math.pow(1 + monthlyRate, months);
+                              let projectedCorpus = safeNpsData.corpus * Math.pow(1 + monthlyRate, months);
                               for (let m = 1; m <= months; m++) {
                                 projectedCorpus += monthlyDeposit * Math.pow(1 + monthlyRate, months - m);
                               }
@@ -6688,9 +6702,9 @@ const handlePredefinedQuestion = (q: string) => {
                             <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20 text-xs text-slate-400">
                               <span className="font-bold">NPS Asset Allocation Split:</span>
                               <div className="flex gap-4">
-                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-500" /> Equity (E): {npsData.allocationE}%</span>
-                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-indigo-500" /> Corp Bonds (C): {npsData.allocationC}%</span>
-                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> Government (G): {npsData.allocationG}%</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-500" /> Equity (E): {safeNpsData.allocationE}%</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-indigo-500" /> Corp Bonds (C): {safeNpsData.allocationC}%</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> Government (G): {safeNpsData.allocationG}%</span>
                               </div>
                             </div>
 
@@ -6700,7 +6714,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <label className="text-[9px] text-slate-500 font-bold uppercase">Employer Co-Pay</label>
                                 <input
                                   type="number"
-                                  value={npsData.employerMonthly}
+                                  value={safeNpsData.employerMonthly}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
                                     const updated = { ...npsData, employerMonthly: val };
@@ -6714,7 +6728,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <label className="text-[9px] text-slate-500 font-bold uppercase">Personal Co-Pay</label>
                                 <input
                                   type="number"
-                                  value={npsData.personalMonthly}
+                                  value={safeNpsData.personalMonthly}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
                                     const updated = { ...npsData, personalMonthly: val };
@@ -6728,7 +6742,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <label className="text-[9px] text-slate-500 font-bold uppercase">Corpus Balance</label>
                                 <input
                                   type="number"
-                                  value={npsData.corpus}
+                                  value={safeNpsData.corpus}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
                                     const updated = { ...npsData, corpus: val };
@@ -6972,7 +6986,7 @@ const handlePredefinedQuestion = (q: string) => {
                             <div className="p-3 rounded-xl border border-[var(--border-color)] bg-slate-900/40 text-xs">
                               <span className="text-[9px] uppercase tracking-wider text-slate-500 font-black block">PPF Account Lock</span>
                               <span className="font-extrabold text-white block mt-0.5">Annual PPF Deposit Cap</span>
-                              <span className="text-xs text-rose-400 block mt-1 font-semibold">⚠️ Deposit {format(ppfData.annualContribution)} before March 31</span>
+                              <span className="text-xs text-rose-400 block mt-1 font-semibold">⚠️ Deposit {format(safePpfData.annualContribution)} before March 31</span>
                             </div>
                           )}
 
@@ -7090,7 +7104,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                 </motion.div>
               );
-              } catch (err) {
+              } catch (err: any) {
                 console.error("Error rendering Investments tab:", err);
                 return (
                   <div className="p-8 rounded-2xl border border-[var(--border-color)] bg-slate-900/50 flex flex-col items-center justify-center gap-4 text-center my-6">
@@ -7098,7 +7112,7 @@ const handlePredefinedQuestion = (q: string) => {
                       <AlertTriangle className="w-6 h-6" />
                     </div>
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider">Investments Engine Synchronizing</h3>
-                    <p className="text-xs text-slate-400 max-w-md">Refreshing live market quotes and portfolio valuations. Click below to reload your asset view.</p>
+                    <p className="text-xs text-slate-400 max-w-md">{err?.message || "Refreshing live market quotes and portfolio valuations. Click below to reload your asset view."}</p>
                     <button 
                       onClick={() => setActiveTab("investments")} 
                       className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all cursor-pointer shadow-lg shadow-blue-500/20"
