@@ -2561,7 +2561,7 @@ export default function Dashboard() {
     const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
     const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
     const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
-      const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
+      const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes?.["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
       return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
     }, 0);
     const parentBondsVal = (bondHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(curr.buyPrice || 1000)), 0);
@@ -2666,7 +2666,7 @@ export default function Dashboard() {
   const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
   const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
   const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
-    const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
+    const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes?.["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
     return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
   }, 0);
   const parentBondsVal = (bondHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(curr.buyPrice || 1000)), 0);
@@ -3237,12 +3237,12 @@ export default function Dashboard() {
 
   const handleRebalancePortfolio = () => {
     if (portfolio.length === 0) return;
-    const totalValue = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || 0)), 0);
+    const totalValue = portfolio.reduce((acc, item) => acc + (item.qty * (quotes?.[item.symbol]?.price || 0)), 0);
     if (totalValue === 0) return;
 
     const targetPercent = 100 / portfolio.length;
     const nextPortfolio = portfolio.map(item => {
-      const price = quotes[item.symbol]?.price || 1;
+      const price = quotes?.[item.symbol]?.price || 1;
       const targetAllocationValue = totalValue * (targetPercent / 100);
       const suggestedQty = Math.max(1, Math.round(targetAllocationValue / price));
       return {
@@ -3263,15 +3263,16 @@ export default function Dashboard() {
   
   // Timezone and Market Hours checker
   const getExchangeMarketState = (symbol: string) => {
+    const sym = typeof symbol === "string" ? symbol : "";
     let timezone = "EDT";
     let exchange = "US";
-    if (symbol.endsWith(".NS") || symbol.endsWith(".BO")) {
+    if (sym.endsWith(".NS") || symbol.endsWith(".BO")) {
       timezone = "IST";
       exchange = "IN";
-    } else if (symbol.endsWith(".L")) {
+    } else if (sym.endsWith(".L")) {
       timezone = "BST";
       exchange = "UK";
-    } else if (symbol.endsWith(".T")) {
+    } else if (sym.endsWith(".T")) {
       timezone = "JST";
       exchange = "JP";
     }
@@ -3654,7 +3655,7 @@ const handleSaveCurrentPortfolio = (name: string) => {
       const query = text.toLowerCase().trim();
 
       // Dashboard context extraction
-      const totalSipInvestments = portfolio.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(quotes[item.symbol]?.price || item.avgBuyPrice || 0)), 0);
+      const totalSipInvestments = portfolio.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(quotes?.[item.symbol]?.price || item.avgBuyPrice || 0)), 0);
       const fdCount = fixedDeposits.length;
       
       const netWorthFormatted = calculatedNetWorth.toLocaleString("en-IN", { style: "currency", currency: activeCurrency.code, maximumFractionDigits: 0 });
@@ -5495,11 +5496,11 @@ const handlePredefinedQuestion = (q: string) => {
               const safeMutualFunds = Array.isArray(mutualFunds) ? mutualFunds : [];
 
               // 1. Equities Total Value
-              const equitiesVal = safePortfolio.reduce((acc, item) => acc + ((item.qty || 0) * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+              const equitiesVal = safePortfolio.reduce((acc, item) => acc + ((item.qty || 0) * (quotes?.[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
               const equitiesCost = safePortfolio.reduce((acc, item) => acc + ((item.qty || 0) * (item.avgBuyPrice || 0)), 0);
               const equitiesProfit = equitiesVal - equitiesCost;
               const equitiesTodayChange = safePortfolio.reduce((acc, item) => {
-                const quote = quotes[item.symbol];
+                const quote = quotes?.[item.symbol];
                 if (!quote) return acc;
                 return acc + ((item.qty || 0) * (quote.change || 0));
               }, 0);
@@ -5553,7 +5554,7 @@ const handlePredefinedQuestion = (q: string) => {
 
               // 5. Gold calculations
               const goldCalculated = safeGoldHoldings.map(g => {
-                const livePrice = g.type === "Physical Gold" ? spotGoldPrice : (quotes["GOLDSHARE"]?.price || g.buyPricePerGram || 120);
+                const livePrice = g.type === "Physical Gold" ? spotGoldPrice : (quotes?.["GOLDSHARE"]?.price || g.buyPricePerGram || 120);
                 const grams = parseFloat(g.grams) || 0;
                 const units = parseFloat(g.units) || 0;
                 const buyPricePerGram = parseFloat(g.buyPricePerGram) || 0;
@@ -5571,14 +5572,14 @@ const handlePredefinedQuestion = (q: string) => {
 
               // 6. ETFs calculations
               const etfsCalculated = safeEtfHoldings.map(etf => {
-                const livePrice = quotes[etf.symbol]?.price || etf.avgPrice || 100;
+                const livePrice = quotes?.[etf.symbol]?.price || etf.avgPrice || 100;
                 const units = parseFloat(etf.units) || 0;
                 const avgPrice = parseFloat(etf.avgPrice) || 0;
                 const currentValue = units * livePrice;
                 const cost = units * avgPrice;
                 const profit = currentValue - cost;
                 const profitPct = cost > 0 ? (profit / cost) * 100 : 0;
-                const change = quotes[etf.symbol]?.change || 0;
+                const change = quotes?.[etf.symbol]?.change || 0;
                 const todayChange = units * change;
                 return { ...etf, currentValue, cost, profit, profitPct, todayChange };
               });
@@ -5614,7 +5615,7 @@ const handlePredefinedQuestion = (q: string) => {
               const allPerformanceItems: { symbolOrName: string; pct: number }[] = [];
               safePortfolio.forEach(item => {
                 const cost = (item.qty || 0) * (item.avgBuyPrice || 0);
-                const val = (item.qty || 0) * (quotes[item.symbol]?.price || item.avgBuyPrice || 0);
+                const val = (item.qty || 0) * (quotes?.[item.symbol]?.price || item.avgBuyPrice || 0);
                 const pct = cost > 0 ? ((val - cost) / cost) * 100 : 0;
                 if (!isNaN(pct)) allPerformanceItems.push({ symbolOrName: item.symbol, pct });
               });
@@ -5910,7 +5911,7 @@ const handlePredefinedQuestion = (q: string) => {
                                         // User sectors
                                         const userSects: Record<string, number> = {};
                                         portfolio.forEach(s => {
-                                          userSects[s.sector || "Technology"] = (userSects[s.sector || "Technology"] || 0) + (s.qty * (quotes[s.symbol]?.price || s.avgBuyPrice || 100));
+                                          userSects[s.sector || "Technology"] = (userSects[s.sector || "Technology"] || 0) + (s.qty * (quotes?.[s.symbol]?.price || s.avgBuyPrice || 100));
                                         });
                                         const userTotal = Object.values(userSects).reduce((a, b) => a + b, 0);
 
@@ -6142,7 +6143,7 @@ const handlePredefinedQuestion = (q: string) => {
                             {/* Stock Holdings List Grid */}
                             <div className="flex flex-col gap-4 mt-2">
                               {portfolio.map((item) => {
-                                const quote = quotes[item.symbol];
+                                const quote = quotes?.[item.symbol];
                                 const currentPrice = quote?.price || item.avgBuyPrice || 100;
                                 const cost = item.qty * item.avgBuyPrice;
                                 const currentValue = item.qty * currentPrice;
@@ -7004,7 +7005,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                       {/* Fincody Suggestion Robo-Advisor Widget Card */}
                       {(() => {
-                        const portfolioTotalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
+                        const portfolioTotalVal = portfolio.reduce((acc, item) => acc + (item.qty * (quotes?.[item.symbol]?.price || item.avgBuyPrice || 100)), 0);
                         const stockCounts = portfolio.length;
                         
                         let auditResult = "You do not have any active equity holdings. We recommend starting with a low-cost Nifty 50 Index ETF or S&P 500 ETF (e.g., NIFTYBEES, SPY) to capture steady index-compounding returns without stock-picking risk.";

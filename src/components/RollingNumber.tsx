@@ -12,10 +12,11 @@ interface RollingNumberProps {
 }
 
 export default function RollingNumber({ value, showSymbol = true, className = "", decimals }: RollingNumberProps) {
+  const safeVal = typeof value === "number" && !isNaN(value) ? value : 0;
   const { activeCurrency, format, convert } = useCurrency();
   const [displayString, setDisplayString] = useState("");
   
-  const convertedTarget = convert(value);
+  const convertedTarget = convert(safeVal);
   
   // Motion values for smooth tweening
   const motionValue = useMotionValue(convertedTarget);
@@ -39,7 +40,7 @@ export default function RollingNumber({ value, showSymbol = true, className = ""
       // Otherwise, animate the value change (stiffness/damping spring)
       motionValue.set(convertedTarget);
     }
-    prevValueRef.current = value;
+    prevValueRef.current = safeVal;
   }, [value, convertedTarget, activeCurrency.code, motionValue]);
 
   // Translate spring progress to formatted text
@@ -75,14 +76,14 @@ export default function RollingNumber({ value, showSymbol = true, className = ""
   // Initial render safety
   useEffect(() => {
     if (decimals !== undefined) {
-      const convertedVal = convert(value);
+      const convertedVal = convert(safeVal);
       const formatted = new Intl.NumberFormat(activeCurrency.locale, {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals
       }).format(convertedVal);
       setDisplayString(showSymbol ? `${activeCurrency.symbol}${formatted}` : formatted);
     } else {
-      setDisplayString(format(value, showSymbol));
+      setDisplayString(format(safeVal, showSymbol));
     }
   }, [value, activeCurrency, format, showSymbol, decimals]);
 
