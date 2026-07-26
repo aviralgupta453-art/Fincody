@@ -2558,8 +2558,8 @@ export default function Dashboard() {
     
     // Calculate parent total investment value dynamically
     const mfVal = (mutualFunds || []).reduce((acc: number, curr: any) => acc + parseFloat(curr.current || 0), 0);
-    const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
-    const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+    const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+    const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgPrice || 0)), 0);
     const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
       const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes?.["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
       return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
@@ -2663,8 +2663,8 @@ export default function Dashboard() {
   const chartData = getProjectionsChartData();
 
   // Parent-level calculations for assets (to prevent hoisting ReferenceErrors in static pages prerender)
-  const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
-  const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+  const parentEquitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+  const parentEtfsVal = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgPrice || 0)), 0);
   const parentGoldVal = (goldHoldings || []).reduce((acc: number, curr: any) => {
     const livePrice = curr.type === "Physical Gold" ? spotGoldPrice : (quotes?.["GOLDSHARE"]?.price || curr.buyPricePerGram || 120);
     return acc + (parseFloat(curr.grams || curr.units || 0) * parseFloat(livePrice || 0));
@@ -3351,7 +3351,7 @@ export default function Dashboard() {
   };
 
   const handleAddRecToPortfolio = (st: any) => {
-    const livePrice = quotes[st.symbol]?.price || st.avgBuyPrice || 100;
+    const livePrice = quotes?.[st.symbol]?.price || st.avgBuyPrice || 100;
     const qty = st.qty || 1;
     const alreadyExists = portfolio.find(p => p.symbol === st.symbol);
     let updated: any[];
@@ -3380,7 +3380,7 @@ export default function Dashboard() {
 
   const handleReplaceHolding = (recStock: any, targetSymbol: string) => {
     let updated = portfolio.filter(p => p.symbol !== targetSymbol);
-    const livePrice = quotes[recStock.symbol]?.price || recStock.avgBuyPrice || 100;
+    const livePrice = quotes?.[recStock.symbol]?.price || recStock.avgBuyPrice || 100;
     const qty = recStock.qty || 1;
     
     updated = [
@@ -3576,7 +3576,7 @@ const handleSaveCurrentPortfolio = (name: string) => {
   }, [(Array.isArray(portfolio) ? portfolio : []).map((p: any) => p?.symbol || "").join(",")]);
 
   // Dynamically calculated financial metrics incorporating all assets & entries (safely protected from NaN values)
-  const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
+  const equitiesVal = (portfolio || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.qty || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgBuyPrice || 0)), 0);
   const fdsTotalValue = (fixedDeposits || []).reduce((acc: number, curr: any) => {
     const start = new Date(curr.startDate || new Date());
     const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
@@ -3592,7 +3592,7 @@ const handleSaveCurrentPortfolio = (name: string) => {
     const grams = parseFloat(curr.grams || 0);
     return acc + (grams * livePrice);
   }, 0);
-  const etfsTotalValue = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes[curr.symbol]?.price || curr.avgPrice || 0)), 0);
+  const etfsTotalValue = (etfHoldings || []).reduce((acc: number, curr: any) => acc + (parseFloat(curr.units || 0) * parseFloat(quotes?.[curr.symbol]?.price || curr.avgPrice || 0)), 0);
   const bondsTotalValue = (bondHoldings || []).reduce((acc: number, curr: any) => {
     const start = new Date(curr.startDate || new Date());
     const yearsElapsed = Math.max(0, (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
@@ -7017,12 +7017,12 @@ const handlePredefinedQuestion = (q: string) => {
 
                         if (stockCounts > 0) {
                           const sortedPortfolio = [...portfolio].sort((a, b) => {
-                            const valA = a.qty * (quotes[a.symbol]?.price || a.avgBuyPrice || 100);
-                            const valB = b.qty * (quotes[b.symbol]?.price || b.avgBuyPrice || 100);
+                            const valA = a.qty * (quotes?.[a.symbol]?.price || a.avgBuyPrice || 100);
+                            const valB = b.qty * (quotes?.[b.symbol]?.price || b.avgBuyPrice || 100);
                             return valB - valA;
                           });
                           const topStock = sortedPortfolio[0];
-                          const topStockWeight = portfolioTotalVal > 0 ? ((topStock.qty * (quotes[topStock.symbol]?.price || topStock.avgBuyPrice || 100)) / portfolioTotalVal) * 100 : 0;
+                          const topStockWeight = portfolioTotalVal > 0 ? ((topStock.qty * (quotes?.[topStock.symbol]?.price || topStock.avgBuyPrice || 100)) / portfolioTotalVal) * 100 : 0;
                           
                           // Determine sector concentrations dynamically based on ticker keywords
                           const techHoldings = portfolio.filter(item => ["AAPL", "MSFT", "GOOG", "TCS", "INFY", "NVDA", "META"].includes(item.symbol.toUpperCase())).length;
@@ -10045,13 +10045,13 @@ const handlePredefinedQuestion = (q: string) => {
               <div>
                 <div className="flex items-center gap-3">
                   <h3 className="text-xl font-bold text-white font-mono">{selectedStockSymbol}</h3>
-                  {quotes[selectedStockSymbol] && (
+                  {quotes?.[selectedStockSymbol] && (
                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                      quotes[selectedStockSymbol].marketState === "Open" 
+                      quotes?.[selectedStockSymbol].marketState === "Open" 
                         ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
                         : "bg-slate-800 text-slate-400 border border-slate-700/50"
                     }`}>
-                      {quotes[selectedStockSymbol].marketState} Market
+                      {quotes?.[selectedStockSymbol].marketState} Market
                     </span>
                   )}
                 </div>
@@ -10068,8 +10068,8 @@ const handlePredefinedQuestion = (q: string) => {
             </div>
 
             {/* Price Info Banner */}
-            {quotes[selectedStockSymbol] && (() => {
-              const q = quotes[selectedStockSymbol];
+            {quotes?.[selectedStockSymbol] && (() => {
+              const q = quotes?.[selectedStockSymbol];
               const isPositive = q.change >= 0;
               const displayPrice = hoveredPrice !== null ? hoveredPrice : q.price;
               const displayLabel = hoveredPrice !== null ? `Price at ${hoveredTime}` : "Live Market Value";
