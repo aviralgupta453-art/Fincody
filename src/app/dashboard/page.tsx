@@ -419,14 +419,10 @@ export default function Dashboard() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session && isMounted) {
-          const { data: { user: freshUser } } = await supabase.auth.getUser();
-          if (isMounted) setUser(freshUser ?? session.user);
-        } else if (isMounted) {
-          setUser(null);
+          setUser(session.user);
         }
       } catch (err) {
         console.error("Auth check failed:", err);
-        if (isMounted) setUser(null);
       } finally {
         if (isMounted) setAuthLoading(false);
       }
@@ -443,13 +439,12 @@ export default function Dashboard() {
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
-        if (session && isMounted) {
-          const { data: { user: freshUser } } = await supabase.auth.getUser();
-          if (isMounted) setUser(freshUser ?? session.user);
-        } else if (isMounted) {
+        if (event === "SIGNED_OUT") {
           setUser(null);
+        } else if (session && isMounted) {
+          setUser(session.user);
         }
       } catch (err) {
         console.error("Auth state change error:", err);
@@ -4965,7 +4960,7 @@ const handlePredefinedQuestion = (q: string) => {
                       </div>
                     </div>
                     <div className="w-full min-w-0 h-72">
-                      <ResponsiveContainer width="99%" height="100%">
+                      <ResponsiveContainer width="100%" height={160}>
                         <AreaChart data={chartData}>
                           <defs>
                             <linearGradient id="chartGrad2" x1="0" y1="0" x2="0" y2="1">
@@ -6887,7 +6882,7 @@ const handlePredefinedQuestion = (q: string) => {
                           <div className="h-56 w-full min-w-0 flex items-center justify-center relative my-4">
                             {consolidatedAllocationData.length > 0 ? (
                               <>
-                                <ResponsiveContainer width="99%" height="100%">
+                                <ResponsiveContainer width="100%" height={220}>
                                   <PieChart>
                                     <Pie
                                       data={consolidatedAllocationData}
