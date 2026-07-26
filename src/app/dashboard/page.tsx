@@ -5488,6 +5488,12 @@ const handlePredefinedQuestion = (q: string) => {
             {/* Investments */}
                         {activeTab === "investments" && (() => {
               try {
+                const safeAiRec = {
+                  diversification: typeof aiRecommendation?.diversification === "number" ? aiRecommendation.diversification : 85,
+                  risk: typeof aiRecommendation?.risk === "string" ? aiRecommendation.risk : "Moderate",
+                  rationale: typeof aiRecommendation?.rationale === "string" ? aiRecommendation.rationale : "Balanced portfolio model",
+                  stocks: Array.isArray(aiRecommendation?.stocks) ? aiRecommendation.stocks : []
+                };
                 const safePpfData = {
                   balance: typeof ppfData?.balance === "number" ? ppfData.balance : 450000,
                   annualContribution: typeof ppfData?.annualContribution === "number" ? ppfData.annualContribution : 150000,
@@ -5896,21 +5902,21 @@ const handlePredefinedQuestion = (q: string) => {
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                   <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
                                     <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">AI Risk Target</span>
-                                    <span className="text-xs font-black text-white block mt-1.5">{aiRecommendation.risk} Profiling</span>
+                                    <span className="text-xs font-black text-white block mt-1.5">{safeAiRec.risk} Profiling</span>
                                   </div>
                                   <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
                                     <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Diversification</span>
-                                    <span className="text-xs font-black text-emerald-500 block mt-1.5">{aiRecommendation.diversification}/100 Score</span>
+                                    <span className="text-xs font-black text-emerald-500 block mt-1.5">{safeAiRec.diversification}/100 Score</span>
                                   </div>
                                   <div className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-950/20">
                                     <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Expected Yield</span>
-                                    <span className="text-xs font-black text-blue-400 block mt-1.5">{aiRecommendation.risk === "High" ? "18% CAGR" : "12% CAGR"}</span>
+                                    <span className="text-xs font-black text-blue-400 block mt-1.5">{safeAiRec.risk === "High" ? "18% CAGR" : "12% CAGR"}</span>
                                   </div>
                                 </div>
 
                                 <div className="text-xs text-slate-400 p-3.5 rounded-xl border border-blue-500/10 bg-blue-600/[0.01]">
                                   <span className="font-extrabold text-blue-400 block mb-1">Co-Pilot Rationale:</span>
-                                  {aiRecommendation.rationale}
+                                  {safeAiRec.rationale}
                                 </div>
 
                                 {/* Your Portfolio vs AI Suggestions Comparative Analytics */}
@@ -5931,7 +5937,7 @@ const handlePredefinedQuestion = (q: string) => {
 
                                         // Rec sectors
                                         const recSects: Record<string, number> = {};
-                                        (aiRecommendation?.stocks || []).forEach((s: any) => {
+                                        (safeAiRec.stocks || []).forEach((s: any) => {
                                           recSects[s.sector] = (recSects[s.sector] || 0) + s.allocation;
                                         });
 
@@ -5991,7 +5997,7 @@ const handlePredefinedQuestion = (q: string) => {
                                         </div>
                                       </div>
                                       <div className="p-3.5 rounded-xl bg-slate-900/40 border border-[var(--border-color)] text-[10px] text-slate-400 leading-relaxed font-semibold">
-                                        ⚖️ <strong>Diversification Gap</strong>: Your portfolio score is ~45/100. Adopting the recommendations increases exposure to {aiRecommendation.diversification}/100.
+                                        ⚖️ <strong>Diversification Gap</strong>: Your portfolio score is ~45/100. Adopting the recommendations increases exposure to {safeAiRec.diversification}/100.
                                       </div>
                                     </div>
                                   </div>
@@ -6001,7 +6007,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 <div className="flex flex-col gap-3">
                                   <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Asset Proposals</span>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {aiRecommendation.stocks
+                                    {safeAiRec.stocks
                                       .filter((s: any) => !ignoredRecs.includes(s.symbol))
                                       .map((st: any) => (
                                         <div key={st.symbol} className="p-4 rounded-xl border border-[var(--border-color)] bg-slate-900/30 flex flex-col justify-between gap-3 group relative">
@@ -6139,7 +6145,7 @@ const handlePredefinedQuestion = (q: string) => {
                                       >
                                         <div className="flex items-center gap-3">
                                           <div className="w-8 h-8 rounded-lg bg-white/5 border border-[var(--border-color)] flex items-center justify-center font-bold text-white text-[10px] font-mono">
-                                            {stock.symbol.substring(0, 3)}
+                                            {(stock.symbol || "STK").substring(0, 3)}
                                           </div>
                                           <div>
                                             <span className="font-extrabold text-xs text-white block font-mono">{stock.symbol}</span>
@@ -6166,7 +6172,7 @@ const handlePredefinedQuestion = (q: string) => {
                                 // Exchange specific info
                                 const { localTimeStr, marketState } = getExchangeMarketState(item.symbol);
                                 
-                                const flashStatus = priceUpdateStatus[item.symbol];
+                                const flashStatus = priceUpdateStatus?.[item.symbol];
                                 const flashClass = flashStatus === "up" 
                                   ? "bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]" 
                                   : flashStatus === "down"
@@ -6185,7 +6191,7 @@ const handlePredefinedQuestion = (q: string) => {
                                     >
                                       <div className="flex items-center gap-3">
                                         <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[var(--border-color)] flex items-center justify-center font-sans text-xs font-bold text-slate-300">
-                                          {item.symbol.substring(0, 4)}
+                                          {(item.symbol || "STK").substring(0, 4)}
                                         </div>
                                         <div className="text-left">
                                           <span className="font-bold text-sm text-white block hover:text-blue-400 transition-colors">{item.symbol}</span>
